@@ -31,9 +31,9 @@ export default function LoginPage() {
                     Google로 시작하기
                 </button>
 
-                <button className="mt-3 w-full rounded-lg bg-black py-3 text-white" onClick={handleKakaoLogin}>
+                {/* <button className="mt-3 w-full rounded-lg bg-black py-3 text-white" onClick={handleKakaoLogin}>
                     카카오로 시작하기
-                </button>
+                </button> */}
             </div>
         </main>
     );
