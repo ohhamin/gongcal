@@ -70,8 +70,8 @@ export default function DayPage({ params }: Props) {
                 return false;
             }
 
-            const existingStart = new Date(event.start);
-            const existingEnd = new Date(event.end);
+            const existingStart = new Date(event.start_at);
+            const existingEnd = new Date(event.end_at);
 
             return start < existingEnd && end > existingStart;
         });
@@ -226,8 +226,8 @@ export default function DayPage({ params }: Props) {
 
         setTitle(event.title);
 
-        const start = new Date(event.start);
-        const end = new Date(event.end);
+        const start = new Date(event.start_at);
+        const end = new Date(event.end_at);
 
         setStartTime(formatTime(start));
         setEndTime(formatTime(end));
@@ -283,8 +283,8 @@ export default function DayPage({ params }: Props) {
                 return false;
             }
 
-            const existingStart = new Date(event.start);
-            const existingEnd = new Date(event.end);
+            const existingStart = new Date(event.start_at);
+            const existingEnd = new Date(event.end_at);
 
             return start < existingEnd && end > existingStart;
         });
@@ -327,8 +327,8 @@ export default function DayPage({ params }: Props) {
                 return false;
             }
 
-            const existingStart = new Date(event.start);
-            const existingEnd = new Date(event.end);
+            const existingStart = new Date(event.start_at);
+            const existingEnd = new Date(event.end_at);
 
             return start < existingEnd && end > existingStart;
         });
