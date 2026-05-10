@@ -53,6 +53,13 @@ export default function DayPage({ params }: Props) {
         return `${String(hour).padStart(2, '0')}:${minute}`;
     });
 
+    const lockScroll = () => {
+        document.body.style.overflow = 'hidden';
+    };
+
+    const unlockScroll = () => {
+        document.body.style.overflow = '';
+    };
     // 날짜 변환
     const formatTime = (date: Date) => {
         return date.toLocaleTimeString('ko-KR', {
@@ -262,8 +269,9 @@ export default function DayPage({ params }: Props) {
 
     // 이벤트 드래그하기
     const handleDateSelect = (info: any) => {
-        setSelectedEventId(null);
+        unlockScroll();
 
+        setSelectedEventId(null);
         setTitle('');
 
         const start = new Date(info.start);
@@ -461,7 +469,12 @@ export default function DayPage({ params }: Props) {
                                 expandRows={false}
                                 editable={person.id === myUserId}
                                 selectable={person.id === myUserId}
-                                dateClick={person.id === myUserId ? handleDateClick : undefined}
+                                select={person.id === myUserId ? handleDateSelect : undefined}
+                                selectLongPressDelay={300}
+                                selectAllow={() => {
+                                    lockScroll();
+                                    return true;
+                                }}
                                 eventClick={person.id === myUserId ? handleEventClick : undefined}
                                 eventResize={person.id === myUserId ? handleEventResize : undefined}
                                 eventDrop={person.id === myUserId ? handleEventDrop : undefined}
