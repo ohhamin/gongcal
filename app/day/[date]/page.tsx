@@ -275,6 +275,21 @@ export default function DayPage({ params }: Props) {
         setOpen(true);
     };
 
+    const handleDateClick = (info: any) => {
+        setSelectedEventId(null);
+        setTitle('');
+
+        const clickedDate = new Date(info.date);
+        const endDate = new Date(clickedDate);
+
+        endDate.setMinutes(endDate.getMinutes() + 30);
+
+        setStartTime(formatTime(clickedDate));
+        setEndTime(formatTime(endDate));
+
+        setOpen(true);
+    };
+
     // 이벤트 사이즈 변환
     const handleEventResize = async (info: any) => {
         const start = info.event.start;
@@ -446,7 +461,7 @@ export default function DayPage({ params }: Props) {
                                 expandRows={false}
                                 editable={person.id === myUserId}
                                 selectable={person.id === myUserId}
-                                select={person.id === myUserId ? handleDateSelect : undefined}
+                                dateClick={person.id === myUserId ? handleDateClick : undefined}
                                 eventClick={person.id === myUserId ? handleEventClick : undefined}
                                 eventResize={person.id === myUserId ? handleEventResize : undefined}
                                 eventDrop={person.id === myUserId ? handleEventDrop : undefined}
