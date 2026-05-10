@@ -65,7 +65,10 @@ export default function DayPage({ params }: Props) {
     //날짜가 겹친지 확인하는 함수
     const hasOverlap = (start: Date, end: Date) => {
         return events.some((event) => {
-            // 수정 중인 자기 자신은 제외
+            if (event.user_id !== myUserId) {
+                return false;
+            }
+
             if (selectedEventId && String(event.id) === selectedEventId) {
                 return false;
             }
@@ -279,6 +282,10 @@ export default function DayPage({ params }: Props) {
 
         // 겹침 체크
         const overlap = events.some((event) => {
+            if (event.user_id !== myUserId) {
+                return false;
+            }
+
             if (String(event.id) === info.event.id) {
                 return false;
             }
@@ -323,6 +330,10 @@ export default function DayPage({ params }: Props) {
 
         // 겹침 체크
         const overlap = events.some((event) => {
+            if (event.user_id !== myUserId) {
+                return false;
+            }
+
             if (String(event.id) === info.event.id) {
                 return false;
             }
