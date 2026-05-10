@@ -29,7 +29,6 @@ export default function AuthCallbackPage() {
                     .from('profiles')
                     .insert({
                         id: user.id,
-                        email: user.email,
                     })
                     .select()
                     .single();
