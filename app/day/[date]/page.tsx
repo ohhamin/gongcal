@@ -229,8 +229,8 @@ export default function DayPage({ params }: Props) {
 
         setTitle(event.title);
 
-        const start = new Date(event.start_at);
-        const end = new Date(event.end_at);
+        const start = new Date(event.start);
+        const end = new Date(event.end);
 
         setStartTime(formatTime(start));
         setEndTime(formatTime(end));
