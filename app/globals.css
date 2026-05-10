@@ -1,4 +1,17 @@
 @import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    background: #f9fafb;
+    color: #111827;
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+}
 
 :root {
     --background: #ffffff;
