@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
     subsets: ['latin'],
 });
 
-export const metadata = {
-    title: 'Gong Calendar',
+export const metadata: Metadata = {
+    title: 'OURCAL',
 
     manifest: '/manifest.json',
 
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ko">
-            <body>
+            <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <main className="min-h-screen bg-gray-50 p-5">
                     <div className="mx-auto max-w-5xl">{children}</div>
                 </main>
