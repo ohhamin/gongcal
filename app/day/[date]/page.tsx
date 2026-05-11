@@ -23,7 +23,7 @@ type CalendarEvent = {
     start_at: string;
     end_at: string;
     user_id: string;
-    isHidden: boolean;
+    is_hidden: boolean;
 };
 
 type Person = {
@@ -209,7 +209,7 @@ export default function DayPage({ params }: Props) {
                     title: trimmedTitle,
                     start_at: start.toISOString(),
                     end_at: end.toISOString(),
-                    isHidden,
+                    is_hidden: isHidden,
                 })
                 .eq('id', Number(selectedEventId));
 
@@ -226,7 +226,7 @@ export default function DayPage({ params }: Props) {
                 start_at: start.toISOString(),
                 end_at: end.toISOString(),
                 user_id: user.id,
-                isHidden,
+                is_hidden: isHidden,
             });
 
             if (error) {
@@ -467,8 +467,8 @@ export default function DayPage({ params }: Props) {
                                     .filter((event) => event.user_id === person.id)
                                     .map((event) => {
                                         const isOwner = event.user_id === myUserId;
-                                        const displayTitle = event.isHidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
-                                        const eventColor = event.isHidden
+                                        const displayTitle = event.is_hidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
+                                        const eventColor = event.is_hidden
                                             ? `${colors[index]}${HIDDEN_EVENT_COLOR_ALPHA}`
                                             : colors[index];
 
@@ -480,7 +480,7 @@ export default function DayPage({ params }: Props) {
                                             backgroundColor: eventColor,
                                             borderColor: eventColor,
                                             extendedProps: {
-                                                isHidden: event.isHidden,
+                                                isHidden: event.is_hidden,
                                             },
                                         };
                                     })}
