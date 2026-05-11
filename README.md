@@ -8,7 +8,7 @@ GongCal은 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유
 
 - 소규모 패치: 세 번째 자리 증가 (예: v.0.0.1 → v.0.0.2)
 - 대규모 패치: 두 번째 자리 증가 후 세 번째 자리를 1로 초기화 (예: v.0.0.2 → v.0.1.1)
-- 버전 변경 시 `README.md`, `OPENCLAW.md`, `package.json`, `package-lock.json`을 함께 갱신합니다.
+- 버전 변경 시 `README.md`, `package.json`, `package-lock.json`을 함께 갱신합니다.
 
 ## 주요 기능
 
