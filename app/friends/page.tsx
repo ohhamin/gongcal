@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { FRIEND_LIMIT, getFriendshipCountByProfileId } from '@/lib/friendships';
 import { supabase } from '@/lib/supabase';
 
 type Profile = {
@@ -86,8 +87,8 @@ export default function FriendsPage() {
 
     // 친구 추가하기
     const handleAddFriend = async () => {
-        if (friends.length >= 3) {
-            alert('친구는 최대 3명까지 추가할 수 있습니다.');
+        if (friends.length >= FRIEND_LIMIT) {
+            alert(`친구는 최대 ${FRIEND_LIMIT}명까지 추가할 수 있습니다.`);
             return false;
         }
 
@@ -122,13 +123,12 @@ export default function FriendsPage() {
             return false;
         }
 
-        const { count: addresseeFriendCount, error: countError } = await supabase
-            .from('friendships')
-            .select('id', { count: 'exact', head: true })
-            .or(`requester_id.eq.${profile.id},addressee_id.eq.${profile.id}`);
+        let addresseeFriendCount = 0;
 
-        if (countError) {
-            console.error(countError);
+        try {
+            addresseeFriendCount = await getFriendshipCountByProfileId(profile.id);
+        } catch (error) {
+            console.error(error);
             alert('친구 수 확인 실패');
 
             setLoading(false);
@@ -136,7 +136,7 @@ export default function FriendsPage() {
             return false;
         }
 
-        if ((addresseeFriendCount || 0) >= 3) {
+        if (addresseeFriendCount >= FRIEND_LIMIT) {
             alert('친구가 3명 이상 존재하는 유저에요');
 
             setLoading(false);
@@ -225,12 +225,12 @@ export default function FriendsPage() {
                 <button
                     className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400"
                     onClick={() => setOpen(true)}
-                    disabled={friends.length >= 3}
+                    disabled={friends.length >= FRIEND_LIMIT}
                 >
                     친구 추가
                 </button>
             </div>
-            <p className="text-sm text-gray-500">최대 3명의 친구와 일정을 공유할 수 있어요.</p>
+            <p className="text-sm text-gray-500">최대 {FRIEND_LIMIT}명의 친구와 일정을 공유할 수 있어요.</p>
 
             <div className="space-y-3">
                 {friends.map((item) => (

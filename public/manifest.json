@@ -1,7 +1,7 @@
 {
-    "name": "Gong Calendar",
-    "short_name": "GongCal",
-    "description": "친구와 일정을 공유하는 캘린더",
+    "name": "OURCAL",
+    "short_name": "OURCAL",
+    "description": "친구와 일정을 공유하는 우리캘린더",
     "start_url": "/calendar",
     "display": "standalone",
     "background_color": "#f9fafb",

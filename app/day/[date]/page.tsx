@@ -1,12 +1,13 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import FullCalendar from '@fullcalendar/react';
+import { DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, { EventResizeDoneArg } from '@fullcalendar/interaction';
 
 import { supabase } from '@/lib/supabase';
 
@@ -26,7 +27,14 @@ type CalendarEvent = {
 
 type Person = {
     id: string;
-    nickname: string;
+    nickname: string | null;
+};
+
+type FriendshipRow = {
+    requester_id: string;
+    addressee_id: string;
+    requester: Person;
+    addressee: Person;
 };
 
 export default function DayPage({ params }: Props) {
@@ -88,7 +96,7 @@ export default function DayPage({ params }: Props) {
     };
 
     // 사용자 조회
-    const fetchVisiblePeople = async () => {
+    const fetchVisiblePeople = useCallback(async () => {
         const {
             data: { user },
         } = await supabase.auth.getUser();
@@ -118,17 +126,17 @@ export default function DayPage({ params }: Props) {
             .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
 
         const friends =
-            friendships?.map((friendship: any) => {
+            (friendships as FriendshipRow[] | null)?.map((friendship) => {
                 const isRequester = friendship.requester_id === user.id;
 
                 return isRequester ? friendship.addressee : friendship.requester;
             }) || [];
 
-        return [myProfile, ...friends].filter(Boolean);
-    };
+        return [myProfile, ...friends].filter(Boolean) as Person[];
+    }, []);
 
     // 일정 조회
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         const visiblePeople = await fetchVisiblePeople();
 
         setPeople(visiblePeople);
@@ -156,7 +164,7 @@ export default function DayPage({ params }: Props) {
         }
 
         setEvents(data || []);
-    };
+    }, [date, fetchVisiblePeople]);
 
     const handleSaveEvent = async () => {
         const start = new Date(`${date}T${startTime}`);
@@ -229,18 +237,20 @@ export default function DayPage({ params }: Props) {
         fetchEvents();
     };
 
-    const handleEventClick = (info: any) => {
+    const handleEventClick = (info: EventClickArg) => {
         const event = info.event;
 
         setSelectedEventId(event.id);
 
         setTitle(event.title);
 
-        const start = new Date(event.start);
-        const end = new Date(event.end);
+        if (!event.start || !event.end) {
+            alert('일정 시간 정보를 불러올 수 없습니다.');
+            return;
+        }
 
-        setStartTime(formatTime(start));
-        setEndTime(formatTime(end));
+        setStartTime(formatTime(event.start));
+        setEndTime(formatTime(event.end));
 
         setOpen(true);
     };
@@ -268,7 +278,7 @@ export default function DayPage({ params }: Props) {
     };
 
     // 이벤트 드래그하기
-    const handleDateSelect = (info: any) => {
+    const handleDateSelect = (info: DateSelectArg) => {
         unlockScroll();
 
         setSelectedEventId(null);
@@ -283,25 +293,15 @@ export default function DayPage({ params }: Props) {
         setOpen(true);
     };
 
-    const handleDateClick = (info: any) => {
-        setSelectedEventId(null);
-        setTitle('');
-
-        const clickedDate = new Date(info.date);
-        const endDate = new Date(clickedDate);
-
-        endDate.setMinutes(endDate.getMinutes() + 30);
-
-        setStartTime(formatTime(clickedDate));
-        setEndTime(formatTime(endDate));
-
-        setOpen(true);
-    };
-
     // 이벤트 사이즈 변환
-    const handleEventResize = async (info: any) => {
+    const handleEventResize = async (info: EventResizeDoneArg) => {
         const start = info.event.start;
         const end = info.event.end;
+
+        if (!start || !end) {
+            info.revert();
+            return;
+        }
 
         // 겹침 체크
         const overlap = events.some((event) => {
@@ -347,9 +347,14 @@ export default function DayPage({ params }: Props) {
     };
 
     // 이벤트 이동 처리
-    const handleEventDrop = async (info: any) => {
+    const handleEventDrop = async (info: EventDropArg) => {
         const start = info.event.start;
         const end = info.event.end;
+
+        if (!start || !end) {
+            info.revert();
+            return;
+        }
 
         // 겹침 체크
         const overlap = events.some((event) => {
@@ -401,7 +406,7 @@ export default function DayPage({ params }: Props) {
         };
 
         load();
-    }, [date]);
+    }, [fetchEvents]);
 
     return (
         <main className="p-5">
@@ -428,7 +433,7 @@ export default function DayPage({ params }: Props) {
                             key={person.id}
                             className="flex h-7 text-xs items-start justify-center border-b pr-2 text-xs text-gray-500"
                         >
-                            {person.nickname}
+                            {person.nickname || '이름 없음'}
                         </div>
                     ))}
 

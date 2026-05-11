@@ -1,6 +1,6 @@
 {
-    "name": "gong_cal",
-    "version": "0.0.2",
+    "name": "ourcal",
+    "version": "0.0.4",
     "private": true,
     "scripts": {
         "dev": "next dev",
