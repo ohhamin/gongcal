@@ -23,6 +23,7 @@ type CalendarEvent = {
     start_at: string;
     end_at: string;
     user_id: string;
+    isHidden: boolean;
 };
 
 type Person = {
@@ -37,6 +38,10 @@ type FriendshipRow = {
     addressee: Person;
 };
 
+const HIDDEN_EVENT_TITLE = '일정 있음';
+// 8자리 hex의 CC는 80% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
+const HIDDEN_EVENT_COLOR_ALPHA = 'CC';
+
 export default function DayPage({ params }: Props) {
     const router = useRouter();
     const [people, setPeople] = useState<Person[]>([]);
@@ -50,6 +55,7 @@ export default function DayPage({ params }: Props) {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const [isHidden, setIsHidden] = useState(false);
     const [myUserId, setMyUserId] = useState<string | null>(null);
 
     const colors = ['#3B82F6', '#d6a212ff', '#10B981', '#EF4444'];
@@ -203,6 +209,7 @@ export default function DayPage({ params }: Props) {
                     title: trimmedTitle,
                     start_at: start.toISOString(),
                     end_at: end.toISOString(),
+                    isHidden,
                 })
                 .eq('id', Number(selectedEventId));
 
@@ -219,6 +226,7 @@ export default function DayPage({ params }: Props) {
                 start_at: start.toISOString(),
                 end_at: end.toISOString(),
                 user_id: user.id,
+                isHidden,
             });
 
             if (error) {
@@ -231,6 +239,7 @@ export default function DayPage({ params }: Props) {
         setOpen(false);
 
         setTitle('');
+        setIsHidden(false);
 
         setSelectedEventId(null);
 
@@ -243,6 +252,7 @@ export default function DayPage({ params }: Props) {
         setSelectedEventId(event.id);
 
         setTitle(event.title);
+        setIsHidden(Boolean(event.extendedProps.isHidden));
 
         if (!event.start || !event.end) {
             alert('일정 시간 정보를 불러올 수 없습니다.');
@@ -273,6 +283,7 @@ export default function DayPage({ params }: Props) {
         setOpen(false);
 
         setSelectedEventId(null);
+        setIsHidden(false);
 
         fetchEvents();
     };
@@ -283,6 +294,7 @@ export default function DayPage({ params }: Props) {
 
         setSelectedEventId(null);
         setTitle('');
+        setIsHidden(false);
 
         const start = new Date(info.start);
         const end = new Date(info.end);
@@ -453,14 +465,25 @@ export default function DayPage({ params }: Props) {
                                 initialDate={date}
                                 events={events
                                     .filter((event) => event.user_id === person.id)
-                                    .map((event) => ({
-                                        id: String(event.id),
-                                        title: event.title,
-                                        start: event.start_at,
-                                        end: event.end_at,
-                                        backgroundColor: colors[index],
-                                        borderColor: colors[index],
-                                    }))}
+                                    .map((event) => {
+                                        const isOwner = event.user_id === myUserId;
+                                        const displayTitle = event.isHidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
+                                        const eventColor = event.isHidden
+                                            ? `${colors[index]}${HIDDEN_EVENT_COLOR_ALPHA}`
+                                            : colors[index];
+
+                                        return {
+                                            id: String(event.id),
+                                            title: displayTitle,
+                                            start: event.start_at,
+                                            end: event.end_at,
+                                            backgroundColor: eventColor,
+                                            borderColor: eventColor,
+                                            extendedProps: {
+                                                isHidden: event.isHidden,
+                                            },
+                                        };
+                                    })}
                                 headerToolbar={false}
                                 dayHeaders={false}
                                 allDaySlot={false}
@@ -524,7 +547,7 @@ export default function DayPage({ params }: Props) {
                             />
                         </div>
 
-                        <div className="mb-5">
+                        <div className="mb-3">
                             <p className="mb-1 text-sm">종료 시간</p>
 
                             <input
@@ -535,6 +558,15 @@ export default function DayPage({ params }: Props) {
                                 onChange={(e) => setEndTime(e.target.value)}
                             />
                         </div>
+
+                        <label className="mb-5 flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={isHidden}
+                                onChange={(e) => setIsHidden(e.target.checked)}
+                            />
+                            친구에게 숨기기
+                        </label>
 
                         <div className="flex items-center justify-between">
                             <div>
