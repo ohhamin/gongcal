@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.0.4 - 2026-05-11
+
+### 업데이트 내용
+
+- 전체 lint 실패 원인을 정리하고 `npm run lint`가 통과하도록 수정했습니다.
+- `app/day/[date]/page.tsx`의 FullCalendar 핸들러에서 `any` 타입을 제거하고 명시 타입을 적용했습니다.
+- 이벤트 클릭/드래그/리사이즈에서 nullable 날짜값을 방어 처리했습니다.
+- `fetchVisiblePeople`, `fetchEvents`를 `useCallback`으로 감싸 hook dependency 경고를 해결했습니다.
+- auth callback effect에 `router` 의존성을 추가했습니다.
+- README 기준 버전을 `v.0.0.3`에서 소규모 패치 버전 `v.0.0.4`로 업데이트했습니다.
+
+### 작업 메모
+
+- lint 실패 원인은 기존 `any` 타입, 미사용 핸들러, hook dependency 누락, nullable event date 미처리였습니다.
+- `npm run lint`와 `npx tsc --noEmit` 모두 통과했습니다.
+
 ## v.0.0.3 - 2026-05-11
 
 ### 업데이트 내용

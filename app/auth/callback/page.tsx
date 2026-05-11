@@ -46,7 +46,7 @@ export default function AuthCallbackPage() {
         };
 
         load();
-    }, []);
+    }, [router]);
 
     return <div className="p-10">로그인 처리중...</div>;
 }
