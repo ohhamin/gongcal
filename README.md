@@ -1,6 +1,7 @@
 # GongCal
 
 GongCal은 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다.
+v.0.0.1
 
 ## 주요 기능
 
