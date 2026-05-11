@@ -1,13 +1,35 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+
+type Profile = {
+    id: string;
+    nickname: string | null;
+};
+
+type FriendshipRow = {
+    id: number;
+    status: string;
+    requester_id: string;
+    addressee_id: string;
+    requester: Profile;
+    addressee: Profile;
+};
+
+type FriendItem = {
+    friendshipId: number;
+    status: string;
+    isReceivedRequest: boolean;
+    isSentRequest: boolean;
+    friend: Profile;
+};
 
 export default function FriendsPage() {
     const router = useRouter();
 
-    const [friends, setFriends] = useState<any[]>([]);
+    const [friends, setFriends] = useState<FriendItem[]>([]);
 
     const [nickname, setNickname] = useState('');
 
@@ -46,7 +68,7 @@ export default function FriendsPage() {
         }
 
         const parsed =
-            data?.map((friendship: any) => {
+            (data as FriendshipRow[] | null)?.map((friendship) => {
                 const isRequester = friendship.requester_id === user.id;
                 const friend = isRequester ? friendship.addressee : friendship.requester;
 
@@ -66,25 +88,29 @@ export default function FriendsPage() {
     const handleAddFriend = async () => {
         if (friends.length >= 3) {
             alert('친구는 최대 3명까지 추가할 수 있습니다.');
-            return;
+            return false;
         }
+
         setLoading(true);
 
         const {
             data: { user },
         } = await supabase.auth.getUser();
 
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return false;
+        }
 
         // 닉네임 검색
-        const { data: profile } = await supabase.from('profiles').select('*').eq('nickname', nickname).single();
+        const { data: profile } = await supabase.from('profiles').select('*').eq('nickname', nickname.trim()).single();
 
         if (!profile) {
             alert('사용자를 찾을 수 없습니다.');
 
             setLoading(false);
 
-            return;
+            return false;
         }
 
         // 자기 자신 방지
@@ -93,7 +119,29 @@ export default function FriendsPage() {
 
             setLoading(false);
 
-            return;
+            return false;
+        }
+
+        const { count: addresseeFriendCount, error: countError } = await supabase
+            .from('friendships')
+            .select('id', { count: 'exact', head: true })
+            .or(`requester_id.eq.${profile.id},addressee_id.eq.${profile.id}`);
+
+        if (countError) {
+            console.error(countError);
+            alert('친구 수 확인 실패');
+
+            setLoading(false);
+
+            return false;
+        }
+
+        if ((addresseeFriendCount || 0) >= 3) {
+            alert('친구가 3명 이상 존재하는 유저에요');
+
+            setLoading(false);
+
+            return false;
         }
 
         const { error } = await supabase.from('friendships').insert({
@@ -109,7 +157,7 @@ export default function FriendsPage() {
 
             setLoading(false);
 
-            return;
+            return false;
         }
 
         setNickname('');
@@ -117,6 +165,8 @@ export default function FriendsPage() {
         fetchFriends();
 
         setLoading(false);
+
+        return true;
     };
 
     const handleAcceptFriend = async (friendshipId: number) => {
@@ -231,12 +281,15 @@ export default function FriendsPage() {
                             </button>
 
                             <button
-                                className="rounded bg-black px-4 py-2 text-white"
+                                className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400"
                                 onClick={async () => {
-                                    await handleAddFriend();
+                                    const added = await handleAddFriend();
 
-                                    setOpen(false);
+                                    if (added) {
+                                        setOpen(false);
+                                    }
                                 }}
+                                disabled={loading}
                             >
                                 추가
                             </button>
