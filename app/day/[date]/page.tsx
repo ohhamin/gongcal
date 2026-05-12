@@ -20,6 +20,7 @@ type Props = {
 type CalendarEvent = {
     id: string;
     title: string;
+    detail: string | null;
     start_at: string;
     end_at: string;
     user_id: string;
@@ -38,9 +39,25 @@ type FriendshipRow = {
     addressee: Person;
 };
 
+type CommentRow = {
+    id: number;
+    events_id: number;
+    profile_id: string;
+    contents: string | null;
+    created_at: string | null;
+    profile: Person | null;
+};
+
+type CommentQueryRow = Omit<CommentRow, 'profile'> & {
+    profile: Person | Person[] | null;
+};
+
 const HIDDEN_EVENT_TITLE = '일정 있음';
-// 8자리 hex의 CC는 80% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
-const HIDDEN_EVENT_COLOR_ALPHA = 'CC';
+// 8자리 hex의 99는 약 60% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
+const HIDDEN_EVENT_COLOR_ALPHA = '99';
+const EVENT_TITLE_MAX_LENGTH = 50;
+const EVENT_DETAIL_MAX_LENGTH = 500;
+const COMMENT_MAX_LENGTH = 100;
 
 export default function DayPage({ params }: Props) {
     const router = useRouter();
@@ -48,15 +65,21 @@ export default function DayPage({ params }: Props) {
     const { date } = use(params);
 
     const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [open, setOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
 
     const [title, setTitle] = useState('');
+    const [detail, setDetail] = useState('');
 
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const [isHidden, setIsHidden] = useState(false);
     const [myUserId, setMyUserId] = useState<string | null>(null);
+    const [comments, setComments] = useState<CommentRow[]>([]);
+    const [commentInput, setCommentInput] = useState('');
+    const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    const [editingCommentInput, setEditingCommentInput] = useState('');
 
     const colors = ['#3B82F6', '#d6a212ff', '#10B981', '#EF4444'];
 
@@ -74,13 +97,31 @@ export default function DayPage({ params }: Props) {
     const unlockScroll = () => {
         document.body.style.overflow = '';
     };
+
     // 날짜 변환
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('ko-KR', {
+    const formatTime = (targetDate: Date) => {
+        return targetDate.toLocaleTimeString('ko-KR', {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
         });
+    };
+
+    const formatDateTime = (value: string | null) => {
+        if (!value) return '';
+
+        const targetDate = new Date(value);
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+        const hour = String(targetDate.getHours()).padStart(2, '0');
+        const minute = String(targetDate.getMinutes()).padStart(2, '0');
+
+        return `${year}.${month}.${day} ${hour}:${minute}`;
+    };
+
+    const formatEventDateTimeRange = (event: CalendarEvent) => {
+        return `${formatDateTime(event.start_at)} - ${formatDateTime(event.end_at)}`;
     };
 
     //날짜가 겹친지 확인하는 함수
@@ -99,6 +140,35 @@ export default function DayPage({ params }: Props) {
 
             return start < existingEnd && end > existingStart;
         });
+    };
+
+    const resetForm = () => {
+        setTitle('');
+        setDetail('');
+        setStartTime('');
+        setEndTime('');
+        setSelectedEventId(null);
+        setIsHidden(false);
+    };
+
+    const openEventForm = (event: CalendarEvent | null, start?: Date, end?: Date) => {
+        if (event) {
+            setSelectedEventId(String(event.id));
+            setTitle(event.title);
+            setDetail(event.detail || '');
+            setStartTime(formatTime(new Date(event.start_at)));
+            setEndTime(formatTime(new Date(event.end_at)));
+            setIsHidden(event.is_hidden);
+        } else {
+            resetForm();
+
+            if (start && end) {
+                setStartTime(formatTime(start));
+                setEndTime(formatTime(end));
+            }
+        }
+
+        setIsFormOpen(true);
     };
 
     // 사용자 조회
@@ -172,6 +242,39 @@ export default function DayPage({ params }: Props) {
         setEvents(data || []);
     }, [date, fetchVisiblePeople]);
 
+    const fetchComments = useCallback(async (eventId: string) => {
+        const { data, error } = await supabase
+            .from('comments')
+            .select(
+                `
+                id,
+                events_id,
+                profile_id,
+                contents,
+                created_at,
+                profile:profiles!comments_profile_id_fkey (
+                    id,
+                    nickname
+                )
+            `,
+            )
+            .eq('events_id', Number(eventId))
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error(error);
+            alert('댓글을 불러오지 못했습니다.');
+            return;
+        }
+
+        const normalizedComments = ((data || []) as CommentQueryRow[]).map((comment) => ({
+            ...comment,
+            profile: Array.isArray(comment.profile) ? comment.profile[0] || null : comment.profile,
+        }));
+
+        setComments(normalizedComments);
+    }, []);
+
     const handleSaveEvent = async () => {
         const start = new Date(`${date}T${startTime}`);
         const end = new Date(`${date}T${endTime}`);
@@ -181,14 +284,20 @@ export default function DayPage({ params }: Props) {
 
         if (!user) return;
         const trimmedTitle = title.trim();
+        const trimmedDetail = detail.trim();
 
         if (trimmedTitle.length < 1) {
-            alert('일정 내용을 입력해주세요.');
+            alert('일정 제목을 입력해주세요.');
             return;
         }
 
-        if (trimmedTitle.length > 50) {
-            alert('일정은 50자 이하만 가능합니다.');
+        if (trimmedTitle.length > EVENT_TITLE_MAX_LENGTH) {
+            alert(`일정 제목은 ${EVENT_TITLE_MAX_LENGTH}자 이하만 가능합니다.`);
+            return;
+        }
+
+        if (trimmedDetail.length > EVENT_DETAIL_MAX_LENGTH) {
+            alert(`세부내용은 ${EVENT_DETAIL_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -201,17 +310,17 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
+        const eventPayload = {
+            title: trimmedTitle,
+            detail: trimmedDetail || null,
+            start_at: start.toISOString(),
+            end_at: end.toISOString(),
+            is_hidden: isHidden,
+        };
+
         // 수정
         if (selectedEventId) {
-            const { error } = await supabase
-                .from('events')
-                .update({
-                    title: trimmedTitle,
-                    start_at: start.toISOString(),
-                    end_at: end.toISOString(),
-                    is_hidden: isHidden,
-                })
-                .eq('id', Number(selectedEventId));
+            const { error } = await supabase.from('events').update(eventPayload).eq('id', Number(selectedEventId));
 
             if (error) {
                 console.error(error);
@@ -222,11 +331,8 @@ export default function DayPage({ params }: Props) {
         // 생성
         else {
             const { error } = await supabase.from('events').insert({
-                title: trimmedTitle,
-                start_at: start.toISOString(),
-                end_at: end.toISOString(),
+                ...eventPayload,
                 user_id: user.id,
-                is_hidden: isHidden,
             });
 
             if (error) {
@@ -235,34 +341,29 @@ export default function DayPage({ params }: Props) {
             }
         }
 
-        // 초기화
-        setOpen(false);
-
-        setTitle('');
-        setIsHidden(false);
-
-        setSelectedEventId(null);
+        setIsFormOpen(false);
+        resetForm();
+        setDetailEvent(null);
 
         fetchEvents();
     };
 
-    const handleEventClick = (info: EventClickArg) => {
-        const event = info.event;
+    const handleEventClick = async (info: EventClickArg) => {
+        const selectedEvent = events.find((event) => String(event.id) === info.event.id);
 
-        setSelectedEventId(event.id);
+        if (!selectedEvent) return;
 
-        setTitle(event.title);
-        setIsHidden(Boolean(event.extendedProps.isHidden));
+        const isOwner = selectedEvent.user_id === myUserId;
 
-        if (!event.start || !event.end) {
-            alert('일정 시간 정보를 불러올 수 없습니다.');
+        if (!isOwner && selectedEvent.is_hidden) {
             return;
         }
 
-        setStartTime(formatTime(event.start));
-        setEndTime(formatTime(event.end));
-
-        setOpen(true);
+        setDetailEvent(selectedEvent);
+        setCommentInput('');
+        setEditingCommentId(null);
+        setEditingCommentInput('');
+        await fetchComments(selectedEvent.id);
     };
 
     const handleDeleteEvent = async () => {
@@ -272,6 +373,15 @@ export default function DayPage({ params }: Props) {
 
         if (!ok) return;
 
+        // comments FK에 cascade가 없으므로, 일정 삭제 전에 연결 댓글을 먼저 정리합니다.
+        const { error: commentDeleteError } = await supabase.from('comments').delete().eq('events_id', Number(selectedEventId));
+
+        if (commentDeleteError) {
+            console.error(commentDeleteError);
+            alert('댓글 삭제 실패');
+            return;
+        }
+
         const { error } = await supabase.from('events').delete().eq('id', Number(selectedEventId));
 
         if (error) {
@@ -280,29 +390,134 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
-        setOpen(false);
-
-        setSelectedEventId(null);
-        setIsHidden(false);
+        setIsFormOpen(false);
+        setDetailEvent(null);
+        resetForm();
 
         fetchEvents();
+    };
+
+    const handleEditFromDetail = () => {
+        if (!detailEvent || detailEvent.user_id !== myUserId) return;
+
+        openEventForm(detailEvent);
+    };
+
+    const handleCreateComment = async () => {
+        if (!detailEvent) return;
+
+        const trimmedComment = commentInput.trim();
+
+        if (!trimmedComment) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            return;
+        }
+
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) return;
+
+        const { error } = await supabase.from('comments').insert({
+            events_id: Number(detailEvent.id),
+            profile_id: user.id,
+            contents: trimmedComment,
+        });
+
+        if (error) {
+            console.error(error);
+            alert('댓글 등록 실패');
+            return;
+        }
+
+        setCommentInput('');
+        fetchComments(detailEvent.id);
+    };
+
+    const handleStartEditComment = (comment: CommentRow) => {
+        if (comment.profile_id !== myUserId) return;
+
+        setEditingCommentId(comment.id);
+        setEditingCommentInput(comment.contents || '');
+    };
+
+    const handleCancelEditComment = () => {
+        setEditingCommentId(null);
+        setEditingCommentInput('');
+    };
+
+    const handleUpdateComment = async (comment: CommentRow) => {
+        if (!detailEvent || comment.profile_id !== myUserId) return;
+
+        const trimmedComment = editingCommentInput.trim();
+
+        if (!trimmedComment) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            return;
+        }
+
+        const { error } = await supabase
+            .from('comments')
+            .update({
+                contents: trimmedComment,
+                modified_at: new Date().toISOString(),
+            })
+            .eq('id', comment.id)
+            .eq('events_id', comment.events_id)
+            .eq('profile_id', myUserId);
+
+        if (error) {
+            console.error(error);
+            alert('댓글 수정 실패');
+            return;
+        }
+
+        handleCancelEditComment();
+        fetchComments(detailEvent.id);
+    };
+
+    const handleDeleteComment = async (comment: CommentRow) => {
+        if (!detailEvent || comment.profile_id !== myUserId) return;
+
+        const ok = confirm('댓글을 삭제할까요?');
+
+        if (!ok) return;
+
+        const { error } = await supabase
+            .from('comments')
+            .delete()
+            .eq('id', comment.id)
+            .eq('events_id', comment.events_id)
+            .eq('profile_id', myUserId);
+
+        if (error) {
+            console.error(error);
+            alert('댓글 삭제 실패');
+            return;
+        }
+
+        if (editingCommentId === comment.id) {
+            handleCancelEditComment();
+        }
+
+        fetchComments(detailEvent.id);
     };
 
     // 이벤트 드래그하기
     const handleDateSelect = (info: DateSelectArg) => {
         unlockScroll();
-
-        setSelectedEventId(null);
-        setTitle('');
-        setIsHidden(false);
-
-        const start = new Date(info.start);
-        const end = new Date(info.end);
-
-        setStartTime(formatTime(start));
-        setEndTime(formatTime(end));
-
-        setOpen(true);
+        openEventForm(null, new Date(info.start), new Date(info.end));
     };
 
     // 이벤트 사이즈 변환
@@ -481,6 +696,7 @@ export default function DayPage({ params }: Props) {
                                             borderColor: eventColor,
                                             extendedProps: {
                                                 isHidden: event.is_hidden,
+                                                userId: event.user_id,
                                             },
                                         };
                                     })}
@@ -503,7 +719,7 @@ export default function DayPage({ params }: Props) {
                                     lockScroll();
                                     return true;
                                 }}
-                                eventClick={person.id === myUserId ? handleEventClick : undefined}
+                                eventClick={handleEventClick}
                                 eventResize={person.id === myUserId ? handleEventResize : undefined}
                                 eventDrop={person.id === myUserId ? handleEventDrop : undefined}
                                 displayEventTime={false}
@@ -512,18 +728,134 @@ export default function DayPage({ params }: Props) {
                     ))}
                 </div>
             </div>
-            {open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-                        <h2 className="mb-4 text-xl font-bold">일정 추가</h2>
+
+            {detailEvent && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+                        <div className="mb-4 flex items-start justify-between gap-3">
+                            <h2 className="text-xl font-bold">{detailEvent.title}</h2>
+
+                            <div className="flex gap-2">
+                                <button
+                                    className={`rounded bg-gray-900 px-3 py-1 text-sm text-white ${
+                                        detailEvent.user_id === myUserId ? '' : 'hidden'
+                                    }`}
+                                    onClick={handleEditFromDetail}
+                                >
+                                    수정
+                                </button>
+                                <button
+                                    className="rounded bg-gray-200 px-3 py-1 text-sm"
+                                    onClick={() => {
+                                        setDetailEvent(null);
+                                        handleCancelEditComment();
+                                    }}
+                                >
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+
+                        <p className="mb-4 text-sm text-gray-500">{formatEventDateTimeRange(detailEvent)}</p>
+
+                        <div className="mb-5 whitespace-pre-wrap rounded border bg-gray-50 p-3 text-sm text-gray-700">
+                            {detailEvent.detail || '세부내용이 없습니다.'}
+                        </div>
+
+                        <div className="mb-5 flex gap-2">
+                            <input
+                                className="flex-1 rounded border p-2 text-sm"
+                                placeholder="댓글을 입력하세요"
+                                value={commentInput}
+                                maxLength={COMMENT_MAX_LENGTH}
+                                onChange={(e) => setCommentInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleCreateComment();
+                                    }
+                                }}
+                            />
+                            <button className="rounded bg-black px-4 py-2 text-sm text-white" onClick={handleCreateComment}>
+                                등록
+                            </button>
+                        </div>
+                        <div className="-mt-4 mb-5 text-right text-xs text-gray-500">
+                            {commentInput.trim().length} / {COMMENT_MAX_LENGTH}
+                        </div>
+
+                        <div className="space-y-3">
+                            {comments.length === 0 && <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>}
+
+                            {comments.map((comment) => {
+                                const isMyComment = comment.profile_id === myUserId;
+                                const isEditing = editingCommentId === comment.id;
+
+                                return (
+                                    <div key={comment.id} className="rounded border p-3">
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <div>
+                                                <p className="text-sm font-semibold">{comment.profile?.nickname || '이름 없음'}</p>
+                                                <p className="text-xs text-gray-400">{formatDateTime(comment.created_at)}</p>
+                                            </div>
+
+                                            {isMyComment && !isEditing && (
+                                                <div className="flex gap-2 text-xs">
+                                                    <button className="text-gray-600" onClick={() => handleStartEditComment(comment)}>
+                                                        수정
+                                                    </button>
+                                                    <button className="text-red-500" onClick={() => handleDeleteComment(comment)}>
+                                                        삭제
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {isEditing ? (
+                                            <div className="mt-2">
+                                                <textarea
+                                                    className="min-h-20 w-full resize-y rounded border p-2 text-sm"
+                                                    value={editingCommentInput}
+                                                    maxLength={COMMENT_MAX_LENGTH}
+                                                    onChange={(e) => setEditingCommentInput(e.target.value)}
+                                                />
+                                                <div className="mt-1 text-right text-xs text-gray-500">
+                                                    {editingCommentInput.trim().length} / {COMMENT_MAX_LENGTH}
+                                                </div>
+                                                <div className="mt-2 flex justify-end gap-2">
+                                                    <button className="rounded bg-gray-200 px-3 py-1 text-xs" onClick={handleCancelEditComment}>
+                                                        취소
+                                                    </button>
+                                                    <button
+                                                        className="rounded bg-black px-3 py-1 text-xs text-white"
+                                                        onClick={() => handleUpdateComment(comment)}
+                                                    >
+                                                        저장
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="whitespace-pre-wrap text-sm text-gray-700">{comment.contents}</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isFormOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+                    <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+                        <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
 
                         <div className="mb-3">
-                            <p className="mb-1 text-sm">일정 내용</p>
+                            <p className="mb-1 text-sm">일정 제목</p>
 
                             <input
                                 className="w-full rounded border p-2"
                                 value={title}
-                                maxLength={50}
+                                maxLength={EVENT_TITLE_MAX_LENGTH}
                                 onChange={(e) => setTitle(e.target.value)}
                             />
                             <div
@@ -531,7 +863,25 @@ export default function DayPage({ params }: Props) {
                                     title.trim().length >= 45 ? 'text-red-500' : 'text-gray-500'
                                 }`}
                             >
-                                {title.trim().length} / 50
+                                {title.trim().length} / {EVENT_TITLE_MAX_LENGTH}
+                            </div>
+                        </div>
+
+                        <div className="mb-3">
+                            <p className="mb-1 text-sm">세부내용</p>
+
+                            <textarea
+                                className="min-h-28 w-full resize-y rounded border p-2"
+                                value={detail}
+                                maxLength={EVENT_DETAIL_MAX_LENGTH}
+                                onChange={(e) => setDetail(e.target.value)}
+                            />
+                            <div
+                                className={`mt-1 text-right text-xs ${
+                                    detail.trim().length >= 450 ? 'text-red-500' : 'text-gray-500'
+                                }`}
+                            >
+                                {detail.trim().length} / {EVENT_DETAIL_MAX_LENGTH}
                             </div>
                         </div>
 
@@ -581,7 +931,13 @@ export default function DayPage({ params }: Props) {
                             </div>
 
                             <div className="flex gap-2">
-                                <button className="rounded bg-gray-200 px-4 py-2" onClick={() => setOpen(false)}>
+                                <button
+                                    className="rounded bg-gray-200 px-4 py-2"
+                                    onClick={() => {
+                                        setIsFormOpen(false);
+                                        resetForm();
+                                    }}
+                                >
                                     취소
                                 </button>
 
