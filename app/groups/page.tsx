@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
     GROUP_LIMIT,
@@ -13,7 +14,9 @@ import {
     normalizeProfile,
     validateGroupName,
 } from '@/lib/groups';
+import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentProfile';
 
 type FriendshipRow = {
     requester_id: string;
@@ -31,6 +34,8 @@ type GroupMember = GroupRow & {
 };
 
 export default function GroupsPage() {
+    const queryClient = useQueryClient();
+    const currentUserQuery = useCurrentUser();
     const [myProfileId, setMyProfileId] = useState<string | null>(null);
     const [groups, setGroups] = useState<GroupRow[]>([]);
     const [members, setMembers] = useState<GroupMember[]>([]);
@@ -47,10 +52,16 @@ export default function GroupsPage() {
 
     const isSelectedGroupOwner = Boolean(selectedGroup?.is_owner);
 
+    const invalidateMyGroupCaches = async (profileId: string) => {
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.myGroups(profileId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.myAcceptedGroups(profileId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profileId) }),
+        ]);
+    };
+
     const fetchGroups = useCallback(async () => {
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
+        const user = currentUserQuery.data;
 
         if (!user) return;
 
@@ -69,7 +80,7 @@ export default function GroupsPage() {
         }
 
         setGroups((data || []) as GroupRow[]);
-    }, []);
+    }, [currentUserQuery.data]);
 
     const fetchMembers = useCallback(async (groupId: number) => {
         const { data, error } = await supabase
@@ -242,6 +253,7 @@ export default function GroupsPage() {
         setGroupName('');
         setIsNameChecked(false);
         setIsCreateOpen(false);
+        await invalidateMyGroupCaches(myProfileId);
         fetchGroups();
     };
 
@@ -269,6 +281,7 @@ export default function GroupsPage() {
         }
 
         const updatedGroup = { ...selectedGroup, group_name: editGroupName.trim() };
+        await Promise.all(members.map((member) => invalidateMyGroupCaches(member.profile_id)));
         setSelectedGroup(updatedGroup);
         await refreshSelectedGroup();
         alert('그룹 이름을 수정했습니다.');
@@ -300,6 +313,7 @@ export default function GroupsPage() {
             return;
         }
 
+        await Promise.all(members.map((member) => invalidateMyGroupCaches(member.profile_id)));
         setSelectedGroup(null);
         setMembers([]);
         fetchGroups();
@@ -314,6 +328,7 @@ export default function GroupsPage() {
             return;
         }
 
+        await invalidateMyGroupCaches(group.profile_id);
         fetchGroups();
     };
 
@@ -349,6 +364,7 @@ export default function GroupsPage() {
             setMembers([]);
         }
 
+        await invalidateMyGroupCaches(myProfileId);
         fetchGroups();
     };
 
@@ -383,6 +399,7 @@ export default function GroupsPage() {
             return;
         }
 
+        await Promise.all([invalidateMyGroupCaches(myProfileId), invalidateMyGroupCaches(member.profile_id)]);
         setSelectedGroup({ ...selectedGroup, is_owner: false });
         await refreshSelectedGroup();
     };
@@ -414,6 +431,7 @@ export default function GroupsPage() {
             return;
         }
 
+        await invalidateMyGroupCaches(member.profile_id);
         await refreshSelectedGroup();
     };
 
@@ -447,6 +465,7 @@ export default function GroupsPage() {
             return;
         }
 
+        await invalidateMyGroupCaches(friend.id);
         setIsInviteOpen(false);
         setFriendSearch('');
         await refreshSelectedGroup();

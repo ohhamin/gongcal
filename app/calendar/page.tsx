@@ -9,20 +9,24 @@ import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 
 import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
-import { supabase } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentProfile';
 
 export default function Home() {
     const router = useRouter();
+    const currentUserQuery = useCurrentUser();
     const [isCalendarLoading, setIsCalendarLoading] = useState(true);
 
     useEffect(() => {
-        const minimumLoadingTime = new Promise((resolve) => setTimeout(resolve, 1000));
-        const authCheck = supabase.auth.getUser().then(({ data: { user } }) => {
-            if (!user) router.push('/login');
-        });
+        const timer = setTimeout(() => setIsCalendarLoading(false), 1000);
 
-        Promise.all([minimumLoadingTime, authCheck]).finally(() => setIsCalendarLoading(false));
-    }, [router]);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        if (!currentUserQuery.isLoading && !currentUserQuery.data) {
+            router.push('/login');
+        }
+    }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
 
     const handleDateClick = (info: DateClickArg) => {
         router.push(`/day/${info.dateStr}`);
@@ -35,7 +39,7 @@ export default function Home() {
                 <GroupSelector />
             </div>
             <main className="p-5">
-                {isCalendarLoading ? (
+                {isCalendarLoading || currentUserQuery.isLoading ? (
                     <CalendarLoading />
                 ) : (
                     <FullCalendar

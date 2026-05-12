@@ -1,6 +1,6 @@
 {
     "name": "ourcal",
-    "version": "0.2.2",
+    "version": "0.2.4",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -14,9 +14,10 @@
         "@fullcalendar/interaction": "^6.1.20",
         "@fullcalendar/react": "^6.1.20",
         "@fullcalendar/timegrid": "^6.1.20",
+        "@supabase/ssr": "^0.10.3",
         "@supabase/supabase-js": "^2.105.4",
+        "@tanstack/react-query": "^5.100.10",
         "next": "16.2.6",
-        "node": "^26.1.0",
         "react": "19.2.4",
         "react-dom": "19.2.4"
     },
