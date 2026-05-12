@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.2.7 - 2026-05-12
+
+### 업데이트 내용
+
+- 월간 캘린더 상단의 이전/다음 화살표(`prev,next`)를 제거했습니다.
+- 시간 입력을 `<input type="time">` 대신 30분 단위 커스텀 드롭다운으로 변경했습니다.
+- 시간 관련 유틸(`START_TIME_SLOTS`, `END_TIME_SLOTS`, `formatDisplayTime`, `formatEndTimeWithDuration`, `getValidEndSlots`, `dateToTimeValue`, `timeValueToDate`, `isAllDayEvent`)을 `lib/timeSlots.ts`로 분리했습니다.
+- `components/TimeSelect.tsx` 컴포넌트를 추가해 시작 시간은 `오전 10:00`, 종료 시간은 `오후 1:00 (3시간)` 형식으로 표시하도록 했습니다.
+- 일정 폼에 `하루 종일` 체크박스를 추가했습니다. 체크 시 시작=`00:00`, 종료=`24:00`으로 설정하고 드롭다운을 비활성화하며, 해제 시 이전 시간으로 복원합니다.
+- README/package 기준 버전을 `v.0.2.6`에서 소규모 패치 버전 `v.0.2.7`로 업데이트했습니다.
+
+### 작업 메모
+
+- 종료 시간 슬롯은 선택된 시작 시간보다 늦은 값만 표시되므로 `start >= end` 상태로 저장될 수 없습니다.
+- `24:00`은 `timeValueToDate`에서 `T23:59:59`로 변환되며, `isAllDayEvent`는 이 패턴으로 하루 종일 여부를 판별합니다.
+
 ## v.0.2.6 - 2026-05-12
 
 ### 업데이트 내용
