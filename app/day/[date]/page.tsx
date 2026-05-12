@@ -177,7 +177,10 @@ export default function DayPage({ params }: Props) {
             data: { user },
         } = await supabase.auth.getUser();
 
-        if (!user) return [];
+        if (!user) {
+            router.push('/login');
+            return [];
+        }
 
         setMyUserId(user.id);
 
@@ -209,7 +212,7 @@ export default function DayPage({ params }: Props) {
             }) || [];
 
         return [myProfile, ...friends].filter(Boolean) as Person[];
-    }, []);
+    }, [router]);
 
     // 일정 조회
     const fetchEvents = useCallback(async () => {
@@ -301,12 +304,12 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
-        if (hasOverlap(start, end)) {
-            alert('이미 해당 시간에 일정이 있습니다.');
-            return;
-        }
         if (start >= end) {
             alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+            return;
+        }
+        if (hasOverlap(start, end)) {
+            alert('이미 해당 시간에 일정이 있습니다.');
             return;
         }
 
@@ -320,7 +323,7 @@ export default function DayPage({ params }: Props) {
 
         // 수정
         if (selectedEventId) {
-            const { error } = await supabase.from('events').update(eventPayload).eq('id', Number(selectedEventId));
+            const { error } = await supabase.from('events').update(eventPayload).eq('id', Number(selectedEventId)).eq('user_id', user.id);
 
             if (error) {
                 console.error(error);
@@ -367,7 +370,7 @@ export default function DayPage({ params }: Props) {
     };
 
     const handleDeleteEvent = async () => {
-        if (!selectedEventId) return;
+        if (!selectedEventId || !myUserId) return;
 
         const ok = confirm('일정을 삭제할까요?');
 
@@ -382,7 +385,7 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
-        const { error } = await supabase.from('events').delete().eq('id', Number(selectedEventId));
+        const { error } = await supabase.from('events').delete().eq('id', Number(selectedEventId)).eq('user_id', myUserId);
 
         if (error) {
             console.error(error);
@@ -530,6 +533,11 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
+        if (!myUserId) {
+            info.revert();
+            return;
+        }
+
         // 겹침 체크
         const overlap = events.some((event) => {
             if (event.user_id !== myUserId) {
@@ -560,7 +568,8 @@ export default function DayPage({ params }: Props) {
                 start_at: start.toISOString(),
                 end_at: end.toISOString(),
             })
-            .eq('id', Number(info.event.id));
+            .eq('id', Number(info.event.id))
+            .eq('user_id', myUserId);
 
         if (error) {
             console.error(error);
@@ -583,6 +592,11 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
+        if (!myUserId) {
+            info.revert();
+            return;
+        }
+
         // 겹침 체크
         const overlap = events.some((event) => {
             if (event.user_id !== myUserId) {
@@ -613,7 +627,8 @@ export default function DayPage({ params }: Props) {
                 start_at: start.toISOString(),
                 end_at: end.toISOString(),
             })
-            .eq('id', Number(info.event.id));
+            .eq('id', Number(info.event.id))
+            .eq('user_id', myUserId);
 
         if (error) {
             console.error(error);
@@ -890,7 +905,7 @@ export default function DayPage({ params }: Props) {
 
                             <input
                                 type="time"
-                                step="3600"
+                                step="1800"
                                 className="w-full rounded border p-2"
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
@@ -902,7 +917,7 @@ export default function DayPage({ params }: Props) {
 
                             <input
                                 type="time"
-                                step="3600"
+                                step="1800"
                                 className="w-full rounded border p-2"
                                 value={endTime}
                                 onChange={(e) => setEndTime(e.target.value)}
