@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.2.4 - 2026-05-12
+
+### 업데이트 내용
+
+- Supabase 브라우저 클라이언트에 `persistSession`, `autoRefreshToken`, `detectSessionInUrl` 옵션을 명시해 같은 기기 자동 로그인 유지 동작을 분명히 했습니다.
+- 설정 페이지를 클라이언트 컴포넌트로 전환하고 오른쪽 아래에 로그아웃 버튼을 추가했습니다.
+- 로그아웃 시 Supabase 세션을 종료하고 TanStack Query 캐시를 비운 뒤 로그인 페이지로 이동하도록 했습니다.
+- README/package 기준 버전을 `v.0.2.3`에서 소규모 패치 버전 `v.0.2.4`로 업데이트했습니다.
+
+### 작업 메모
+
+- 실제 세션 만료/refresh token 정책은 Supabase Auth 설정이 최종 기준입니다. 앱에서는 같은 브라우저 저장소의 세션 유지와 자동 refresh를 명시했습니다.
+
 ## v.0.2.3 - 2026-05-12
 
 ### 업데이트 내용
