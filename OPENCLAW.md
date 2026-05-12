@@ -16,7 +16,7 @@
 
 ### 작업 메모
 
-- `profiles.main_group_id` 컬럼이 nullable로 존재해야 하며, `groups.id` 하나에 여러 `profile_id` 멤버 row가 연결되는 구조를 기준으로 구현했습니다.
+- `profiles.main_group_id` 컬럼이 nullable로 존재해야 하며, `groups.id` + `groups.profile_id` 복합 키 구조를 기준으로 같은 `id`의 여러 멤버 row를 관리합니다.
 - 그룹 제한은 클라이언트 UX 가드입니다. 동시 초대/직접 API 호출까지 막으려면 Supabase RLS, unique constraint, trigger/RPC 보강이 필요합니다.
 
 ## v.0.1.3 - 2026-05-12
