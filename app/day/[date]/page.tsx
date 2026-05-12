@@ -8,6 +8,7 @@ import { DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { EventResizeDoneArg } from '@fullcalendar/interaction';
 
+import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
 import { normalizeProfile, Profile } from '@/lib/groups';
 import { supabase } from '@/lib/supabase';
@@ -61,6 +62,7 @@ export default function DayPage({ params }: Props) {
     const { date } = use(params);
 
     const [events, setEvents] = useState<CalendarEvent[]>([]);
+    const [isCalendarLoading, setIsCalendarLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
 
@@ -649,10 +651,13 @@ export default function DayPage({ params }: Props) {
         fetchEvents();
     };
 
-    // 첫 로딩
+    // 첫 로딩: FullCalendar 초기 렌더가 느리게 보이지 않도록 최소 1초 로딩 화면으로 가립니다.
     useEffect(() => {
         const load = async () => {
-            await fetchEvents();
+            const minimumLoadingTime = new Promise((resolve) => setTimeout(resolve, 1000));
+
+            await Promise.all([fetchEvents(), minimumLoadingTime]);
+            setIsCalendarLoading(false);
         };
 
         load();
@@ -666,33 +671,36 @@ export default function DayPage({ params }: Props) {
             </div>
 
             <div className="w-full">
-                <div
-                    className="grid w-full"
-                    style={{
-                        gridTemplateColumns: `44px repeat(${people.length}, minmax(0, 1fr))`,
-                    }}
-                >
-                    <div className="h-7 border-b" />
+                {isCalendarLoading ? (
+                    <CalendarLoading />
+                ) : (
+                    <div
+                        className="grid w-full"
+                        style={{
+                            gridTemplateColumns: `44px repeat(${people.length}, minmax(0, 1fr))`,
+                        }}
+                    >
+                        <div className="h-7 border-b" />
 
-                    {people.map((person) => (
-                        <div
-                            key={person.id}
-                            className="flex h-7 text-xs items-start justify-center border-b pr-2 text-xs text-gray-500"
-                        >
-                            {person.nickname || '이름 없음'}
-                        </div>
-                    ))}
-
-                    <div>
-                        {timeSlots.map((time) => (
-                            <div key={time} className="flex h-7 justify-end border-b pr-2 text-xs text-gray-500">
-                                {time}
+                        {people.map((person) => (
+                            <div
+                                key={person.id}
+                                className="flex h-7 items-start justify-center border-b pr-2 text-xs text-gray-500"
+                            >
+                                {person.nickname || '이름 없음'}
                             </div>
                         ))}
-                    </div>
 
-                    {people.map((person, index) => (
-                        <div key={person.id} className="min-w-0 border-l">
+                        <div>
+                            {timeSlots.map((time) => (
+                                <div key={time} className="flex h-7 justify-end border-b pr-2 text-xs text-gray-500">
+                                    {time}
+                                </div>
+                            ))}
+                        </div>
+
+                        {people.map((person, index) => (
+                            <div key={person.id} className="min-w-0 border-l">
                             <FullCalendar
                                 plugins={[timeGridPlugin, interactionPlugin]}
                                 initialView="timeGridDay"
@@ -743,9 +751,10 @@ export default function DayPage({ params }: Props) {
                                 eventDrop={person.id === myUserId ? handleEventDrop : undefined}
                                 displayEventTime={false}
                             />
-                        </div>
-                    ))}
-                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {detailEvent && (
