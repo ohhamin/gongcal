@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FRIEND_LIMIT, getFriendshipCountByProfileId } from '@/lib/friendships';
 import { supabase } from '@/lib/supabase';
+import { useCurrentUser } from '@/lib/useCurrentProfile';
 
 type Profile = {
     id: string;
@@ -27,6 +28,7 @@ type FriendItem = {
 };
 
 export default function FriendsPage() {
+    const currentUserQuery = useCurrentUser();
     const [friends, setFriends] = useState<FriendItem[]>([]);
 
     const [nickname, setNickname] = useState('');
@@ -36,10 +38,8 @@ export default function FriendsPage() {
     const [open, setOpen] = useState(false);
 
     // 친구 불러오기
-    const fetchFriends = async () => {
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
+    const fetchFriends = useCallback(async () => {
+        const user = currentUserQuery.data;
 
         if (!user) return;
 
@@ -80,7 +80,7 @@ export default function FriendsPage() {
             }) || [];
 
         setFriends(parsed);
-    };
+    }, [currentUserQuery.data]);
 
     // 친구 추가하기
     const handleAddFriend = async () => {
@@ -91,9 +91,7 @@ export default function FriendsPage() {
 
         setLoading(true);
 
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
+        const user = currentUserQuery.data;
 
         if (!user) {
             setLoading(false);
@@ -206,7 +204,7 @@ export default function FriendsPage() {
         };
 
         load();
-    }, []);
+    }, [fetchFriends]);
 
     return (
         <main className="min-h-screen bg-gray-50 p-5">

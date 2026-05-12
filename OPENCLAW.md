@@ -1,5 +1,22 @@
 # OPENCLAW
 
+## v.0.2.3 - 2026-05-12
+
+### 업데이트 내용
+
+- `@tanstack/react-query`, `@supabase/ssr`를 추가하고 앱 전체를 `QueryProvider`로 감쌌습니다.
+- `useCurrentUser`, `useMyProfile`, `useMyAcceptedGroups` 훅을 추가해 접속 유저/프로필/수락 그룹 정보를 공통 캐시로 재사용하도록 했습니다.
+- `GroupSelector`, 월간 캘린더, Day 페이지, 친구/그룹 페이지의 반복 `getUser` 호출을 공통 캐시 기반으로 줄였습니다.
+- Supabase SSR `middleware.ts`를 추가해 서버 라우팅 중 Auth 쿠키가 갱신되도록 했습니다.
+- `lib/supabase.ts`를 `createBrowserClient` 기준으로 변경해 SSR 쿠키 흐름과 맞췄습니다.
+- 로컬 npm script 실행을 방해하던 `node` 런타임 패키지 의존성을 제거했습니다.
+- README/package 기준 버전을 `v.0.2.2`에서 소규모 패치 버전 `v.0.2.3`으로 업데이트했습니다.
+
+### 작업 메모
+
+- 로그인 세션 만료 시간을 정확히 1시간으로 정하는 값은 코드가 아니라 Supabase Auth Dashboard의 JWT expiry 설정이 기준입니다. 이번 변경은 앱에서 세션 쿠키 갱신과 캐싱을 안정화하는 역할입니다.
+- Next.js 16 빌드에서 `middleware.ts` convention deprecation 경고가 표시됩니다. 현재 동작은 정상이며, 추후 Next 권장 방식인 `proxy.ts`로 전환하면 경고를 제거할 수 있습니다.
+
 ## v.0.2.2 - 2026-05-12
 
 ### 업데이트 내용
