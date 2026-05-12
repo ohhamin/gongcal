@@ -46,7 +46,7 @@ export default function Home() {
                         plugins={[dayGridPlugin, interactionPlugin]}
                         initialView="dayGridMonth"
                         headerToolbar={{
-                            left: 'prev,next',
+                            left: '',
                             center: 'title',
                             right: '',
                         }}
