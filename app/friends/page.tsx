@@ -27,17 +27,18 @@ type FriendItem = {
     friend: Profile;
 };
 
+const FRIEND_SEARCH_PAGE_SIZE = 20;
+
 export default function FriendsPage() {
     const currentUserQuery = useCurrentUser();
     const [friends, setFriends] = useState<FriendItem[]>([]);
-
     const [nickname, setNickname] = useState('');
-
+    const [searchResults, setSearchResults] = useState<Profile[]>([]);
+    const [searchPage, setSearchPage] = useState(0);
+    const [searchTotalCount, setSearchTotalCount] = useState(0);
     const [loading, setLoading] = useState(false);
-
     const [open, setOpen] = useState(false);
 
-    // 친구 불러오기
     const fetchFriends = useCallback(async () => {
         const user = currentUserQuery.data;
 
@@ -82,41 +83,65 @@ export default function FriendsPage() {
         setFriends(parsed);
     }, [currentUserQuery.data]);
 
-    // 친구 추가하기
-    const handleAddFriend = async () => {
-        if (friends.length >= FRIEND_LIMIT) {
-            alert(`친구는 최대 ${FRIEND_LIMIT}명까지 추가할 수 있습니다.`);
-            return false;
+    const searchProfiles = async (page = 0) => {
+        const user = currentUserQuery.data;
+        const trimmedNickname = nickname.trim();
+
+        if (!user || !trimmedNickname) {
+            setSearchResults([]);
+            setSearchTotalCount(0);
+            setSearchPage(0);
+            return;
         }
 
         setLoading(true);
 
+        const from = page * FRIEND_SEARCH_PAGE_SIZE;
+        const to = from + FRIEND_SEARCH_PAGE_SIZE - 1;
+
+        const { data, count, error } = await supabase
+            .from('profiles')
+            .select('id, nickname', { count: 'exact' })
+            .ilike('nickname', `%${trimmedNickname}%`)
+            .neq('id', user.id)
+            .order('nickname', { ascending: true })
+            .range(from, to);
+
+        setLoading(false);
+
+        if (error) {
+            console.error(error);
+            alert('사용자 검색 실패');
+            return;
+        }
+
+        setSearchResults((data || []) as Profile[]);
+        setSearchTotalCount(count || 0);
+        setSearchPage(page);
+    };
+
+    const handleRequestFriend = async (profile: Profile) => {
         const user = currentUserQuery.data;
 
-        if (!user) {
-            setLoading(false);
-            return false;
+        if (!user) return;
+
+        if (friends.length >= FRIEND_LIMIT) {
+            alert(`친구는 최대 ${FRIEND_LIMIT}명까지 추가할 수 있습니다.`);
+            return;
         }
 
-        // 닉네임 검색
-        const { data: profile } = await supabase.from('profiles').select('*').eq('nickname', nickname.trim()).single();
+        const alreadyFriend = friends.some((item) => item.friend.id === profile.id);
 
-        if (!profile) {
-            alert('사용자를 찾을 수 없습니다.');
-
-            setLoading(false);
-
-            return false;
+        if (alreadyFriend) {
+            alert('이미 친구인 사용자에요.');
+            return;
         }
 
-        // 자기 자신 방지
-        if (profile.id === user.id) {
-            alert('자기 자신은 추가할 수 없습니다.');
+        const ok = confirm('친구 요청을 보낼까요?');
 
-            setLoading(false);
+        if (!ok) return;
 
-            return false;
-        }
+        setLoading(true);
 
         let addresseeFriendCount = 0;
 
@@ -125,18 +150,14 @@ export default function FriendsPage() {
         } catch (error) {
             console.error(error);
             alert('친구 수 확인 실패');
-
             setLoading(false);
-
-            return false;
+            return;
         }
 
         if (addresseeFriendCount >= FRIEND_LIMIT) {
             alert(`친구가 ${FRIEND_LIMIT}명 이상 존재하는 유저에요`);
-
             setLoading(false);
-
-            return false;
+            return;
         }
 
         const { error } = await supabase.from('friendships').insert({
@@ -145,23 +166,16 @@ export default function FriendsPage() {
             status: 'pending',
         });
 
-        if (error) {
-            console.error(error);
-
-            alert('이미 친구이거나 요청이 존재합니다.');
-
-            setLoading(false);
-
-            return false;
-        }
-
-        setNickname('');
-
-        fetchFriends();
-
         setLoading(false);
 
-        return true;
+        if (error) {
+            console.error(error);
+            alert('이미 친구인 사용자에요.');
+            return;
+        }
+
+        await fetchFriends();
+        await searchProfiles(searchPage);
     };
 
     const handleAcceptFriend = async (friendshipId: number) => {
@@ -197,7 +211,14 @@ export default function FriendsPage() {
         fetchFriends();
     };
 
-    // 첫 로딩
+    const resetSearchModal = () => {
+        setOpen(false);
+        setNickname('');
+        setSearchResults([]);
+        setSearchPage(0);
+        setSearchTotalCount(0);
+    };
+
     useEffect(() => {
         const load = async () => {
             await fetchFriends();
@@ -205,6 +226,10 @@ export default function FriendsPage() {
 
         load();
     }, [fetchFriends]);
+
+    const totalPages = Math.ceil(searchTotalCount / FRIEND_SEARCH_PAGE_SIZE);
+    const canGoPrev = searchPage > 0;
+    const canGoNext = searchPage + 1 < totalPages;
 
     return (
         <main className="min-h-screen bg-gray-50 p-5">
@@ -252,36 +277,58 @@ export default function FriendsPage() {
                 ))}
             </div>
             {open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+                    <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+                        <button className="absolute top-4 right-4 rounded bg-gray-200 px-3 py-1 text-sm" onClick={resetSearchModal}>
+                            취소
+                        </button>
                         <h2 className="mb-4 text-xl font-bold">친구 추가</h2>
 
-                        <input
-                            className="mb-4 w-full rounded border p-3"
-                            placeholder="닉네임 입력"
-                            value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
-                        />
-
-                        <div className="flex justify-end gap-2">
-                            <button className="rounded bg-gray-200 px-4 py-2" onClick={() => setOpen(false)}>
-                                취소
-                            </button>
-
-                            <button
-                                className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400"
-                                onClick={async () => {
-                                    const added = await handleAddFriend();
-
-                                    if (added) {
-                                        setOpen(false);
+                        <div className="mb-4 flex gap-2 pr-16">
+                            <input
+                                className="min-w-0 flex-1 rounded border p-3"
+                                placeholder="닉네임 입력"
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        searchProfiles(0);
                                     }
                                 }}
-                                disabled={loading}
-                            >
-                                추가
+                            />
+                            <button className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400" onClick={() => searchProfiles(0)} disabled={loading}>
+                                검색
                             </button>
                         </div>
+
+                        <div className="max-h-80 space-y-2 overflow-y-auto">
+                            {searchResults.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">검색 결과가 없습니다.</p>}
+                            {searchResults.map((profile) => (
+                                <button
+                                    key={profile.id}
+                                    className="flex w-full items-center justify-between rounded border p-3 text-left hover:bg-gray-50"
+                                    onClick={() => handleRequestFriend(profile)}
+                                    disabled={loading}
+                                >
+                                    <span className="font-semibold">{profile.nickname || '이름 없음'}</span>
+                                    <span className="text-xs text-gray-500">친구 요청</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {searchTotalCount > FRIEND_SEARCH_PAGE_SIZE && (
+                            <div className="mt-4 flex items-center justify-between text-sm">
+                                <button className="rounded bg-gray-200 px-3 py-2 disabled:opacity-40" onClick={() => searchProfiles(searchPage - 1)} disabled={!canGoPrev || loading}>
+                                    이전
+                                </button>
+                                <span className="text-gray-500">
+                                    {searchPage + 1} / {totalPages}
+                                </span>
+                                <button className="rounded bg-gray-200 px-3 py-2 disabled:opacity-40" onClick={() => searchProfiles(searchPage + 1)} disabled={!canGoNext || loading}>
+                                    다음
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

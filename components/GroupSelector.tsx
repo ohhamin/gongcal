@@ -8,7 +8,7 @@ import { useMyAcceptedGroups } from '@/lib/useMyAcceptedGroups';
 import { useMyProfile } from '@/lib/useCurrentProfile';
 
 type Props = {
-    onChange?: () => void;
+    onChange?: (nextMainGroupId: number | null) => void;
 };
 
 export default function GroupSelector({ onChange }: Props) {
@@ -31,11 +31,11 @@ export default function GroupSelector({ onChange }: Props) {
             ...profile,
             main_group_id: nextMainGroupId,
         });
+        onChange?.(nextMainGroupId);
 
         try {
             await updateMainGroup(profile.id, nextMainGroupId);
             await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
-            onChange?.();
         } catch (error) {
             console.error(error);
             alert('그룹 변경 실패');
