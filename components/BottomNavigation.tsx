@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
-    { href: '/calendar', label: '캘린더' },
-    { href: '/friends', label: '친구관리' },
-    { href: '/groups', label: '그룹관리' },
-    { href: '/settings', label: '설정' },
+    { href: '/calendar', label: '📅', title: '캘린더' },
+    { href: '/friends', label: '🤝', title: '친구관리' },
+    { href: '/groups', label: '👥', title: '그룹관리' },
+    { href: '/settings', label: '⚙️', title: '설정' },
 ];
 
 const HIDDEN_PREFIXES = ['/login', '/auth', '/setup-profile'];
@@ -29,11 +29,13 @@ export default function BottomNavigation() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`px-2 py-3 text-center text-sm font-semibold ${
-                                isActive ? 'text-black' : 'text-gray-400'
+                            className={`px-2 py-3 text-center text-2xl font-semibold ${
+                                isActive ? 'opacity-100' : 'opacity-35'
                             }`}
+                            title={item.title}
+                            aria-label={item.title}
                         >
-                            {item.label}
+                            <span aria-hidden="true">{item.label}</span>
                         </Link>
                     );
                 })}
