@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { FRIEND_LIMIT, getFriendshipCountByProfileId } from '@/lib/friendships';
 import { supabase } from '@/lib/supabase';
 
@@ -28,8 +27,6 @@ type FriendItem = {
 };
 
 export default function FriendsPage() {
-    const router = useRouter();
-
     const [friends, setFriends] = useState<FriendItem[]>([]);
 
     const [nickname, setNickname] = useState('');
@@ -137,7 +134,7 @@ export default function FriendsPage() {
         }
 
         if (addresseeFriendCount >= FRIEND_LIMIT) {
-            alert('친구가 3명 이상 존재하는 유저에요');
+            alert(`친구가 ${FRIEND_LIMIT}명 이상 존재하는 유저에요`);
 
             setLoading(false);
 
@@ -215,11 +212,6 @@ export default function FriendsPage() {
         <main className="min-h-screen bg-gray-50 p-5">
             <div className="mb-2 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">친구</h1>
-                <div className="flex gap-2">
-                    <button className="rounded bg-black px-4 py-2 text-white" onClick={() => router.push('/calendar')}>
-                        캘린더
-                    </button>
-                </div>
             </div>
             <div className="mb-2 flex items-center justify-end">
                 <button
@@ -230,8 +222,6 @@ export default function FriendsPage() {
                     친구 추가
                 </button>
             </div>
-            <p className="text-sm text-gray-500">최대 {FRIEND_LIMIT}명의 친구와 일정을 공유할 수 있어요.</p>
-
             <div className="space-y-3">
                 {friends.map((item) => (
                     <div key={item.friendshipId} className="flex items-center justify-between rounded-xl border p-4">
