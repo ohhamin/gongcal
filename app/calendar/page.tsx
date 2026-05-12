@@ -613,42 +613,50 @@ export default function CalendarPage() {
                 />
             </div>
 
-            <div className="min-h-0 flex-1">
-                {isCalendarLoading || currentUserQuery.isLoading || profileQuery.isLoading ? (
+            <div className="relative min-h-0 flex-1">
+                {currentUserQuery.isLoading || profileQuery.isLoading ? (
                     <CalendarLoading />
                 ) : (
-                    <FullCalendar
-                        key={profileQuery.data?.main_group_id || 'personal'}
-                        plugins={[dayGridPlugin, interactionPlugin]}
-                        initialView="dayGridMonth"
-                        headerToolbar={{ left: '', center: 'title', right: '' }}
-                        height="100%"
-                        expandRows={true}
-                        fixedWeekCount={false}
-                        events={calendarEvents}
-                        dateClick={handleDateClick}
-                        eventClick={handleEventClick}
-                        dayMaxEvents={4}
-                        moreLinkContent={(args) => `+${args.num}`}
-                        moreLinkClick={(arg) => {
-                            setPopupDate(formatLocalDateString(arg.date));
-                            return 'none';
-                        }}
-                        datesSet={(arg) => {
-                            setVisibleRange((prev) => {
-                                if (
-                                    prev &&
-                                    prev.start.getTime() === arg.start.getTime() &&
-                                    prev.end.getTime() === arg.end.getTime()
-                                ) {
-                                    return prev;
-                                }
-                                return { start: arg.start, end: arg.end };
-                            });
-                        }}
-                        displayEventTime={false}
-                        eventDisplay="block"
-                    />
+                    <>
+                        <FullCalendar
+                            key={profileQuery.data?.main_group_id || 'personal'}
+                            plugins={[dayGridPlugin, interactionPlugin]}
+                            initialView="dayGridMonth"
+                            headerToolbar={{ left: '', center: 'title', right: '' }}
+                            height="100%"
+                            expandRows={true}
+                            fixedWeekCount={false}
+                            events={calendarEvents}
+                            dateClick={handleDateClick}
+                            eventClick={handleEventClick}
+                            dayMaxEvents={4}
+                            moreLinkContent={(args) => `+${args.num}`}
+                            moreLinkClick={(arg) => {
+                                setPopupDate(formatLocalDateString(arg.date));
+                                return 'none';
+                            }}
+                            datesSet={(arg) => {
+                                setVisibleRange((prev) => {
+                                    if (
+                                        prev &&
+                                        prev.start.getTime() === arg.start.getTime() &&
+                                        prev.end.getTime() === arg.end.getTime()
+                                    ) {
+                                        return prev;
+                                    }
+                                    return { start: arg.start, end: arg.end };
+                                });
+                            }}
+                            displayEventTime={false}
+                            eventDisplay="block"
+                        />
+
+                        {isCalendarLoading && (
+                            <div className="absolute inset-0 z-10 bg-white">
+                                <CalendarLoading />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
