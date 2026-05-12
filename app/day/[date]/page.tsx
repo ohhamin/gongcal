@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import { DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
@@ -10,8 +10,17 @@ import interactionPlugin, { EventResizeDoneArg } from '@fullcalendar/interaction
 
 import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
+import TimeSelect from '@/components/TimeSelect';
 import { normalizeProfile, Profile } from '@/lib/groups';
 import { supabase } from '@/lib/supabase';
+import {
+    START_TIME_SLOTS,
+    getValidEndSlots,
+    dateToTimeValue,
+    timeValueToDate,
+    isAllDayEvent,
+    type TimeValue,
+} from '@/lib/timeSlots';
 import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
 
 type Props = {
@@ -72,8 +81,11 @@ export default function DayPage({ params }: Props) {
     const [title, setTitle] = useState('');
     const [detail, setDetail] = useState('');
 
-    const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
+    const [startTime, setStartTime] = useState<TimeValue>('09:00');
+    const [endTime, setEndTime] = useState<TimeValue>('10:00');
+    const [isAllDay, setIsAllDay] = useState(false);
+    const prevStartTimeRef = useRef<TimeValue>('09:00');
+    const prevEndTimeRef = useRef<TimeValue>('10:00');
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const [isHidden, setIsHidden] = useState(false);
     const [myUserId, setMyUserId] = useState<string | null>(null);
@@ -84,28 +96,12 @@ export default function DayPage({ params }: Props) {
 
     const colors = ['#3B82F6', '#d6a212ff', '#10B981', '#EF4444'];
 
-    const timeSlots = Array.from({ length: 48 }, (_, i) => {
-        const hour = Math.floor(i / 2);
-        const minute = i % 2 === 0 ? '00' : '30';
-
-        return `${String(hour).padStart(2, '0')}:${minute}`;
-    });
-
     const lockScroll = () => {
         document.body.style.overflow = 'hidden';
     };
 
     const unlockScroll = () => {
         document.body.style.overflow = '';
-    };
-
-    // 날짜 변환
-    const formatTime = (targetDate: Date) => {
-        return targetDate.toLocaleTimeString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-        });
     };
 
     const formatDateTime = (value: string | null) => {
@@ -125,7 +121,6 @@ export default function DayPage({ params }: Props) {
         return `${formatDateTime(event.start_at)} - ${formatDateTime(event.end_at)}`;
     };
 
-    //날짜가 겹친지 확인하는 함수
     const hasOverlap = (start: Date, end: Date) => {
         return events.some((event) => {
             if (event.user_id !== myUserId) {
@@ -146,8 +141,9 @@ export default function DayPage({ params }: Props) {
     const resetForm = () => {
         setTitle('');
         setDetail('');
-        setStartTime('');
-        setEndTime('');
+        setStartTime('09:00');
+        setEndTime('10:00');
+        setIsAllDay(false);
         setSelectedEventId(null);
         setIsHidden(false);
     };
@@ -157,19 +153,39 @@ export default function DayPage({ params }: Props) {
             setSelectedEventId(String(event.id));
             setTitle(event.title);
             setDetail(event.detail || '');
-            setStartTime(formatTime(new Date(event.start_at)));
-            setEndTime(formatTime(new Date(event.end_at)));
+            const allDay = isAllDayEvent(event.start_at, event.end_at);
+            setIsAllDay(allDay);
+            if (allDay) {
+                setStartTime('00:00');
+                setEndTime('24:00');
+            } else {
+                setStartTime(dateToTimeValue(new Date(event.start_at)));
+                setEndTime(dateToTimeValue(new Date(event.end_at)));
+            }
             setIsHidden(event.is_hidden);
         } else {
             resetForm();
 
             if (start && end) {
-                setStartTime(formatTime(start));
-                setEndTime(formatTime(end));
+                setStartTime(dateToTimeValue(start));
+                setEndTime(dateToTimeValue(end));
             }
         }
 
         setIsFormOpen(true);
+    };
+
+    const handleAllDayChange = (checked: boolean) => {
+        if (checked) {
+            prevStartTimeRef.current = startTime;
+            prevEndTimeRef.current = endTime;
+            setStartTime('00:00');
+            setEndTime('24:00');
+        } else {
+            setStartTime(prevStartTimeRef.current || '09:00');
+            setEndTime(prevEndTimeRef.current || '10:00');
+        }
+        setIsAllDay(checked);
     };
 
     // 사용자 조회: TanStack Query에 캐시된 내 프로필을 기준으로 표시 대상을 계산합니다.
@@ -278,8 +294,8 @@ export default function DayPage({ params }: Props) {
     }, []);
 
     const handleSaveEvent = async () => {
-        const start = new Date(`${date}T${startTime}`);
-        const end = new Date(`${date}T${endTime}`);
+        const start = timeValueToDate(date, startTime);
+        const end = timeValueToDate(date, endTime);
         const {
             data: { user },
         } = await supabase.auth.getUser();
@@ -537,7 +553,6 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
-        // 겹침 체크
         const overlap = events.some((event) => {
             if (event.user_id !== myUserId) {
                 return false;
@@ -596,7 +611,6 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
-        // 겹침 체크
         const overlap = events.some((event) => {
             if (event.user_id !== myUserId) {
                 return false;
@@ -709,7 +723,7 @@ export default function DayPage({ params }: Props) {
                         ))}
 
                         <div>
-                            {timeSlots.map((time) => (
+                            {START_TIME_SLOTS.map((time) => (
                                 <div key={time} className="flex h-7 justify-end border-b pr-2 text-xs text-gray-500">
                                     {time}
                                 </div>
@@ -931,27 +945,41 @@ export default function DayPage({ params }: Props) {
                             </div>
                         </div>
 
+                        <label className="mb-3 flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={isAllDay}
+                                onChange={(e) => handleAllDayChange(e.target.checked)}
+                            />
+                            하루 종일
+                        </label>
+
                         <div className="mb-3">
                             <p className="mb-1 text-sm">시작 시간</p>
 
-                            <input
-                                type="time"
-                                step="1800"
-                                className="w-full rounded border p-2"
+                            <TimeSelect
                                 value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
+                                slots={START_TIME_SLOTS}
+                                onChange={(val) => {
+                                    setStartTime(val);
+                                    const validEnds = getValidEndSlots(val);
+                                    if (!validEnds.includes(endTime)) {
+                                        setEndTime(validEnds[0] ?? '');
+                                    }
+                                }}
+                                disabled={isAllDay}
                             />
                         </div>
 
                         <div className="mb-3">
                             <p className="mb-1 text-sm">종료 시간</p>
 
-                            <input
-                                type="time"
-                                step="1800"
-                                className="w-full rounded border p-2"
+                            <TimeSelect
                                 value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
+                                slots={getValidEndSlots(startTime)}
+                                onChange={setEndTime}
+                                startTime={startTime}
+                                disabled={isAllDay}
                             />
                         </div>
 
