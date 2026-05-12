@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
-import { EventClickArg } from '@fullcalendar/core';
+import { DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
 import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
@@ -31,6 +31,7 @@ type CalendarEvent = {
     end_at: string;
     user_id: string;
     is_hidden: boolean;
+    is_allday: boolean;
 };
 
 type Person = Profile;
@@ -76,6 +77,24 @@ function formatPopupDate(dateStr: string): string {
     return `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일`;
 }
 
+function addDays(date: Date, days: number): Date {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+}
+
+function getTodayString(): string {
+    return formatLocalDateString(new Date());
+}
+
+function formatEventTimeLabel(event: CalendarEvent): string {
+    return event.is_allday ? '하루 종일' : `${formatHourMinute(event.start_at)} - ${formatHourMinute(event.end_at)}`;
+}
+
+function isSameDate(start: string, end: string): boolean {
+    return start === end;
+}
+
 function formatHourMinute(value: string): string {
     const d = new Date(value);
     const hour = String(d.getHours()).padStart(2, '0');
@@ -108,7 +127,8 @@ export default function CalendarPage() {
     const [popupDate, setPopupDate] = useState<string | null>(null);
 
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [formDate, setFormDate] = useState<string | null>(null);
+    const [startDate, setStartDate] = useState(getTodayString());
+    const [endDate, setEndDate] = useState(getTodayString());
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [detail, setDetail] = useState('');
@@ -117,7 +137,7 @@ export default function CalendarPage() {
     const [isAllDay, setIsAllDay] = useState(false);
     const prevStartTimeRef = useRef<TimeValue>(DEFAULT_START_TIME);
     const prevEndTimeRef = useRef<TimeValue>(DEFAULT_END_TIME);
-    const [isHidden, setIsHidden] = useState(false);
+    const [isHidden, setIsHidden] = useState(true);
 
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
     const [comments, setComments] = useState<CommentRow[]>([]);
@@ -189,8 +209,8 @@ export default function CalendarPage() {
             .from('events')
             .select('*')
             .in('user_id', peopleIds)
-            .gte('start_at', visibleRange.start.toISOString())
-            .lt('start_at', visibleRange.end.toISOString());
+            .lt('start_at', visibleRange.end.toISOString())
+            .gte('end_at', visibleRange.start.toISOString());
 
         if (error) {
             console.error(error);
@@ -233,7 +253,11 @@ export default function CalendarPage() {
 
     const getEventsForDate = (dateStr: string): CalendarEvent[] => {
         return events
-            .filter((event) => formatLocalDateString(new Date(event.start_at)) === dateStr)
+            .filter((event) => {
+                const dayStart = new Date(`${dateStr}T00:00:00`);
+                const dayEnd = new Date(`${dateStr}T23:59:59`);
+                return new Date(event.start_at) <= dayEnd && new Date(event.end_at) >= dayStart;
+            })
             .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
     };
 
@@ -253,23 +277,41 @@ export default function CalendarPage() {
         setDetail('');
         setStartTime(DEFAULT_START_TIME);
         setEndTime(DEFAULT_END_TIME);
+        const today = getTodayString();
+        setStartDate(today);
+        setEndDate(today);
         setIsAllDay(false);
         setSelectedEventId(null);
-        setIsHidden(false);
+        setIsHidden(true);
     };
 
-    const openCreateForm = (dateStr: string) => {
+    const openCreateForm = (dateStr = getTodayString(), targetEndDate = dateStr, allDay = false) => {
         resetForm();
-        setFormDate(dateStr);
+        setStartDate(dateStr);
+        setEndDate(targetEndDate);
+
+        if (allDay) {
+            setStartTime('00:00');
+            setEndTime('24:00');
+            setIsAllDay(true);
+        }
+
         setIsFormOpen(true);
+    };
+
+    const openCreateFormFromSelect = (info: DateSelectArg) => {
+        const selectedStart = formatLocalDateString(info.start);
+        const selectedEnd = formatLocalDateString(addDays(info.end, -1));
+        openCreateForm(selectedStart, selectedEnd, true);
     };
 
     const openEditForm = (event: CalendarEvent) => {
         setSelectedEventId(String(event.id));
-        setFormDate(formatLocalDateString(new Date(event.start_at)));
+        setStartDate(formatLocalDateString(new Date(event.start_at)));
+        setEndDate(formatLocalDateString(new Date(event.end_at)));
         setTitle(event.title);
         setDetail(event.detail || '');
-        const allDay = isAllDayEvent(event.start_at, event.end_at);
+        const allDay = event.is_allday || isAllDayEvent(event.start_at, event.end_at);
         setIsAllDay(allDay);
         if (allDay) {
             setStartTime('00:00');
@@ -296,10 +338,10 @@ export default function CalendarPage() {
     };
 
     const handleSaveEvent = async () => {
-        if (!formDate) return;
+        if (!startDate || !endDate) return;
 
-        const start = timeValueToDate(formDate, startTime);
-        const end = timeValueToDate(formDate, endTime);
+        const start = timeValueToDate(startDate, startTime);
+        const end = timeValueToDate(endDate, endTime);
 
         const {
             data: { user },
@@ -341,6 +383,7 @@ export default function CalendarPage() {
             start_at: start.toISOString(),
             end_at: end.toISOString(),
             is_hidden: isHidden,
+            is_allday: isAllDay,
         };
 
         if (selectedEventId) {
@@ -456,9 +499,14 @@ export default function CalendarPage() {
     };
 
     const handleEventClick = (info: EventClickArg) => {
-        const target = events.find((event) => String(event.id) === info.event.id);
-        if (!target) return;
-        openDetail(target);
+        info.jsEvent.preventDefault();
+
+        // 여러 날짜에 걸친 이벤트는 실제로 누른 날짜 칸의 목록을 열어야 합니다.
+        const targetElement = info.jsEvent.target as HTMLElement | null;
+        const dayCell = targetElement?.closest('[data-date]');
+        const clickedDate = dayCell?.getAttribute('data-date');
+
+        setPopupDate(clickedDate || formatLocalDateString(info.event.start || new Date()));
     };
 
     const handleListEventClick = (event: CalendarEvent) => {
@@ -573,6 +621,12 @@ export default function CalendarPage() {
         fetchComments(detailEvent.id);
     };
 
+    const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
+
+    const getEndTimeSlots = () => {
+        return isSameDate(startDate, endDate) ? getValidEndSlots(startTime) : START_TIME_SLOTS.concat('24:00');
+    };
+
     const calendarEvents = events.map((event) => {
         const isOwner = event.user_id === myUserId;
         const baseColor = isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
@@ -589,19 +643,20 @@ export default function CalendarPage() {
             extendedProps: {
                 isHidden: event.is_hidden,
                 userId: event.user_id,
+                ownerName: ownerNameById.get(event.user_id) || '',
+                isOwner,
             },
         };
     });
 
     const popupEvents = popupDate ? getEventsForDate(popupDate) : [];
-    const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
 
     return (
         <div
-            className="flex flex-col rounded-2xl bg-white p-3 shadow"
-            style={{ height: 'calc(100vh - 6.5rem)' }}
+            className="flex flex-col bg-white"
+            style={{ height: 'calc(100vh - 5.5rem)' }}
         >
-            <div className="mb-2 flex shrink-0 items-center justify-between gap-3 px-1">
+            <div className="mb-1 flex shrink-0 items-center justify-between gap-3 px-1">
                 <h1 className="text-xl font-bold">우리캘린더</h1>
                 <GroupSelector
                     onChange={() => {
@@ -629,7 +684,10 @@ export default function CalendarPage() {
                             events={calendarEvents}
                             dateClick={handleDateClick}
                             eventClick={handleEventClick}
-                            dayMaxEvents={4}
+                            selectable={true}
+                            selectLongPressDelay={300}
+                            select={openCreateFormFromSelect}
+                            dayMaxEvents={3}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
                                 setPopupDate(formatLocalDateString(arg.date));
@@ -649,6 +707,17 @@ export default function CalendarPage() {
                             }}
                             displayEventTime={false}
                             eventDisplay="block"
+                            eventContent={(arg) => {
+                                const ownerName = arg.event.extendedProps.ownerName as string;
+                                const isOwner = arg.event.extendedProps.isOwner as boolean;
+
+                                return (
+                                    <div className="leading-tight">
+                                        <div className="truncate text-[10px] font-semibold">{arg.event.title}</div>
+                                        {!isOwner && ownerName && <div className="truncate text-[9px] opacity-90">{ownerName}</div>}
+                                    </div>
+                                );
+                            }}
                         />
 
                         {isCalendarLoading && (
@@ -662,7 +731,7 @@ export default function CalendarPage() {
 
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4">
-                    <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-xl">
+                    <div className="flex h-[65vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-xl">
                         <div className="flex shrink-0 items-center justify-between border-b p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
                             <button
@@ -703,7 +772,7 @@ export default function CalendarPage() {
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-semibold">{displayTitle}</p>
                                                         <p className="text-xs text-gray-500">
-                                                            {formatHourMinute(event.start_at)} - {formatHourMinute(event.end_at)}
+                                                            {formatEventTimeLabel(event)}
                                                             {!isOwner && ownerName ? ` · ${ownerName}` : ''}
                                                         </p>
                                                     </div>
@@ -755,7 +824,9 @@ export default function CalendarPage() {
                         </div>
 
                         <p className="mb-4 text-sm text-gray-500">
-                            {formatDateTimeText(detailEvent.start_at)} - {formatDateTimeText(detailEvent.end_at)}
+                            {detailEvent.is_allday
+                                ? `하루 종일 · ${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`
+                                : `${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`}
                         </p>
 
                         <div className="mb-5 whitespace-pre-wrap rounded border bg-gray-50 p-3 text-sm text-gray-700">
@@ -864,16 +935,20 @@ export default function CalendarPage() {
                 </div>
             )}
 
+            <button
+                className="fixed right-5 bottom-20 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-black text-2xl font-bold text-white shadow-lg"
+                aria-label="일정 추가"
+                onClick={() => openCreateForm()}
+            >
+                +
+            </button>
+
             {isFormOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+                    <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
                         <h2 className="mb-4 text-xl font-bold">
                             {selectedEventId ? '일정 수정' : '일정 추가'}
-                            {formDate && (
-                                <span className="ml-2 text-sm font-normal text-gray-500">
-                                    {formatPopupDate(formDate)}
-                                </span>
-                            )}
+
                         </h2>
 
                         <div className="mb-3">
@@ -910,50 +985,67 @@ export default function CalendarPage() {
                             </div>
                         </div>
 
-                        <label className="mb-3 flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={isAllDay}
-                                onChange={(e) => handleAllDayChange(e.target.checked)}
-                            />
-                            하루 종일
-                        </label>
+                        <div className="mb-3 grid grid-cols-2 gap-2">
+                            <div>
+                                <p className="mb-1 text-sm">시작 날짜</p>
+                                <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                            </div>
+                            <div>
+                                <p className="mb-1 text-sm">종료 날짜</p>
+                                <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                            </div>
+                        </div>
 
-                        <div className="mb-3">
-                            <p className="mb-1 text-sm">시작 시간</p>
-                            <TimeSelect
+                        <div className="mb-3 grid grid-cols-2 gap-2">
+                            <div>
+                                <p className="mb-1 text-sm">시작 시간</p>
+                                <TimeSelect
                                 value={startTime}
                                 slots={START_TIME_SLOTS}
                                 onChange={(val) => {
                                     setStartTime(val);
-                                    const validEnds = getValidEndSlots(val);
+                                    const validEnds = isSameDate(startDate, endDate)
+                                        ? getValidEndSlots(val)
+                                        : START_TIME_SLOTS.concat('24:00');
                                     if (!validEnds.includes(endTime)) {
                                         setEndTime(validEnds[0] ?? '');
                                     }
                                 }}
-                                disabled={isAllDay}
-                            />
-                        </div>
+                                    disabled={isAllDay}
+                                />
+                            </div>
 
-                        <div className="mb-3">
-                            <p className="mb-1 text-sm">종료 시간</p>
-                            <TimeSelect
+                            <div>
+                                <p className="mb-1 text-sm">종료 시간</p>
+                                <TimeSelect
                                 value={endTime}
-                                slots={getValidEndSlots(startTime)}
+                                slots={getEndTimeSlots()}
                                 onChange={setEndTime}
                                 startTime={startTime}
-                                disabled={isAllDay}
-                            />
+                                    disabled={isAllDay}
+                                />
+                            </div>
                         </div>
 
-                        <label className="mb-5 flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={isHidden}
-                                onChange={(e) => setIsHidden(e.target.checked)}
-                            />
-                            친구에게 숨기기
-                        </label>
+                        <div className="mb-5 flex items-center justify-between gap-3 text-sm">
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={isAllDay}
+                                    onChange={(e) => handleAllDayChange(e.target.checked)}
+                                />
+                                하루 종일
+                            </label>
+
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={!isHidden}
+                                    onChange={(e) => setIsHidden(!e.target.checked)}
+                                />
+                                상세 일정 함께 보기
+                            </label>
+                        </div>
 
                         <div className="flex items-center justify-between">
                             <div>
