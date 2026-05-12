@@ -20,7 +20,7 @@ type Props = {
 type CalendarEvent = {
     id: string;
     title: string;
-    detaile: string | null;
+    detail: string | null;
     start_at: string;
     end_at: string;
     user_id: string;
@@ -77,6 +77,8 @@ export default function DayPage({ params }: Props) {
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [comments, setComments] = useState<CommentRow[]>([]);
     const [commentInput, setCommentInput] = useState('');
+    const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+    const [editingCommentInput, setEditingCommentInput] = useState('');
 
     const colors = ['#3B82F6', '#d6a212ff', '#10B981', '#EF4444'];
 
@@ -152,7 +154,7 @@ export default function DayPage({ params }: Props) {
         if (event) {
             setSelectedEventId(String(event.id));
             setTitle(event.title);
-            setDetail(event.detaile || '');
+            setDetail(event.detail || '');
             setStartTime(formatTime(new Date(event.start_at)));
             setEndTime(formatTime(new Date(event.end_at)));
             setIsHidden(event.is_hidden);
@@ -309,7 +311,7 @@ export default function DayPage({ params }: Props) {
 
         const eventPayload = {
             title: trimmedTitle,
-            detaile: trimmedDetail || null,
+            detail: trimmedDetail || null,
             start_at: start.toISOString(),
             end_at: end.toISOString(),
             is_hidden: isHidden,
@@ -358,6 +360,8 @@ export default function DayPage({ params }: Props) {
 
         setDetailEvent(selectedEvent);
         setCommentInput('');
+        setEditingCommentId(null);
+        setEditingCommentInput('');
         await fetchComments(selectedEvent.id);
     };
 
@@ -427,6 +431,75 @@ export default function DayPage({ params }: Props) {
         }
 
         setCommentInput('');
+        fetchComments(detailEvent.id);
+    };
+
+    const handleStartEditComment = (comment: CommentRow) => {
+        if (comment.profile_id !== myUserId) return;
+
+        setEditingCommentId(comment.id);
+        setEditingCommentInput(comment.contents || '');
+    };
+
+    const handleCancelEditComment = () => {
+        setEditingCommentId(null);
+        setEditingCommentInput('');
+    };
+
+    const handleUpdateComment = async (comment: CommentRow) => {
+        if (!detailEvent || comment.profile_id !== myUserId) return;
+
+        const trimmedComment = editingCommentInput.trim();
+
+        if (!trimmedComment) {
+            alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        const { error } = await supabase
+            .from('comments')
+            .update({
+                contents: trimmedComment,
+                modified_at: new Date().toISOString(),
+            })
+            .eq('id', comment.id)
+            .eq('events_id', comment.events_id)
+            .eq('profile_id', myUserId);
+
+        if (error) {
+            console.error(error);
+            alert('댓글 수정 실패');
+            return;
+        }
+
+        handleCancelEditComment();
+        fetchComments(detailEvent.id);
+    };
+
+    const handleDeleteComment = async (comment: CommentRow) => {
+        if (!detailEvent || comment.profile_id !== myUserId) return;
+
+        const ok = confirm('댓글을 삭제할까요?');
+
+        if (!ok) return;
+
+        const { error } = await supabase
+            .from('comments')
+            .delete()
+            .eq('id', comment.id)
+            .eq('events_id', comment.events_id)
+            .eq('profile_id', myUserId);
+
+        if (error) {
+            console.error(error);
+            alert('댓글 삭제 실패');
+            return;
+        }
+
+        if (editingCommentId === comment.id) {
+            handleCancelEditComment();
+        }
+
         fetchComments(detailEvent.id);
     };
 
@@ -660,7 +733,13 @@ export default function DayPage({ params }: Props) {
                                 >
                                     수정
                                 </button>
-                                <button className="rounded bg-gray-200 px-3 py-1 text-sm" onClick={() => setDetailEvent(null)}>
+                                <button
+                                    className="rounded bg-gray-200 px-3 py-1 text-sm"
+                                    onClick={() => {
+                                        setDetailEvent(null);
+                                        handleCancelEditComment();
+                                    }}
+                                >
                                     닫기
                                 </button>
                             </div>
@@ -669,7 +748,7 @@ export default function DayPage({ params }: Props) {
                         <p className="mb-4 text-sm text-gray-500">{formatEventDateTimeRange(detailEvent)}</p>
 
                         <div className="mb-5 whitespace-pre-wrap rounded border bg-gray-50 p-3 text-sm text-gray-700">
-                            {detailEvent.detaile || '세부내용이 없습니다.'}
+                            {detailEvent.detail || '세부내용이 없습니다.'}
                         </div>
 
                         <div className="mb-5 flex gap-2">
@@ -692,15 +771,55 @@ export default function DayPage({ params }: Props) {
                         <div className="space-y-3">
                             {comments.length === 0 && <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>}
 
-                            {comments.map((comment) => (
-                                <div key={comment.id} className="rounded border p-3">
-                                    <div className="mb-1 flex items-center justify-between gap-2">
-                                        <p className="text-sm font-semibold">{comment.profile?.nickname || '이름 없음'}</p>
-                                        <p className="text-xs text-gray-400">{formatDateTime(comment.created_at)}</p>
+                            {comments.map((comment) => {
+                                const isMyComment = comment.profile_id === myUserId;
+                                const isEditing = editingCommentId === comment.id;
+
+                                return (
+                                    <div key={comment.id} className="rounded border p-3">
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <div>
+                                                <p className="text-sm font-semibold">{comment.profile?.nickname || '이름 없음'}</p>
+                                                <p className="text-xs text-gray-400">{formatDateTime(comment.created_at)}</p>
+                                            </div>
+
+                                            {isMyComment && !isEditing && (
+                                                <div className="flex gap-2 text-xs">
+                                                    <button className="text-gray-600" onClick={() => handleStartEditComment(comment)}>
+                                                        수정
+                                                    </button>
+                                                    <button className="text-red-500" onClick={() => handleDeleteComment(comment)}>
+                                                        삭제
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {isEditing ? (
+                                            <div className="mt-2">
+                                                <textarea
+                                                    className="min-h-20 w-full resize-y rounded border p-2 text-sm"
+                                                    value={editingCommentInput}
+                                                    onChange={(e) => setEditingCommentInput(e.target.value)}
+                                                />
+                                                <div className="mt-2 flex justify-end gap-2">
+                                                    <button className="rounded bg-gray-200 px-3 py-1 text-xs" onClick={handleCancelEditComment}>
+                                                        취소
+                                                    </button>
+                                                    <button
+                                                        className="rounded bg-black px-3 py-1 text-xs text-white"
+                                                        onClick={() => handleUpdateComment(comment)}
+                                                    >
+                                                        저장
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="whitespace-pre-wrap text-sm text-gray-700">{comment.contents}</p>
+                                        )}
                                     </div>
-                                    <p className="whitespace-pre-wrap text-sm text-gray-700">{comment.contents}</p>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
