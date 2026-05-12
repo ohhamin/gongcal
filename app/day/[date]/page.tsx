@@ -1,14 +1,14 @@
 'use client';
 
 import { use, useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-
 import FullCalendar from '@fullcalendar/react';
 import { DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { EventResizeDoneArg } from '@fullcalendar/interaction';
 
+import GroupSelector from '@/components/GroupSelector';
+import { normalizeProfile, Profile } from '@/lib/groups';
 import { supabase } from '@/lib/supabase';
 
 type Props = {
@@ -27,16 +27,11 @@ type CalendarEvent = {
     is_hidden: boolean;
 };
 
-type Person = {
-    id: string;
-    nickname: string | null;
-};
+type Person = Profile;
 
-type FriendshipRow = {
-    requester_id: string;
-    addressee_id: string;
-    requester: Person;
-    addressee: Person;
+type GroupMemberRow = {
+    profile_id: string;
+    profile: Person | Person[] | null;
 };
 
 type CommentRow = {
@@ -60,7 +55,6 @@ const EVENT_DETAIL_MAX_LENGTH = 500;
 const COMMENT_MAX_LENGTH = 100;
 
 export default function DayPage({ params }: Props) {
-    const router = useRouter();
     const [people, setPeople] = useState<Person[]>([]);
     const { date } = use(params);
 
@@ -171,7 +165,7 @@ export default function DayPage({ params }: Props) {
         setIsFormOpen(true);
     };
 
-    // 사용자 조회
+    // 사용자 조회: profile.main_group_id가 없으면 내 일정만, 있으면 수락 완료된 그룹원의 일정을 함께 표시합니다.
     const fetchVisiblePeople = useCallback(async () => {
         const {
             data: { user },
@@ -181,34 +175,46 @@ export default function DayPage({ params }: Props) {
 
         setMyUserId(user.id);
 
-        const { data: myProfile } = await supabase.from('profiles').select('id, nickname').eq('id', user.id).single();
+        const { data: myProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id, nickname, main_group_id')
+            .eq('id', user.id)
+            .single();
 
-        const { data: friendships } = await supabase
-            .from('friendships')
+        if (profileError) {
+            console.error(profileError);
+            return [];
+        }
+
+        if (!myProfile?.main_group_id) {
+            return myProfile ? [myProfile as Person] : [];
+        }
+
+        const { data: groupMembers, error: groupError } = await supabase
+            .from('groups')
             .select(
                 `
-    *,
-    requester:profiles!friendships_requester_id_fkey (
-      id,
-      nickname
-    ),
-    addressee:profiles!friendships_addressee_id_fkey (
-      id,
-      nickname
-    )
-  `,
+                profile_id,
+                profile:profiles!groups_profile_id_fkey (
+                    id,
+                    nickname
+                )
+            `,
             )
-            .eq('status', 'accepted')
-            .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+            .eq('id', myProfile.main_group_id)
+            .eq('is_accepted', true)
+            .order('profile_id', { ascending: true });
 
-        const friends =
-            (friendships as FriendshipRow[] | null)?.map((friendship) => {
-                const isRequester = friendship.requester_id === user.id;
+        if (groupError) {
+            console.error(groupError);
+            return [myProfile as Person];
+        }
 
-                return isRequester ? friendship.addressee : friendship.requester;
-            }) || [];
+        const visiblePeople = ((groupMembers || []) as GroupMemberRow[])
+            .map((member) => normalizeProfile(member.profile))
+            .filter(Boolean) as Person[];
 
-        return [myProfile, ...friends].filter(Boolean) as Person[];
+        return visiblePeople.length > 0 ? visiblePeople : [myProfile as Person];
     }, []);
 
     // 일정 조회
@@ -637,13 +643,9 @@ export default function DayPage({ params }: Props) {
 
     return (
         <main className="p-5">
-            <div className="mb-2 flex items-center justify-end">
-                <button className="rounded bg-black px-4 py-2 text-white" onClick={() => router.push('/calendar')}>
-                    캘린더
-                </button>
-            </div>
-            <div className="flex items-center justify-center">
-                <h1 className="mb-5 text-2xl font-bold">{date}</h1>
+            <div className="mb-5 flex items-center justify-between gap-3">
+                <h1 className="text-2xl font-bold">{date}</h1>
+                <GroupSelector onChange={fetchEvents} />
             </div>
 
             <div className="w-full">
