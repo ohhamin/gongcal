@@ -1,5 +1,19 @@
 # OPENCLAW
 
+## v.0.2.7 - 2026-05-12
+
+### 업데이트 내용
+
+- 설정 페이지 왼쪽 아래에 회원 탈퇴 버튼을 추가했습니다.
+- 탈퇴 버튼 클릭 시 경고 모달을 표시하고, 확인 시 데이터 정리 후 로그인 페이지로 이동합니다.
+- 탈퇴 처리 순서: ① friendships에서 requester_id/addressee_id 기준 전체 삭제 → ② owner 그룹 ID 조회 후 해당 그룹의 모든 멤버 row 삭제 → ③ 남은 그룹 멤버십 row 삭제 → ④ 세션 종료.
+- `friends/page.tsx`의 `handleAcceptFriend`, `handleDeleteFriend`에서 `fetchFriends()` 호출에 `await`가 빠진 버그를 수정했습니다.
+
+### 작업 메모
+
+- 탈퇴 시 auth 계정 삭제는 Supabase admin API 권한이 필요하므로 현재는 세션 종료(signOut)만 수행합니다. 계정 자체 삭제가 필요하면 서버 사이드 Route Handler + admin client로 보강해야 합니다.
+- owner 그룹 삭제는 해당 그룹의 모든 멤버 row를 group id 기준으로 삭제하는 방식입니다. DB 수준의 cascade가 없으면 events, comments 등 관련 데이터는 별도 정리가 필요합니다.
+
 ## v.0.2.6 - 2026-05-12
 
 ### 업데이트 내용

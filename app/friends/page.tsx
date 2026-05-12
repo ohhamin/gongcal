@@ -192,7 +192,7 @@ export default function FriendsPage() {
             return;
         }
 
-        fetchFriends();
+        await fetchFriends();
     };
 
     const handleDeleteFriend = async (friendshipId: number) => {
@@ -208,7 +208,7 @@ export default function FriendsPage() {
             return;
         }
 
-        fetchFriends();
+        await fetchFriends();
     };
 
     const resetSearchModal = () => {
