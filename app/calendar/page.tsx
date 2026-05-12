@@ -1,13 +1,22 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 
+import { supabase } from '@/lib/supabase';
+
 export default function Home() {
     const router = useRouter();
+
+    useEffect(() => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (!user) router.push('/login');
+        });
+    }, [router]);
 
     const handleDateClick = (info: DateClickArg) => {
         router.push(`/day/${info.dateStr}`);
