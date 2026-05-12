@@ -12,6 +12,7 @@ import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
 import { normalizeProfile, Profile } from '@/lib/groups';
 import { supabase } from '@/lib/supabase';
+import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
 
 type Props = {
     params: Promise<{
@@ -60,6 +61,8 @@ export default function DayPage({ params }: Props) {
     const router = useRouter();
     const [people, setPeople] = useState<Person[]>([]);
     const { date } = use(params);
+    const currentUserQuery = useCurrentUser();
+    const profileQuery = useMyProfile();
 
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [isCalendarLoading, setIsCalendarLoading] = useState(true);
@@ -169,32 +172,18 @@ export default function DayPage({ params }: Props) {
         setIsFormOpen(true);
     };
 
-    // 사용자 조회: profile.main_group_id가 없으면 내 일정만, 있으면 수락 완료된 그룹원의 일정을 함께 표시합니다.
+    // 사용자 조회: TanStack Query에 캐시된 내 프로필을 기준으로 표시 대상을 계산합니다.
     const fetchVisiblePeople = useCallback(async () => {
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
+        const myProfile = profileQuery.data;
 
-        if (!user) {
-            router.push('/login');
+        if (!currentUserQuery.data || !myProfile) {
             return [];
         }
 
-        setMyUserId(user.id);
+        setMyUserId(currentUserQuery.data.id);
 
-        const { data: myProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, nickname, main_group_id')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError) {
-            console.error(profileError);
-            return [];
-        }
-
-        if (!myProfile?.main_group_id) {
-            return myProfile ? [myProfile as Person] : [];
+        if (!myProfile.main_group_id) {
+            return [myProfile as Person];
         }
 
         const { data: groupMembers, error: groupError } = await supabase
@@ -222,7 +211,7 @@ export default function DayPage({ params }: Props) {
             .filter(Boolean) as Person[];
 
         return visiblePeople.length > 0 ? visiblePeople : [myProfile as Person];
-    }, [router]);
+    }, [currentUserQuery.data, profileQuery.data]);
 
     // 일정 조회
     const fetchEvents = useCallback(async () => {
@@ -651,8 +640,16 @@ export default function DayPage({ params }: Props) {
         fetchEvents();
     };
 
+    useEffect(() => {
+        if (!currentUserQuery.isLoading && !currentUserQuery.data) {
+            router.push('/login');
+        }
+    }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
+
     // 첫 로딩: FullCalendar 초기 렌더가 느리게 보이지 않도록 최소 1초 로딩 화면으로 가립니다.
     useEffect(() => {
+        if (currentUserQuery.isLoading || profileQuery.isLoading) return;
+
         const load = async () => {
             const minimumLoadingTime = new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -661,7 +658,7 @@ export default function DayPage({ params }: Props) {
         };
 
         load();
-    }, [fetchEvents]);
+    }, [currentUserQuery.isLoading, fetchEvents, profileQuery.isLoading]);
 
     return (
         <main className="p-5">

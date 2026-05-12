@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.2.2**
+**현재 버전: v.0.2.3**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다.
 
@@ -21,6 +21,8 @@
 - 그룹 생성/초대/수락/탈퇴/삭제/위임/추방 관리
 - 선택한 대표 그룹 기준 날짜별 그룹원 일정 조회
 - 캘린더 초기 로딩 화면 표시
+- TanStack Query 기반 접속 유저/프로필/수락 그룹 캐싱
+- Supabase SSR 기반 세션 쿠키 갱신 middleware
 - 친구에게 숨긴 일정은 타인에게 내용 대신 `일정 있음`으로 표시
 - 일정 세부내용 입력 및 상세 팝업 보기
 - 일정별 댓글 작성/수정/삭제 및 작성일 오름차순 댓글 목록
@@ -33,6 +35,8 @@
 - TypeScript
 - Tailwind CSS
 - Supabase
+- Supabase SSR
+- TanStack Query
 - FullCalendar
 
 ## 시작하기

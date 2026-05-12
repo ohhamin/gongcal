@@ -1,75 +1,45 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { getMyAcceptedGroups, GroupOption, PERSONAL_CALENDAR_VALUE, updateMainGroup } from '@/lib/groups';
-import { supabase } from '@/lib/supabase';
+import { PERSONAL_CALENDAR_VALUE, updateMainGroup } from '@/lib/groups';
+import { queryKeys } from '@/lib/queryKeys';
+import { useMyAcceptedGroups } from '@/lib/useMyAcceptedGroups';
+import { useMyProfile } from '@/lib/useCurrentProfile';
 
 type Props = {
     onChange?: () => void;
 };
 
 export default function GroupSelector({ onChange }: Props) {
-    const [myProfileId, setMyProfileId] = useState<string | null>(null);
-    const [groups, setGroups] = useState<GroupOption[]>([]);
-    const [selectedValue, setSelectedValue] = useState(PERSONAL_CALENDAR_VALUE);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const profileQuery = useMyProfile();
+    const acceptedGroupsQuery = useMyAcceptedGroups();
 
-    const fetchGroups = useCallback(async () => {
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
-            setLoading(false);
-            return;
-        }
-
-        setMyProfileId(user.id);
-
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, main_group_id')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError) {
-            console.error(profileError);
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const acceptedGroups = await getMyAcceptedGroups(user.id);
-            setGroups(acceptedGroups);
-            setSelectedValue(profile?.main_group_id ? String(profile.main_group_id) : PERSONAL_CALENDAR_VALUE);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            await fetchGroups();
-        };
-
-        load();
-    }, [fetchGroups]);
+    const profile = profileQuery.data;
+    const groups = acceptedGroupsQuery.data || [];
+    const selectedValue = profile?.main_group_id ? String(profile.main_group_id) : PERSONAL_CALENDAR_VALUE;
+    const loading = profileQuery.isLoading || acceptedGroupsQuery.isLoading;
 
     const handleChange = async (value: string) => {
-        if (!myProfileId) return;
+        if (!profile) return;
 
-        setSelectedValue(value);
+        const nextMainGroupId = value === PERSONAL_CALENDAR_VALUE ? null : Number(value);
+
+        // 낙관적 업데이트로 페이지 이동/드롭다운 전환 시 같은 프로필 값을 즉시 재사용합니다.
+        queryClient.setQueryData(queryKeys.myProfile(profile.id), {
+            ...profile,
+            main_group_id: nextMainGroupId,
+        });
 
         try {
-            await updateMainGroup(myProfileId, value === PERSONAL_CALENDAR_VALUE ? null : Number(value));
+            await updateMainGroup(profile.id, nextMainGroupId);
+            await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
             onChange?.();
         } catch (error) {
             console.error(error);
             alert('그룹 변경 실패');
-            fetchGroups();
+            await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
         }
     };
 
@@ -78,7 +48,7 @@ export default function GroupSelector({ onChange }: Props) {
             className="rounded border bg-white px-3 py-2 text-sm"
             value={selectedValue}
             onChange={(e) => handleChange(e.target.value)}
-            disabled={loading}
+            disabled={loading || !profile}
         >
             <option value={PERSONAL_CALENDAR_VALUE}>나만보기</option>
             {groups.map((group) => (
