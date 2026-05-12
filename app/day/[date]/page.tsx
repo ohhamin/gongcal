@@ -646,25 +646,45 @@ export default function DayPage({ params }: Props) {
         }
     }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
 
-    // 첫 로딩: FullCalendar 초기 렌더가 느리게 보이지 않도록 최소 1초 로딩 화면으로 가립니다.
+    // 첫 로딩/그룹 변경: 프로필 캐시의 main_group_id가 바뀌면 최신 그룹원 기준으로 다시 조회합니다.
     useEffect(() => {
         if (currentUserQuery.isLoading || profileQuery.isLoading) return;
 
+        let isCanceled = false;
+
         const load = async () => {
+            setIsCalendarLoading(true);
+            setDetailEvent(null);
+            setPeople([]);
+            setEvents([]);
+
             const minimumLoadingTime = new Promise((resolve) => setTimeout(resolve, 1000));
 
             await Promise.all([fetchEvents(), minimumLoadingTime]);
-            setIsCalendarLoading(false);
+
+            if (!isCanceled) {
+                setIsCalendarLoading(false);
+            }
         };
 
         load();
-    }, [currentUserQuery.isLoading, fetchEvents, profileQuery.isLoading]);
+
+        return () => {
+            isCanceled = true;
+        };
+    }, [currentUserQuery.isLoading, fetchEvents, profileQuery.data?.main_group_id, profileQuery.isLoading]);
 
     return (
         <main className="p-5">
             <div className="mb-5 flex items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold">{date}</h1>
-                <GroupSelector onChange={fetchEvents} />
+                <GroupSelector
+                    onChange={() => {
+                        setIsCalendarLoading(true);
+                        setDetailEvent(null);
+                        setIsFormOpen(false);
+                    }}
+                />
             </div>
 
             <div className="w-full">
@@ -698,11 +718,12 @@ export default function DayPage({ params }: Props) {
 
                         {people.map((person, index) => (
                             <div key={person.id} className="min-w-0 border-l">
-                            <FullCalendar
-                                plugins={[timeGridPlugin, interactionPlugin]}
-                                initialView="timeGridDay"
-                                initialDate={date}
-                                events={events
+                                <FullCalendar
+                                    key={`${profileQuery.data?.main_group_id || 'personal'}-${person.id}-${date}`}
+                                    plugins={[timeGridPlugin, interactionPlugin]}
+                                    initialView="timeGridDay"
+                                    initialDate={date}
+                                    events={events
                                     .filter((event) => event.user_id === person.id)
                                     .map((event) => {
                                         const isOwner = event.user_id === myUserId;
@@ -724,30 +745,30 @@ export default function DayPage({ params }: Props) {
                                             },
                                         };
                                     })}
-                                headerToolbar={false}
-                                dayHeaders={false}
-                                allDaySlot={false}
-                                slotDuration="00:30:00"
-                                snapDuration="00:30:00"
-                                slotLabelInterval="00:30:00"
-                                slotLabelContent={() => ''}
-                                slotMinTime="00:00:00"
-                                slotMaxTime="24:00:00"
-                                height="auto"
-                                expandRows={false}
-                                editable={person.id === myUserId}
-                                selectable={person.id === myUserId}
-                                select={person.id === myUserId ? handleDateSelect : undefined}
-                                selectLongPressDelay={300}
-                                selectAllow={() => {
-                                    lockScroll();
-                                    return true;
-                                }}
-                                eventClick={handleEventClick}
-                                eventResize={person.id === myUserId ? handleEventResize : undefined}
-                                eventDrop={person.id === myUserId ? handleEventDrop : undefined}
-                                displayEventTime={false}
-                            />
+                                    headerToolbar={false}
+                                    dayHeaders={false}
+                                    allDaySlot={false}
+                                    slotDuration="00:30:00"
+                                    snapDuration="00:30:00"
+                                    slotLabelInterval="00:30:00"
+                                    slotLabelContent={() => ''}
+                                    slotMinTime="00:00:00"
+                                    slotMaxTime="24:00:00"
+                                    height="auto"
+                                    expandRows={false}
+                                    editable={person.id === myUserId}
+                                    selectable={person.id === myUserId}
+                                    select={person.id === myUserId ? handleDateSelect : undefined}
+                                    selectLongPressDelay={300}
+                                    selectAllow={() => {
+                                        lockScroll();
+                                        return true;
+                                    }}
+                                    eventClick={handleEventClick}
+                                    eventResize={person.id === myUserId ? handleEventResize : undefined}
+                                    eventDrop={person.id === myUserId ? handleEventDrop : undefined}
+                                    displayEventTime={false}
+                                />
                             </div>
                         ))}
                     </div>
