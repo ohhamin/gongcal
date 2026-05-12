@@ -57,6 +57,7 @@ const HIDDEN_EVENT_TITLE = '일정 있음';
 const HIDDEN_EVENT_COLOR_ALPHA = '99';
 const EVENT_TITLE_MAX_LENGTH = 50;
 const EVENT_DETAIL_MAX_LENGTH = 500;
+const COMMENT_MAX_LENGTH = 100;
 
 export default function DayPage({ params }: Props) {
     const router = useRouter();
@@ -412,6 +413,11 @@ export default function DayPage({ params }: Props) {
             return;
         }
 
+        if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            return;
+        }
+
         const {
             data: { user },
         } = await supabase.auth.getUser();
@@ -453,6 +459,11 @@ export default function DayPage({ params }: Props) {
 
         if (!trimmedComment) {
             alert('댓글 내용을 입력해주세요.');
+            return;
+        }
+
+        if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -756,6 +767,7 @@ export default function DayPage({ params }: Props) {
                                 className="flex-1 rounded border p-2 text-sm"
                                 placeholder="댓글을 입력하세요"
                                 value={commentInput}
+                                maxLength={COMMENT_MAX_LENGTH}
                                 onChange={(e) => setCommentInput(e.target.value)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
@@ -766,6 +778,9 @@ export default function DayPage({ params }: Props) {
                             <button className="rounded bg-black px-4 py-2 text-sm text-white" onClick={handleCreateComment}>
                                 등록
                             </button>
+                        </div>
+                        <div className="-mt-4 mb-5 text-right text-xs text-gray-500">
+                            {commentInput.trim().length} / {COMMENT_MAX_LENGTH}
                         </div>
 
                         <div className="space-y-3">
@@ -800,8 +815,12 @@ export default function DayPage({ params }: Props) {
                                                 <textarea
                                                     className="min-h-20 w-full resize-y rounded border p-2 text-sm"
                                                     value={editingCommentInput}
+                                                    maxLength={COMMENT_MAX_LENGTH}
                                                     onChange={(e) => setEditingCommentInput(e.target.value)}
                                                 />
+                                                <div className="mt-1 text-right text-xs text-gray-500">
+                                                    {editingCommentInput.trim().length} / {COMMENT_MAX_LENGTH}
+                                                </div>
                                                 <div className="mt-2 flex justify-end gap-2">
                                                     <button className="rounded bg-gray-200 px-3 py-1 text-xs" onClick={handleCancelEditComment}>
                                                         취소
