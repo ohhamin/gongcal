@@ -7,6 +7,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 
+import GroupSelector from '@/components/GroupSelector';
 import { supabase } from '@/lib/supabase';
 
 export default function Home() {
@@ -24,12 +25,9 @@ export default function Home() {
 
     return (
         <div className="rounded-2xl bg-white p-5 shadow">
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5 flex items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold">우리캘린더</h1>
-
-                <button className="rounded bg-black px-4 py-2 text-white" onClick={() => router.push('/friends')}>
-                    친구
-                </button>
+                <GroupSelector />
             </div>
             <main className="p-5">
                 <FullCalendar
