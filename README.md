@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.3.26**
+**현재 버전: v.0.4.1**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -9,6 +9,28 @@
 - 소규모 패치: 세 번째 자리 증가 (예: v.0.0.1 → v.0.0.2)
 - 대규모 패치: 두 번째 자리 증가 후 세 번째 자리를 1로 초기화 (예: v.0.1.3 → v.0.2.1)
 - 버전 변경 시 `README.md`, `OPENCLAW.md`, `package.json`, `package-lock.json`을 함께 갱신합니다.
+
+## 레포 구조
+
+```text
+app/  # Flutter 모바일 껍데기(WebView)
+web/  # Next.js OURCAL 웹 앱
+```
+
+루트 npm 스크립트는 `web` 실행을 위임합니다.
+
+```bash
+npm run web:dev
+npm run web:build
+npm run web:lint
+```
+
+Flutter 앱은 `app/`에서 실행합니다.
+
+```bash
+cd app
+flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
+```
 
 ## 주요 기능
 
@@ -110,7 +132,7 @@
 ### 네비게이션/페이지
 
 - 하단 이모지 네비게이션으로 캘린더/친구관리/그룹관리/설정 이동
-- Day 페이지(`app/day/[date]`)는 직접 URL 접근 호환용으로 유지
+- Day 페이지(`web/app/day/[date]`)는 직접 URL 접근 호환용으로 유지
 - 기본 일정 확인/추가/상세 흐름은 월간 캘린더에서 처리
 
 ## Supabase RPC
@@ -120,10 +142,10 @@
 Supabase SQL Editor에서 아래 파일을 실행하세요.
 
 ```text
-supabase/save_event_with_invites.sql
-supabase/get_event_invite_attendees.sql
-supabase/get_my_invited_events.sql
-supabase/respond_event_invite.sql
+web/supabase/save_event_with_invites.sql
+web/supabase/get_event_invite_attendees.sql
+web/supabase/get_my_invited_events.sql
+web/supabase/respond_event_invite.sql
 ```
 
 ## 기술 스택
@@ -136,22 +158,24 @@ supabase/respond_event_invite.sql
 - Supabase SSR
 - TanStack Query
 - FullCalendar
+- Flutter
+- webview_flutter
 
 ## 시작하기
 
-의존성을 설치합니다.
+웹 의존성을 설치합니다.
 
 ```bash
-npm install
+npm --prefix web install
 ```
 
 환경 변수를 설정합니다.
 
 ```bash
-cp .env.example .env.local
+cp web/.env.example web/.env.local
 ```
 
-`.env.local`에 실제 Supabase 값을 입력합니다.
+`web/.env.local`에 실제 Supabase 값을 입력합니다.
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
@@ -167,7 +191,7 @@ http://localhost:3000/auth/callback
 개발 서버를 실행합니다.
 
 ```bash
-npm run dev
+npm run web:dev
 ```
 
 브라우저에서 <http://localhost:3000>을 열면 앱을 확인할 수 있습니다. `next.config.ts`에서 `localhost:3000`과 `127.0.0.1:3000`을 개발 허용 origin으로 명시합니다.
@@ -175,16 +199,19 @@ npm run dev
 ## 스크립트
 
 ```bash
-npm run dev    # 개발 서버 실행
-npm run build  # 프로덕션 빌드
-npm run start  # 프로덕션 서버 실행
-npm run lint   # ESLint 검사
+npm run web:dev        # 웹 개발 서버 실행
+npm run web:build      # 웹 프로덕션 빌드
+npm run web:lint       # 웹 ESLint 검사
+npm run app:build:apk  # Flutter Android APK 빌드
 ```
 
 ## 프로젝트 구조
 
 ```text
 app/
+  lib/main.dart     # Flutter WebView shell
+  android/          # Android 프로젝트
+web/app/
   auth/callback/   # 로그인 콜백 처리
   calendar/        # 월간 캘린더와 일정/초대/댓글 흐름
   day/[date]/      # 날짜별 직접 접근 호환 화면
@@ -193,11 +220,11 @@ app/
   login/           # 로그인 화면
   setup-profile/   # 프로필 설정 화면
   settings/        # 설정 화면
-lib/
+web/lib/
   friendships.ts   # 친구 정책 유틸
   groups.ts        # 그룹 정책 유틸
   supabase.ts      # Supabase 클라이언트
-supabase/
+web/supabase/
   save_event_with_invites.sql # 일정+초대 저장 RPC
   get_event_invite_attendees.sql # 일정 참석자 조회 RPC
   get_my_invited_events.sql # 월간 내 초대 일정 조회 RPC

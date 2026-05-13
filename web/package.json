@@ -1,0 +1,36 @@
+{
+    "name": "ourcal",
+    "version": "0.4.1",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint"
+    },
+    "dependencies": {
+        "@fullcalendar/core": "^6.1.20",
+        "@fullcalendar/daygrid": "^6.1.20",
+        "@fullcalendar/interaction": "^6.1.20",
+        "@fullcalendar/react": "^6.1.20",
+        "@fullcalendar/timegrid": "^6.1.20",
+        "@supabase/ssr": "^0.10.3",
+        "@supabase/supabase-js": "^2.105.4",
+        "@tanstack/react-query": "^5.100.10",
+        "next": "16.2.6",
+        "react": "19.2.4",
+        "react-dom": "19.2.4"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4",
+        "@types/minimatch": "^6.0.0",
+        "@types/next-pwa": "^5.6.9",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "16.2.6",
+        "tailwindcss": "^4",
+        "typescript": "^5"
+    }
+}
