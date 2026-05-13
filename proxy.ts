@@ -1,13 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-// 인증 없이 접근 가능한 공개 경로
-const PUBLIC_PATHS = ['/login', '/auth/callback'];
-
 // 로그인 필요 보호 경로
 const PROTECTED_PATHS = ['/calendar', '/day', '/friends', '/groups', '/settings', '/setup-profile'];
 
-export async function authProxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
     const { pathname } = request.nextUrl;
 
@@ -47,3 +44,7 @@ export async function authProxy(request: NextRequest) {
 
     return response;
 }
+
+export const config = {
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+};
