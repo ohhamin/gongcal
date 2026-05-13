@@ -23,6 +23,7 @@ web/  # Next.js OURCAL 웹 앱
 npm run web:dev
 npm run web:build
 npm run web:lint
+npm run app:build:apk:debug
 ```
 
 Flutter 앱은 `app/`에서 실행합니다.
@@ -31,6 +32,8 @@ Flutter 앱은 `app/`에서 실행합니다.
 cd app
 flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 ```
+
+APK는 GitHub Actions의 `Android APK` workflow에서 debug APK artifact로 받을 수 있습니다. 수동 실행 시 `web_url` 입력값으로 WebView 대상 URL을 바꿀 수 있습니다.
 
 ## 주요 기능
 
@@ -202,7 +205,8 @@ npm run web:dev
 npm run web:dev        # 웹 개발 서버 실행
 npm run web:build      # 웹 프로덕션 빌드
 npm run web:lint       # 웹 ESLint 검사
-npm run app:build:apk  # Flutter Android APK 빌드
+npm run app:build:apk        # Flutter Android release APK 빌드
+npm run app:build:apk:debug  # Flutter Android debug APK 빌드
 ```
 
 ## 프로젝트 구조
