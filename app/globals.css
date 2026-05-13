@@ -137,7 +137,7 @@ body {
 }
 
 .fc .fc-daygrid-event .fc-event-main {
-    height: 12px !important;
+    height: 10px !important;
     line-height: 10px !important;
     overflow: hidden !important;
 }
@@ -155,4 +155,11 @@ body {
     inset: 0 !important;
     height: 100% !important;
     background: rgba(59, 130, 246, 0.16) !important;
+}
+
+/* 모바일 롱프레스 드래그 선택이 브라우저 스크롤/텍스트 선택에 먹히지 않도록 합니다. */
+.fc .fc-daygrid-day,
+.fc .fc-daygrid-day-frame {
+    touch-action: none;
+    user-select: none;
 }
