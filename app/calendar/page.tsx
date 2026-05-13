@@ -1057,10 +1057,14 @@ export default function CalendarPage() {
         if (event.is_hidden && !canSeeEventDetail(event)) return;
 
         setDetailEvent(event);
+        setAttendees([{ profile_id: event.user_id, nickname: ownerNameById.get(event.user_id) || '이름 없음', is_agree: true, isOwner: true }]);
         setCommentInput('');
         setEditingCommentId(null);
         setEditingCommentInput('');
-        await fetchComments(event.id);
+        await Promise.all([
+            loadEventAttendees(String(event.id), event.user_id),
+            fetchComments(event.id),
+        ]);
     };
 
     const handleDateClick = (info: DateClickArg) => {
@@ -1504,6 +1508,22 @@ export default function CalendarPage() {
                             {detailEvent.detail || '세부내용이 없습니다.'}
                         </div>
 
+                        <div className="mb-5 rounded border p-3">
+                            <p className="mb-2 text-sm font-semibold">참석자 명단</p>
+                            <div className="h-[20vh] space-y-2 overflow-y-auto pr-1">
+                                {attendees.map((attendee) => {
+                                    const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
+
+                                    return (
+                                        <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded border p-2 text-xs">
+                                            <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
+                                            <p className="shrink-0 text-gray-500">{statusText}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         <div className="mb-5 flex gap-2">
                             <input
                                 className="flex-1 rounded border p-2 text-sm"
@@ -1528,7 +1548,7 @@ export default function CalendarPage() {
                             {commentInput.trim().length} / {COMMENT_MAX_LENGTH}
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="h-[25vh] space-y-3 overflow-y-auto pr-1">
                             {comments.length === 0 && (
                                 <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>
                             )}
@@ -1636,8 +1656,8 @@ export default function CalendarPage() {
 
                                 <div>
                                     <p className="mb-1 text-sm">세부일정</p>
-                                    <textarea
-                                        className="min-h-40 w-full resize-y rounded border p-2"
+                                    <input
+                                        className="w-full rounded border p-2"
                                         value={detail}
                                         maxLength={EVENT_DETAIL_MAX_LENGTH}
                                         onChange={(e) => setDetail(e.target.value)}
@@ -1653,7 +1673,7 @@ export default function CalendarPage() {
                                     <p className="text-sm font-semibold">참석자</p>
                                     <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
                                 </div>
-                                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto md:max-h-64">
+                                <div className="h-[20vh] min-h-0 space-y-2 overflow-y-auto pr-1">
                                     {attendees.map((attendee) => {
                                         const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
                                         const canCancelInvite = !attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId);
@@ -1719,17 +1739,20 @@ export default function CalendarPage() {
                                 하루 종일
                             </label>
 
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
-                                상세 일정 함께 보기
-                                <span
+                            <div className="flex items-center gap-2">
+                                <label className="flex items-center gap-2">
+                                    <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
+                                    상세 일정 함께 보기
+                                </label>
+                                <button
+                                    type="button"
                                     className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-600"
-                                    title="구성원에게는 시간만 노출되고 '🔒'로 표시됩니다."
-                                    aria-label="구성원에게는 시간만 노출되고 '🔒'로 표시됩니다."
+                                    aria-label="상세 일정 함께 보기 안내"
+                                    onClick={() => alert("구성원에게는 시간만 노출되고 '🔒'로 표시됩니다.")}
                                 >
                                     ?
-                                </span>
-                            </label>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between">
