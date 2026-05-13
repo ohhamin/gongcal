@@ -36,6 +36,13 @@ type EventAttendee = {
     isOwner: boolean;
 };
 
+type InviteAttendeeRpcRow = {
+    event_id: number;
+    profile_id: string;
+    nickname: string | null;
+    is_agree: boolean;
+};
+
 type CalendarEvent = {
     id: string;
     title: string;
@@ -609,6 +616,25 @@ export default function CalendarPage() {
             isOwner: true,
         };
 
+        const { data: rpcRows, error: rpcError } = await supabase.rpc('get_event_invite_attendees', {
+            p_event_id: Number(eventId),
+        });
+
+        if (!rpcError) {
+            const inviteAttendees = ((rpcRows || []) as InviteAttendeeRpcRow[]).map((row) => ({
+                profile_id: row.profile_id,
+                nickname: row.nickname || '이름 없음',
+                is_agree: row.is_agree,
+                isOwner: false,
+            }));
+
+            // 참석자 목록은 events_invite.event_id 기준으로 매번 재구성합니다. 저장된 초대는 수락 여부와 무관하게 모두 노출합니다.
+            setAttendees([ownerAttendee, ...inviteAttendees]);
+            return;
+        }
+
+        console.error(rpcError);
+
         const { data, error } = await supabase
             .from('events_invite')
             .select('event_id, profile_id, is_agree')
@@ -647,7 +673,6 @@ export default function CalendarPage() {
             isOwner: false,
         }));
 
-        // 참석자 목록은 events_invite를 기준으로 매번 재구성합니다. 저장된 초대는 수락 여부와 무관하게 모두 노출합니다.
         setAttendees([ownerAttendee, ...inviteAttendees]);
     };
 
