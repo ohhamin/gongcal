@@ -104,3 +104,30 @@ body {
 .fc .fc-highlight {
     background: rgba(59, 130, 246, 0.16) !important;
 }
+
+/* 월간 캘린더 6주 행을 항상 같은 높이로 고정하고, 드래그 선택 영역도 셀 전체 높이에 맞춥니다. */
+.fc .fc-daygrid-body,
+.fc .fc-daygrid-body table,
+.fc .fc-scrollgrid-sync-table {
+    height: 100% !important;
+}
+
+.fc .fc-daygrid-body tbody,
+.fc .fc-scrollgrid-sync-table tbody {
+    height: 100% !important;
+}
+
+.fc .fc-daygrid-body tr,
+.fc .fc-scrollgrid-sync-table tr {
+    height: calc(100% / 6) !important;
+}
+
+.fc .fc-daygrid-day,
+.fc .fc-daygrid-day-frame {
+    height: 100% !important;
+}
+
+.fc .fc-highlight {
+    inset: 0 !important;
+    height: 100% !important;
+}
