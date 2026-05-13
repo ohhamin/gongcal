@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.4.1 - 2026-05-13
+
+### 업데이트 내용
+
+- 레포를 `web/`(Next.js 웹 앱)과 `app/`(Flutter 모바일 앱) 구조로 분리했습니다.
+- Flutter 앱 껍데기를 추가하고, 현재는 OURCAL 웹 화면을 WebView로 표시하도록 구현했습니다.
+- Android 인터넷 권한과 WebView 의존성(`webview_flutter`)을 추가했습니다.
+- 루트 `package.json`은 monorepo용 위임 스크립트(`web:dev`, `web:build`, `web:lint`, `app:build:apk`)를 제공합니다.
+- Flutter 앱의 웹 주소는 `--dart-define=OURCAL_WEB_URL=...`로 바꿀 수 있게 했습니다.
+- README/package 기준 버전을 큰 구조 변경에 맞춰 `v.0.3.26`에서 `v.0.4.1`로 업데이트했습니다.
+
+### 작업 메모
+
+- Docker Flutter SDK로 `flutter analyze`, `flutter test`, 웹 lint/typecheck는 통과했습니다.
+- 현재 실행 환경 메모리가 낮아 Gradle APK 빌드는 `SIGKILL`로 중단되어 APK 산출물 생성은 아직 완료하지 못했습니다.
+
 ## v.0.3.26 - 2026-05-13
 
 ### 업데이트 내용
