@@ -602,18 +602,27 @@ export default function CalendarPage() {
     };
 
     const loadEventAttendees = async (eventId: string, ownerId: string) => {
+        const ownerAttendee: EventAttendee = {
+            profile_id: ownerId,
+            nickname: ownerNameById.get(ownerId) || '이름 없음',
+            is_agree: true,
+            isOwner: true,
+        };
+
         const { data, error } = await supabase
             .from('events_invite')
             .select('event_id, profile_id, is_agree')
-            .eq('event_id', Number(eventId));
+            .eq('event_id', Number(eventId))
+            .order('profile_id', { ascending: true });
 
         if (error) {
             console.error(error);
+            setAttendees([ownerAttendee]);
             return;
         }
 
         const inviteRows = (data || []) as EventInvite[];
-        const invitedProfileIds = inviteRows.map((row) => row.profile_id);
+        const invitedProfileIds = Array.from(new Set(inviteRows.map((row) => row.profile_id)));
         const profileNameById = new Map<string, string | null>();
 
         if (invitedProfileIds.length > 0) {
@@ -638,10 +647,8 @@ export default function CalendarPage() {
             isOwner: false,
         }));
 
-        setAttendees([
-            { profile_id: ownerId, nickname: ownerNameById.get(ownerId) || '이름 없음', is_agree: true, isOwner: true },
-            ...inviteAttendees,
-        ]);
+        // 참석자 목록은 events_invite를 기준으로 매번 재구성합니다. 저장된 초대는 수락 여부와 무관하게 모두 노출합니다.
+        setAttendees([ownerAttendee, ...inviteAttendees]);
     };
 
     const searchInviteFriends = async () => {
@@ -1549,6 +1556,13 @@ export default function CalendarPage() {
                             <label className="flex items-center gap-2">
                                 <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
                                 상세 일정 함께 보기
+                                <span
+                                    className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-600"
+                                    title="구성원에게는 시간만 노출되고 '🔒'로 표시됩니다."
+                                    aria-label="구성원에게는 시간만 노출되고 '🔒'로 표시됩니다."
+                                >
+                                    ?
+                                </span>
                             </label>
                         </div>
 

@@ -1,5 +1,34 @@
 # OPENCLAW
 
+## v.0.3.18 - 2026-05-13
+
+### 업데이트 내용
+
+- Vercel 빌드 오류 원인인 `middleware.ts`와 `proxy.ts` 동시 사용을 해소하기 위해 `middleware.ts`를 제거하고 `proxy.ts`의 `proxy` export와 matcher config만 사용하도록 정리했습니다.
+- 일정 추가/수정 화면의 `상세 일정 함께 보기` 체크박스 옆에 `?` 도움말 아이콘과 툴팁을 추가했습니다.
+- 참석자 리스트 로딩을 `events_invite.event_id` 기준으로 명확히 재구성하고, 수락 여부와 무관하게 저장된 초대 row를 모두 표시하도록 보강했습니다.
+- README/package 기준 버전을 `v.0.3.17`에서 소규모 패치 버전 `v.0.3.18`로 업데이트했습니다.
+
+### 작업 메모
+
+- 툴팁 문구: `구성원에게는 시간만 노출되고 '🔒'로 표시됩니다.`
+- 초대받은 일정은 기존 정책대로 `events_invite.profile_id`가 현재 프로필이면 원본 `events.user_id`와 상관없이 내 일정처럼 병합합니다.
+
+## v.0.3.17 - 2026-05-13
+
+### 업데이트 내용
+
+- `middleware.ts`의 인증 로직을 `proxy.ts`로 분리하여 관심사를 분리하였습니다.
+- `proxy.ts`에서 서버 사이드 인증 상태를 검사하여, 로그인 세션이 있는 경우 `/` 및 `/login` 접근 시 `/calendar`로 자동 리다이렉트합니다.
+- 비로그인 상태에서 보호된 경로(`/calendar`, `/day`, `/friends`, `/groups`, `/settings`, `/setup-profile`) 접근 시 `/login`으로 리다이렉트합니다.
+- `middleware.ts`는 `proxy.ts`를 import하는 얇은 래퍼로 단순화하였습니다.
+- `app/page.tsx`의 클라이언트 세션 체크 로직을 단순화 (중복 `onAuthStateChange` 제거, `getUser()` 단일 호출로 통합).
+
+### 작업 메모
+
+- `getUser()`는 JWT를 서버에서 검증하므로 `getSession()`보다 보안적으로 안전합니다.
+- 미들웨어는 서버 사이드 리다이렉트를 담당하고, `app/page.tsx`는 클라이언트 사이드 내비게이션 폴백 역할을 합니다.
+
 ## v.0.3.16 - 2026-05-13
 
 ### 업데이트 내용

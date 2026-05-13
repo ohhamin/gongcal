@@ -6,24 +6,15 @@ import { useRouter } from 'next/navigation';
 import CalendarLoading from '@/components/CalendarLoading';
 import { supabase } from '@/lib/supabase';
 
+// 서버 미들웨어(proxy.ts)가 인증된 사용자를 /calendar로, 미인증 사용자를 /login으로 리다이렉트합니다.
+// 이 페이지는 클라이언트 사이드 내비게이션 폴백용입니다.
 export default function Home() {
     const router = useRouter();
 
     useEffect(() => {
         let isMounted = true;
 
-        const routeBySession = async () => {
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-
-            if (!isMounted) return;
-
-            if (session) {
-                router.replace('/calendar');
-                return;
-            }
-
+        const redirect = async () => {
             const {
                 data: { user },
             } = await supabase.auth.getUser();
@@ -32,18 +23,10 @@ export default function Home() {
             router.replace(user ? '/calendar' : '/login');
         };
 
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((event, session) => {
-            if (!isMounted || event !== 'INITIAL_SESSION') return;
-            router.replace(session ? '/calendar' : '/login');
-        });
-
-        routeBySession();
+        redirect();
 
         return () => {
             isMounted = false;
-            subscription.unsubscribe();
         };
     }, [router]);
 
