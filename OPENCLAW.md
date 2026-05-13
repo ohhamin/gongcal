@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.3.19 - 2026-05-13
+
+### 업데이트 내용
+
+- 일정 수정 팝업의 참석자 목록 조회를 `events_invite.event_id = 현재 일정 id` 기준 RPC로 명확히 분리했습니다.
+- `get_event_invite_attendees` Supabase RPC SQL을 추가해 이벤트 소유자가 초대 참석자 row를 RLS 영향 없이 조회할 수 있도록 했습니다.
+- RPC가 DB에 없을 때도 기존 `events_invite` 직접 조회 fallback을 수행하도록 했습니다.
+- README/package 기준 버전을 `v.0.3.18`에서 소규모 패치 버전 `v.0.3.19`로 업데이트했습니다.
+
+### 작업 메모
+
+- 운영 Supabase에 `supabase/get_event_invite_attendees.sql`을 적용해야 일정 수정 팝업에서 저장된 `events_invite` 참석자 목록이 안정적으로 표시됩니다.
+
 ## v.0.3.18 - 2026-05-13
 
 ### 업데이트 내용
