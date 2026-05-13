@@ -274,6 +274,8 @@ export default function CalendarPage() {
     const prevStartTimeRef = useRef<TimeValue>(DEFAULT_START_TIME);
     const prevEndTimeRef = useRef<TimeValue>(DEFAULT_END_TIME);
     const [isHidden, setIsHidden] = useState(true);
+    const [isVisibilityTooltipOpen, setIsVisibilityTooltipOpen] = useState(false);
+    const visibilityTooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [attendees, setAttendees] = useState<EventAttendee[]>([]);
     const [isInviteSearchOpen, setIsInviteSearchOpen] = useState(false);
     const [friendSearchKeyword, setFriendSearchKeyword] = useState('');
@@ -292,6 +294,21 @@ export default function CalendarPage() {
     const [commentInput, setCommentInput] = useState('');
     const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
     const [editingCommentInput, setEditingCommentInput] = useState('');
+
+    useEffect(() => {
+        return () => {
+            if (visibilityTooltipTimerRef.current) clearTimeout(visibilityTooltipTimerRef.current);
+        };
+    }, []);
+
+    const showVisibilityTooltip = () => {
+        setIsVisibilityTooltipOpen(true);
+        if (visibilityTooltipTimerRef.current) clearTimeout(visibilityTooltipTimerRef.current);
+        visibilityTooltipTimerRef.current = setTimeout(() => {
+            setIsVisibilityTooltipOpen(false);
+            visibilityTooltipTimerRef.current = null;
+        }, 2000);
+    };
 
     useEffect(() => {
         if (!currentUserQuery.isLoading && !currentUserQuery.data) {
@@ -1510,7 +1527,7 @@ export default function CalendarPage() {
 
                         <div className="mb-5 rounded border p-3">
                             <p className="mb-2 text-sm font-semibold">참석자 명단</p>
-                            <div className="h-[20vh] space-y-2 overflow-y-auto pr-1">
+                            <div className="h-[15vh] space-y-2 overflow-y-auto pr-1">
                                 {attendees.map((attendee) => {
                                     const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
 
@@ -1548,7 +1565,7 @@ export default function CalendarPage() {
                             {commentInput.trim().length} / {COMMENT_MAX_LENGTH}
                         </div>
 
-                        <div className="h-[25vh] space-y-3 overflow-y-auto pr-1">
+                        <div className="h-[20vh] space-y-3 overflow-y-auto pr-1">
                             {comments.length === 0 && (
                                 <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>
                             )}
@@ -1673,7 +1690,7 @@ export default function CalendarPage() {
                                     <p className="text-sm font-semibold">참석자</p>
                                     <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
                                 </div>
-                                <div className="h-[20vh] min-h-0 space-y-2 overflow-y-auto pr-1">
+                                <div className="h-[15vh] min-h-0 space-y-2 overflow-y-auto pr-1">
                                     {attendees.map((attendee) => {
                                         const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
                                         const canCancelInvite = !attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId);
@@ -1744,14 +1761,21 @@ export default function CalendarPage() {
                                     <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
                                     상세 일정 함께 보기
                                 </label>
-                                <button
-                                    type="button"
-                                    className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-600"
-                                    aria-label="상세 일정 함께 보기 안내"
-                                    onClick={() => alert("구성원에게는 시간만 노출되고 '🔒'로 표시됩니다.")}
-                                >
-                                    ?
-                                </button>
+                                <div className="relative inline-flex">
+                                    {isVisibilityTooltipOpen && (
+                                        <div className="absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-center text-xs text-white shadow-lg">
+                                            구성원에게는 시간만 노출되고 &apos;🔒&apos;로 표시됩니다.
+                                        </div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-600"
+                                        aria-label="상세 일정 함께 보기 안내"
+                                        onClick={showVisibilityTooltip}
+                                    >
+                                        ?
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
