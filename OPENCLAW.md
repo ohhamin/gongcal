@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.3.23 - 2026-05-13
+
+### 업데이트 내용
+
+- 로컬 개발 화면 확인을 위해 `next.config.ts`에 `localhost:3000`, `127.0.0.1:3000` 개발 허용 origin을 명시했습니다.
+- `.env.example`을 추가해 로컬 `.env.local` 생성 기준을 제공했습니다.
+- README에 Supabase Auth Redirect URLs에 `http://localhost:3000/auth/callback`을 추가해야 한다는 로컬 로그인 설정 안내를 보강했습니다.
+- README/package 기준 버전을 `v.0.3.22`에서 소규모 패치 버전 `v.0.3.23`으로 업데이트했습니다.
+
+### 작업 메모
+
+- 실제 Supabase URL/Anon Key는 비밀값 성격이 있으므로 repo에는 예시 파일만 추가했습니다. 로컬에서는 `.env.example`을 `.env.local`로 복사한 뒤 실제 값을 입력해야 합니다.
+
 ## v.0.3.22 - 2026-05-13
 
 ### 업데이트 내용
