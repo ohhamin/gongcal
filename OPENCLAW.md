@@ -1,5 +1,20 @@
 # OPENCLAW
 
+## v.0.3.17 - 2026-05-13
+
+### 업데이트 내용
+
+- `middleware.ts`의 인증 로직을 `proxy.ts`로 분리하여 관심사를 분리하였습니다.
+- `proxy.ts`에서 서버 사이드 인증 상태를 검사하여, 로그인 세션이 있는 경우 `/` 및 `/login` 접근 시 `/calendar`로 자동 리다이렉트합니다.
+- 비로그인 상태에서 보호된 경로(`/calendar`, `/day`, `/friends`, `/groups`, `/settings`, `/setup-profile`) 접근 시 `/login`으로 리다이렉트합니다.
+- `middleware.ts`는 `proxy.ts`를 import하는 얇은 래퍼로 단순화하였습니다.
+- `app/page.tsx`의 클라이언트 세션 체크 로직을 단순화 (중복 `onAuthStateChange` 제거, `getUser()` 단일 호출로 통합).
+
+### 작업 메모
+
+- `getUser()`는 JWT를 서버에서 검증하므로 `getSession()`보다 보안적으로 안전합니다.
+- 미들웨어는 서버 사이드 리다이렉트를 담당하고, `app/page.tsx`는 클라이언트 사이드 내비게이션 폴백 역할을 합니다.
+
 ## v.0.3.16 - 2026-05-13
 
 ### 업데이트 내용
