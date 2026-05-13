@@ -131,7 +131,34 @@ body {
 }
 
 .fc .fc-daygrid-day-number {
+    width: 100% !important;
     padding: 1px 2px !important;
+}
+
+.ourcal-day-cell-content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ourcal-red-day-number {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.ourcal-holiday-name {
+    min-width: 0;
+    max-width: 3.8rem;
+    overflow: hidden;
+    color: #dc2626;
+    font-size: 0.5rem;
+    font-weight: 700;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .fc .fc-daygrid-day-events {
