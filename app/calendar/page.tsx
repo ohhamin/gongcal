@@ -114,7 +114,10 @@ function isSameDate(start: string, end: string): boolean {
 }
 
 function getDisplayPriority(event: CalendarEvent): number {
-    return event.is_allday ? 1 : 2;
+    if (event.is_allday) return 1;
+    // 미수락 초대는 사용자가 확인/수락해야 하므로 같은 날짜의 친구 일정 노출보다 앞에 둡니다.
+    if (event.display_relation === 'my_invite_pending') return 2;
+    return 3;
 }
 
 function getDisplayRelationRank(event: CalendarEvent): number {
@@ -347,6 +350,7 @@ export default function CalendarPage() {
         const visiblePeople = await fetchVisiblePeople();
         setPeople(visiblePeople);
         const peopleIds = visiblePeople.map((p) => p.id);
+        const inviteProfileIds = Array.from(new Set([...peopleIds, currentUserId].filter(Boolean)));
 
         if (peopleIds.length === 0 || !currentUserId) {
             setEvents([]);
@@ -368,7 +372,7 @@ export default function CalendarPage() {
         const { data: inviteRows, error: inviteError } = await supabase
             .from('events_invite')
             .select('event_id, profile_id, is_agree, event:events(*)')
-            .in('profile_id', peopleIds);
+            .in('profile_id', inviteProfileIds);
 
         if (inviteError) {
             console.error(inviteError);
@@ -1101,7 +1105,7 @@ export default function CalendarPage() {
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
-                            headerToolbar={{ left: '', center: 'title', right: '' }}
+                            headerToolbar={{ left: '', center: 'prev,title,next', right: '' }}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}
@@ -1138,6 +1142,7 @@ export default function CalendarPage() {
                                     return { start: arg.start, end: arg.end };
                                 });
                             }}
+                            dayHeaderFormat={{ weekday: 'short' }}
                             displayEventTime={false}
                             eventDisplay="block"
                             eventOrderStrict={true}
