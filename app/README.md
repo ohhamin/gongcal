@@ -21,14 +21,6 @@ flutter build apk --release --dart-define=OURCAL_WEB_URL=https://your-web-url.ex
 
 빌드 결과는 `build/app/outputs/flutter-apk/app-release.apk`에 생성됩니다.
 
-테스트 공유용 debug APK는 GitHub Actions의 `Android APK` workflow에서 artifact로 받을 수 있습니다.
-
-```bash
-flutter build apk --debug --dart-define=OURCAL_WEB_URL=https://your-web-url.example
-```
-
-Debug APK 결과는 `build/app/outputs/flutter-apk/app-debug.apk`에 생성됩니다.
-
 ## 이후 확장 예정
 
 - 푸시 알림

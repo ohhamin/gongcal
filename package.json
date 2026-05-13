@@ -7,7 +7,6 @@
     "web:build": "npm --prefix web run build",
     "web:lint": "npm --prefix web run lint",
     "app:doctor": "cd app && flutter doctor",
-    "app:build:apk": "cd app && flutter build apk --release",
-    "app:build:apk:debug": "cd app && flutter build apk --debug"
+    "app:build:apk": "cd app && flutter build apk --release"
   }
 }
