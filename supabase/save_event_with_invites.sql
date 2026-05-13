@@ -12,7 +12,8 @@ create or replace function public.save_event_with_invites(
 )
 returns bigint
 language plpgsql
-security invoker
+security definer
+set search_path = public
 as $$
 declare
     v_event_id bigint;
@@ -45,13 +46,32 @@ begin
         delete from public.events_invite where event_id = v_event_id;
     end if;
 
+    -- 초대 대상은 자기 자신이 아니면서 accepted 친구인 프로필만 허용합니다.
     insert into public.events_invite (event_id, profile_id, is_agree)
     select
         v_event_id,
-        (invite_item->>'profile_id')::uuid,
-        coalesce((invite_item->>'is_agree')::boolean, false)
-    from jsonb_array_elements(p_invites) as invite_item;
+        invite_profile_id,
+        coalesce(invite_is_agree, false)
+    from (
+        select distinct
+            (invite_item->>'profile_id')::uuid as invite_profile_id,
+            coalesce((invite_item->>'is_agree')::boolean, false) as invite_is_agree
+        from jsonb_array_elements(coalesce(p_invites, '[]'::jsonb)) as invite_item
+    ) invites
+    where invite_profile_id <> v_user_id
+      and exists (
+          select 1
+          from public.friendships f
+          where f.status = 'accepted'
+            and (
+                (f.requester_id = v_user_id and f.addressee_id = invite_profile_id)
+                or (f.addressee_id = v_user_id and f.requester_id = invite_profile_id)
+            )
+      );
 
     return v_event_id;
 end;
 $$;
+
+
+grant execute on function public.save_event_with_invites(bigint, text, text, timestamptz, timestamptz, boolean, boolean, jsonb) to authenticated;

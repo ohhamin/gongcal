@@ -925,7 +925,7 @@ export default function CalendarPage() {
     return (
         <div
             className="flex flex-col bg-white"
-            style={{ height: 'calc(100vh - 5.5rem)' }}
+            style={{ height: 'calc(75vh - 4rem)' }}
         >
             <div className="mb-1 flex shrink-0 items-center justify-between gap-3 px-1">
                 <h1 className="text-xl font-bold">우리캘린더</h1>
@@ -958,7 +958,7 @@ export default function CalendarPage() {
                             selectable={true}
                             selectLongPressDelay={300}
                             select={openCreateFormFromSelect}
-                            dayMaxEvents={2}
+                            dayMaxEvents={3}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
                                 setPopupDate(formatLocalDateString(arg.date));
@@ -1218,122 +1218,126 @@ export default function CalendarPage() {
 
             {isFormOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={closeForm}>
-                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
+                    <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="mb-4 shrink-0 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
 
-                        <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
-                            <div className="space-y-3">
-                                <div>
-                                    <p className="mb-1 text-sm">일정 제목</p>
-                                    <input
-                                        className="w-full rounded border p-2"
-                                        value={title}
-                                        maxLength={EVENT_TITLE_MAX_LENGTH}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                    />
-                                    <div className={`mt-1 text-right text-xs ${title.trim().length >= 45 ? 'text-red-500' : 'text-gray-500'}`}>
-                                        {title.trim().length} / {EVENT_TITLE_MAX_LENGTH}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p className="mb-1 text-sm">세부일정</p>
-                                    <textarea
-                                        className="min-h-40 w-full resize-y rounded border p-2"
-                                        value={detail}
-                                        maxLength={EVENT_DETAIL_MAX_LENGTH}
-                                        onChange={(e) => setDetail(e.target.value)}
-                                    />
-                                    <div className={`mt-1 text-right text-xs ${detail.trim().length >= 450 ? 'text-red-500' : 'text-gray-500'}`}>
-                                        {detail.trim().length} / {EVENT_DETAIL_MAX_LENGTH}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex min-h-0 flex-col rounded border p-3">
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                    <p className="text-sm font-semibold">참석자</p>
-                                    <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
-                                </div>
-                                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto md:max-h-64">
-                                    {attendees.map((attendee) => (
-                                        <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
-                                            <div className="min-w-0">
-                                                <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
-                                                <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '승인' : '미승인'}</p>
-                                            </div>
-                                            {!attendee.isOwner && detailEvent?.user_id !== myUserId && selectedEventId ? null : !attendee.isOwner && (
-                                                <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>삭제</button>
-                                            )}
+                        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+                            <div className="grid min-h-0 gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
+                                <div className="flex min-h-0 flex-col gap-3">
+                                    <div className="shrink-0">
+                                        <p className="mb-1 text-sm">일정 제목</p>
+                                        <input
+                                            className="w-full rounded border p-2"
+                                            value={title}
+                                            maxLength={EVENT_TITLE_MAX_LENGTH}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                        />
+                                        <div className={`mt-1 text-right text-xs ${title.trim().length >= 45 ? 'text-red-500' : 'text-gray-500'}`}>
+                                            {title.trim().length} / {EVENT_TITLE_MAX_LENGTH}
                                         </div>
-                                    ))}
+                                    </div>
+
+                                    <div className="min-h-0 flex-1">
+                                        <p className="mb-1 text-sm">세부일정</p>
+                                        <textarea
+                                            className="min-h-40 w-full resize-y rounded border p-2 md:h-[calc(100%-1.5rem)]"
+                                            value={detail}
+                                            maxLength={EVENT_DETAIL_MAX_LENGTH}
+                                            onChange={(e) => setDetail(e.target.value)}
+                                        />
+                                        <div className={`mt-1 text-right text-xs ${detail.trim().length >= 450 ? 'text-red-500' : 'text-gray-500'}`}>
+                                            {detail.trim().length} / {EVENT_DETAIL_MAX_LENGTH}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex min-h-0 flex-col rounded border p-3">
+                                    <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
+                                        <p className="text-sm font-semibold">참석자</p>
+                                        <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
+                                    </div>
+                                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto md:max-h-80">
+                                        {attendees.map((attendee) => (
+                                            <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
+                                                    <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '승인' : '미승인'}</p>
+                                                </div>
+                                                {!attendee.isOwner && detailEvent?.user_id !== myUserId && selectedEventId ? null : !attendee.isOwner && (
+                                                    <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>삭제</button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="mb-3 grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-end">
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <p className="mb-1 text-sm">시작 날짜</p>
-                                    <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                            <div className="shrink-0 space-y-4 border-t pt-4">
+                                <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-end">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <p className="mb-1 text-sm">시작 날짜</p>
+                                            <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <p className="mb-1 text-sm">시작 시간</p>
+                                            <TimeSelect
+                                                value={startTime}
+                                                slots={START_TIME_SLOTS}
+                                                onChange={(val) => {
+                                                    setStartTime(val);
+                                                    const validEnds = isSameDate(startDate, endDate) ? getValidEndSlots(val) : START_TIME_SLOTS.concat('24:00');
+                                                    if (!validEnds.includes(endTime)) setEndTime(validEnds[0] ?? '');
+                                                }}
+                                                disabled={isAllDay}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="hidden pb-3 text-sm text-gray-400 md:block">~</div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <p className="mb-1 text-sm">종료 날짜</p>
+                                            <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <p className="mb-1 text-sm">종료 시간</p>
+                                            <TimeSelect
+                                                value={endTime}
+                                                slots={getEndTimeSlots()}
+                                                onChange={setEndTime}
+                                                startTime={startTime}
+                                                disabled={isAllDay}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="mb-1 text-sm">시작 시간</p>
-                                    <TimeSelect
-                                        value={startTime}
-                                        slots={START_TIME_SLOTS}
-                                        onChange={(val) => {
-                                            setStartTime(val);
-                                            const validEnds = isSameDate(startDate, endDate) ? getValidEndSlots(val) : START_TIME_SLOTS.concat('24:00');
-                                            if (!validEnds.includes(endTime)) setEndTime(validEnds[0] ?? '');
-                                        }}
-                                        disabled={isAllDay}
-                                    />
+
+                                <div className="flex items-center justify-between gap-3 text-sm">
+                                    <label className="flex items-center gap-2">
+                                        <input type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
+                                        하루 종일
+                                    </label>
+
+                                    <label className="flex items-center gap-2">
+                                        <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
+                                        상세 일정 함께 보기
+                                    </label>
                                 </div>
-                            </div>
 
-                            <div className="hidden pb-3 text-sm text-gray-400 md:block">-</div>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        {selectedEventId && detailEvent?.user_id === myUserId && (
+                                            <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={handleDeleteEvent}>삭제</button>
+                                        )}
+                                    </div>
 
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <p className="mb-1 text-sm">종료 날짜</p>
-                                    <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                                    <div className="flex gap-2">
+                                        <button className="rounded bg-gray-200 px-4 py-2" onClick={closeForm}>취소</button>
+                                        <button className="rounded bg-black px-4 py-2 text-white" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="mb-1 text-sm">종료 시간</p>
-                                    <TimeSelect
-                                        value={endTime}
-                                        slots={getEndTimeSlots()}
-                                        onChange={setEndTime}
-                                        startTime={startTime}
-                                        disabled={isAllDay}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mb-5 flex items-center justify-between gap-3 text-sm">
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
-                                하루 종일
-                            </label>
-
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
-                                상세 일정 함께 보기
-                            </label>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div>
-                                {selectedEventId && detailEvent?.user_id === myUserId && (
-                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={handleDeleteEvent}>삭제</button>
-                                )}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button className="rounded bg-gray-200 px-4 py-2" onClick={closeForm}>취소</button>
-                                <button className="rounded bg-black px-4 py-2 text-white" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
                             </div>
                         </div>
 
