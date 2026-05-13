@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.3.15**
+**현재 버전: v.0.3.16**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -65,7 +65,7 @@
 
 ### 일정 초대/참석자
 
-- 일정 생성/수정 팝업에서 참석자 리스트 표시
+- 일정 생성/수정 팝업에서 참석자 닉네임, 현재 상태(초대중/참석예정), 초대취소 버튼 표시
 - 일정 소유자는 참석자에 항상 포함
 - 친구 찾기 팝업에서 accepted 친구만 검색 가능
 - 친구 검색 결과 클릭 시 DB 저장 없이 참석자 리스트에 임시 추가
@@ -73,7 +73,7 @@
 - 일정 저장 시 `save_event_with_invites` RPC로 `events`와 `events_invite`를 단일 트랜잭션 저장
 - `events_invite` 구조: `event_id`, `profile_id`, `is_agree`
 - 초대받은 일정은 별도 `events` row를 만들지 않고 `events_invite` row만 저장
-- 참석자 리스트에서 `is_agree=false`는 `초대중`으로 표시, `true`는 초대중 문구 숨김
+- 참석자 리스트에서 `is_agree=false`는 `초대중`, `true`는 `참석예정`으로 표시
 - 일정 소유자는 초대 참석자 삭제 가능
 - 초대받은 일정 상세에서 참석하기/참석거절/참석취소 가능
 - 참석하기: 확인 후 `events_invite.is_agree=true`
