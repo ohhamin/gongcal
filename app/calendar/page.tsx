@@ -23,6 +23,19 @@ import {
 } from '@/lib/timeSlots';
 import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
 
+type EventInvite = {
+    event_id: number;
+    profile_id: string;
+    is_agree: boolean;
+};
+
+type EventAttendee = {
+    profile_id: string;
+    nickname: string | null;
+    is_agree: boolean;
+    isOwner: boolean;
+};
+
 type CalendarEvent = {
     id: string;
     title: string;
@@ -32,6 +45,10 @@ type CalendarEvent = {
     user_id: string;
     is_hidden: boolean;
     is_allday: boolean;
+    display_profile_id?: string;
+    display_relation?: 'my_owner' | 'my_invite_pending' | 'my_invite_accepted' | 'other_owner' | 'other_invite_accepted';
+    invite_profile_id?: string;
+    invite_is_agree?: boolean;
 };
 
 type Person = Profile;
@@ -56,6 +73,7 @@ type CommentQueryRow = Omit<CommentRow, 'profile'> & {
 
 const MY_EVENT_COLOR = '#3B82F6';
 const GROUP_EVENT_COLOR = '#10B981';
+const PENDING_INVITE_COLOR = '#F97316';
 const HIDDEN_EVENT_TITLE = '일정 있음';
 // 8자리 hex의 99는 약 60% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
 const HIDDEN_EVENT_COLOR_ALPHA = '99';
@@ -138,6 +156,11 @@ export default function CalendarPage() {
     const prevStartTimeRef = useRef<TimeValue>(DEFAULT_START_TIME);
     const prevEndTimeRef = useRef<TimeValue>(DEFAULT_END_TIME);
     const [isHidden, setIsHidden] = useState(true);
+    const [attendees, setAttendees] = useState<EventAttendee[]>([]);
+    const [isInviteSearchOpen, setIsInviteSearchOpen] = useState(false);
+    const [friendSearchKeyword, setFriendSearchKeyword] = useState('');
+    const [friendSearchResults, setFriendSearchResults] = useState<Person[]>([]);
+    const [isFriendSearching, setIsFriendSearching] = useState(false);
 
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
     const [comments, setComments] = useState<CommentRow[]>([]);
@@ -150,6 +173,27 @@ export default function CalendarPage() {
             router.push('/login');
         }
     }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
+
+    const sortCalendarEvents = useCallback((items: CalendarEvent[]) => {
+        const priority = (event: CalendarEvent) => {
+            if (event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted') return 0;
+            if (event.is_allday) return 1;
+            return 2;
+        };
+        return [...items].sort((a, b) => {
+            const priorityDiff = priority(a) - priority(b);
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
+        });
+    }, []);
+
+    const closeForm = () => {
+        setIsFormOpen(false);
+        setIsInviteSearchOpen(false);
+        setFriendSearchKeyword('');
+        setFriendSearchResults([]);
+        resetForm();
+    };
 
     // 대표 그룹의 수락 멤버 목록을 계산합니다. 그룹이 없으면 본인만 반환합니다.
     const fetchVisiblePeople = useCallback(async (): Promise<Person[]> => {
@@ -195,30 +239,90 @@ export default function CalendarPage() {
     const fetchEvents = useCallback(async () => {
         if (!visibleRange) return;
 
+        const currentUserId = currentUserQuery.data?.id;
         const visiblePeople = await fetchVisiblePeople();
         setPeople(visiblePeople);
-
         const peopleIds = visiblePeople.map((p) => p.id);
 
-        if (peopleIds.length === 0) {
+        if (peopleIds.length === 0 || !currentUserId) {
             setEvents([]);
             return;
         }
 
-        const { data, error } = await supabase
+        const { data: ownedRows, error: ownedError } = await supabase
             .from('events')
             .select('*')
             .in('user_id', peopleIds)
             .lt('start_at', visibleRange.end.toISOString())
             .gte('end_at', visibleRange.start.toISOString());
 
-        if (error) {
-            console.error(error);
+        if (ownedError) {
+            console.error(ownedError);
             return;
         }
 
-        setEvents(data || []);
-    }, [visibleRange, fetchVisiblePeople]);
+        const { data: inviteRows, error: inviteError } = await supabase
+            .from('events_invite')
+            .select('event_id, profile_id, is_agree, event:events(*)')
+            .in('profile_id', peopleIds);
+
+        if (inviteError) {
+            console.error(inviteError);
+            return;
+        }
+
+        type InviteQueryRow = EventInvite & { event: CalendarEvent | CalendarEvent[] | null };
+        const visibleStart = visibleRange.start.getTime();
+        const visibleEnd = visibleRange.end.getTime();
+        const normalizedInviteRows = ((inviteRows || []) as InviteQueryRow[]).filter((invite) => {
+            const event = Array.isArray(invite.event) ? invite.event[0] : invite.event;
+            if (!event) return false;
+            const eventStart = new Date(event.start_at).getTime();
+            const eventEnd = new Date(event.end_at).getTime();
+            if (!(eventStart < visibleEnd && eventEnd >= visibleStart)) return false;
+            if (invite.profile_id === currentUserId) return true;
+            return invite.is_agree;
+        });
+
+        const rank = (event: CalendarEvent) => {
+            switch (event.display_relation) {
+                case 'my_owner': return 0;
+                case 'my_invite_pending': return 1;
+                case 'my_invite_accepted': return 2;
+                case 'other_owner': return 3;
+                case 'other_invite_accepted': return 4;
+                default: return 9;
+            }
+        };
+        const merged = new Map<string, CalendarEvent>();
+
+        ((ownedRows || []) as CalendarEvent[]).forEach((event) => {
+            merged.set(String(event.id), {
+                ...event,
+                id: String(event.id),
+                display_profile_id: event.user_id,
+                display_relation: event.user_id === currentUserId ? 'my_owner' : 'other_owner',
+            });
+        });
+
+        normalizedInviteRows.forEach((invite) => {
+            const event = Array.isArray(invite.event) ? invite.event[0] : invite.event;
+            if (!event) return;
+            const isMe = invite.profile_id === currentUserId;
+            const normalized: CalendarEvent = {
+                ...event,
+                id: String(event.id),
+                display_profile_id: invite.profile_id,
+                display_relation: isMe ? (invite.is_agree ? 'my_invite_accepted' : 'my_invite_pending') : 'other_invite_accepted',
+                invite_profile_id: invite.profile_id,
+                invite_is_agree: invite.is_agree,
+            };
+            const current = merged.get(String(event.id));
+            if (!current || rank(normalized) < rank(current)) merged.set(String(event.id), normalized);
+        });
+
+        setEvents(sortCalendarEvents(Array.from(merged.values())));
+    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, sortCalendarEvents]);
 
     // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
     useEffect(() => {
@@ -258,18 +362,7 @@ export default function CalendarPage() {
                 const dayEnd = new Date(`${dateStr}T23:59:59`);
                 return new Date(event.start_at) <= dayEnd && new Date(event.end_at) >= dayStart;
             })
-            .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
-    };
-
-    const hasOverlap = (start: Date, end: Date): boolean => {
-        return events.some((event) => {
-            if (event.user_id !== myUserId) return false;
-            if (selectedEventId && String(event.id) === selectedEventId) return false;
-
-            const existingStart = new Date(event.start_at);
-            const existingEnd = new Date(event.end_at);
-            return start < existingEnd && end > existingStart;
-        });
+            .sort((a, b) => sortCalendarEvents([a, b])[0].id === a.id ? -1 : 1);
     };
 
     const resetForm = () => {
@@ -283,6 +376,11 @@ export default function CalendarPage() {
         setIsAllDay(false);
         setSelectedEventId(null);
         setIsHidden(true);
+        if (profileQuery.data) {
+            setAttendees([{ profile_id: profileQuery.data.id, nickname: profileQuery.data.nickname, is_agree: true, isOwner: true }]);
+        } else {
+            setAttendees([]);
+        }
     };
 
     const openCreateForm = (dateStr = getTodayString(), targetEndDate = dateStr, allDay = false) => {
@@ -321,6 +419,8 @@ export default function CalendarPage() {
             setEndTime(dateToTimeValue(new Date(event.end_at)));
         }
         setIsHidden(event.is_hidden);
+        setAttendees([{ profile_id: event.user_id, nickname: ownerNameById.get(event.user_id) || '이름 없음', is_agree: true, isOwner: true }]);
+        void loadEventAttendees(String(event.id), event.user_id);
         setIsFormOpen(true);
     };
 
@@ -335,6 +435,46 @@ export default function CalendarPage() {
             setEndTime(prevEndTimeRef.current || DEFAULT_END_TIME);
         }
         setIsAllDay(checked);
+    };
+
+    const loadEventAttendees = async (eventId: string, ownerId: string) => {
+        const { data, error } = await supabase
+            .from('events_invite')
+            .select('event_id, profile_id, is_agree, profile:profiles(id, nickname)')
+            .eq('event_id', Number(eventId));
+        if (error) { console.error(error); return; }
+        type InviteAttendeeRow = EventInvite & { profile: Person | Person[] | null };
+        const inviteAttendees = ((data || []) as InviteAttendeeRow[]).map((row) => {
+            const profile = normalizeProfile(row.profile);
+            return { profile_id: row.profile_id, nickname: profile?.nickname || '이름 없음', is_agree: row.is_agree, isOwner: false };
+        });
+        setAttendees([{ profile_id: ownerId, nickname: ownerNameById.get(ownerId) || '이름 없음', is_agree: true, isOwner: true }, ...inviteAttendees]);
+    };
+
+    const searchInviteFriends = async () => {
+        if (!myUserId) return;
+        const keyword = friendSearchKeyword.trim();
+        setIsFriendSearching(true);
+        const { data, error } = await supabase
+            .from('friendships')
+            .select(`requester_id, addressee_id, requester:profiles!friendships_requester_id_fkey (id, nickname), addressee:profiles!friendships_addressee_id_fkey (id, nickname)`)
+            .eq('status', 'accepted')
+            .or(`requester_id.eq.${myUserId},addressee_id.eq.${myUserId}`);
+        setIsFriendSearching(false);
+        if (error) { console.error(error); alert('친구 검색 실패'); return; }
+        type FriendshipSearchRow = { requester_id: string; addressee_id: string; requester: Person | Person[] | null; addressee: Person | Person[] | null; };
+        const friends = ((data || []) as FriendshipSearchRow[]).map((row) => normalizeProfile(row.requester_id === myUserId ? row.addressee : row.requester)).filter(Boolean) as Person[];
+        setFriendSearchResults(friends.filter((friend) => !keyword || (friend.nickname || '').includes(keyword)).sort((a, b) => (a.nickname || '').localeCompare(b.nickname || '')));
+    };
+
+    const addInviteAttendee = (profile: Person) => {
+        if (attendees.some((attendee) => attendee.profile_id === profile.id)) { alert('이미 추가된 사용자에요'); return; }
+        setAttendees((prev) => [...prev, { profile_id: profile.id, nickname: profile.nickname, is_agree: false, isOwner: false }]);
+        setIsInviteSearchOpen(false); setFriendSearchKeyword(''); setFriendSearchResults([]);
+    };
+
+    const removeInviteAttendee = (profileId: string) => {
+        setAttendees((prev) => prev.filter((attendee) => attendee.isOwner || attendee.profile_id !== profileId));
     };
 
     const handleSaveEvent = async () => {
@@ -372,10 +512,6 @@ export default function CalendarPage() {
             return;
         }
 
-        if (hasOverlap(start, end)) {
-            alert('이미 해당 시간에 일정이 있습니다.');
-            return;
-        }
 
         const eventPayload = {
             title: trimmedTitle,
@@ -386,27 +522,23 @@ export default function CalendarPage() {
             is_allday: isAllDay,
         };
 
+        const invitePayload = attendees
+            .filter((attendee) => !attendee.isOwner)
+            .map((attendee) => ({ profile_id: attendee.profile_id, is_agree: attendee.is_agree }));
+        let savedEventId = selectedEventId ? Number(selectedEventId) : null;
+
         if (selectedEventId) {
-            const { error } = await supabase
-                .from('events')
-                .update(eventPayload)
-                .eq('id', Number(selectedEventId))
-                .eq('user_id', user.id);
-
-            if (error) {
-                console.error(error);
-                return;
-            }
+            const { error } = await supabase.from('events').update(eventPayload).eq('id', Number(selectedEventId)).eq('user_id', user.id);
+            if (error) { console.error(error); return; }
+            await supabase.from('events_invite').delete().eq('event_id', Number(selectedEventId));
         } else {
-            const { error } = await supabase.from('events').insert({
-                ...eventPayload,
-                user_id: user.id,
-            });
-
-            if (error) {
-                console.error(error);
-                return;
-            }
+            const { data, error } = await supabase.from('events').insert({ ...eventPayload, user_id: user.id }).select('id').single();
+            if (error) { console.error(error); return; }
+            savedEventId = data?.id ? Number(data.id) : null;
+        }
+        if (savedEventId && invitePayload.length > 0) {
+            const { error: inviteError } = await supabase.from('events_invite').upsert(invitePayload.map((invite) => ({ ...invite, event_id: savedEventId })), { onConflict: 'event_id,profile_id' });
+            if (inviteError) { console.error(inviteError); alert('초대 저장 실패'); return; }
         }
 
         setIsFormOpen(false);
@@ -431,6 +563,8 @@ export default function CalendarPage() {
             alert('댓글 삭제 실패');
             return;
         }
+
+        await supabase.from('events_invite').delete().eq('event_id', Number(selectedEventId));
 
         const { error } = await supabase
             .from('events')
@@ -485,7 +619,8 @@ export default function CalendarPage() {
 
     const openDetail = async (event: CalendarEvent) => {
         const isOwner = event.user_id === myUserId;
-        if (!isOwner && event.is_hidden) return;
+        const isMyInvite = event.invite_profile_id === myUserId;
+        if (!isOwner && !isMyInvite && event.is_hidden) return;
 
         setDetailEvent(event);
         setCommentInput('');
@@ -516,6 +651,22 @@ export default function CalendarPage() {
     const handleEditFromDetail = () => {
         if (!detailEvent || detailEvent.user_id !== myUserId) return;
         openEditForm(detailEvent);
+    };
+
+    const handleAcceptInvite = async () => {
+        if (!detailEvent || !myUserId) return;
+        const ok = confirm('초대를 받으시겠습니까?'); if (!ok) return;
+        const { error } = await supabase.from('events_invite').update({ is_agree: true }).eq('event_id', Number(detailEvent.id)).eq('profile_id', myUserId);
+        if (error) { console.error(error); alert('초대 수락 실패'); return; }
+        setDetailEvent(null); fetchEvents();
+    };
+
+    const handleCancelInvite = async () => {
+        if (!detailEvent || !myUserId) return;
+        const ok = confirm(detailEvent.invite_is_agree ? '참석을 취소하시겠습니까?' : '초대를 받지 않으시겠습니까?'); if (!ok) return;
+        const { error } = await supabase.from('events_invite').delete().eq('event_id', Number(detailEvent.id)).eq('profile_id', myUserId);
+        if (error) { console.error(error); alert('초대 취소 실패'); return; }
+        setDetailEvent(null); setPopupDate(null); fetchEvents();
     };
 
     const handleCreateComment = async () => {
@@ -628,8 +779,9 @@ export default function CalendarPage() {
     };
 
     const calendarEvents = events.map((event) => {
-        const isOwner = event.user_id === myUserId;
-        const baseColor = isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
+        const isOwner = event.display_relation === 'my_owner' || event.display_relation === 'my_invite_accepted';
+        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
+        const baseColor = isPendingMyInvite ? PENDING_INVITE_COLOR : isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
         const displayTitle = event.is_hidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
 
@@ -680,7 +832,7 @@ export default function CalendarPage() {
                             headerToolbar={{ left: '', center: 'title', right: '' }}
                             height="100%"
                             expandRows={true}
-                            fixedWeekCount={false}
+                            fixedWeekCount={true}
                             events={calendarEvents}
                             dateClick={handleDateClick}
                             eventClick={handleEventClick}
@@ -730,8 +882,8 @@ export default function CalendarPage() {
             </div>
 
             {popupDate && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4">
-                    <div className="flex h-[65vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-xl">
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4" onClick={() => setPopupDate(null)}>
+                    <div className="flex h-[65vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
                         <div className="flex shrink-0 items-center justify-between border-b p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
                             <button
@@ -748,9 +900,10 @@ export default function CalendarPage() {
                             ) : (
                                 <ul className="space-y-2">
                                     {popupEvents.map((event) => {
-                                        const isOwner = event.user_id === myUserId;
-                                        const isHiddenFromMe = event.is_hidden && !isOwner;
-                                        const color = isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
+                                        const isOwner = event.display_relation === 'my_owner' || event.display_relation === 'my_invite_accepted';
+                                        const isMyInvite = event.invite_profile_id === myUserId;
+                                        const isHiddenFromMe = event.is_hidden && !isOwner && !isMyInvite;
+                                        const color = event.display_relation === 'my_invite_pending' ? PENDING_INVITE_COLOR : isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
                                         const displayTitle = isHiddenFromMe ? HIDDEN_EVENT_TITLE : event.title;
                                         const ownerName = ownerNameById.get(event.user_id);
 
@@ -797,20 +950,29 @@ export default function CalendarPage() {
             )}
 
             {detailEvent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDetailEvent(null)}>
+                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                         <div className="mb-4 flex items-start justify-between gap-3">
                             <h2 className="text-xl font-bold">{detailEvent.title}</h2>
 
                             <div className="flex gap-2">
-                                <button
-                                    className={`rounded bg-gray-900 px-3 py-1 text-sm text-white ${
-                                        detailEvent.user_id === myUserId ? '' : 'hidden'
-                                    }`}
-                                    onClick={handleEditFromDetail}
-                                >
-                                    수정
-                                </button>
+                                {detailEvent.user_id === myUserId && (
+                                    <button
+                                        className="rounded bg-gray-900 px-3 py-1 text-sm text-white"
+                                        onClick={handleEditFromDetail}
+                                    >
+                                        수정
+                                    </button>
+                                )}
+                                {detailEvent.invite_profile_id === myUserId && !detailEvent.invite_is_agree && (
+                                    <>
+                                        <button className="rounded bg-blue-600 px-3 py-1 text-sm text-white" onClick={handleAcceptInvite}>참석하기</button>
+                                        <button className="rounded bg-red-500 px-3 py-1 text-sm text-white" onClick={handleCancelInvite}>참석거절</button>
+                                    </>
+                                )}
+                                {detailEvent.invite_profile_id === myUserId && detailEvent.invite_is_agree && (
+                                    <button className="rounded bg-red-500 px-3 py-1 text-sm text-white" onClick={handleCancelInvite}>참석취소</button>
+                                )}
                                 <button
                                     className="rounded bg-gray-200 px-3 py-1 text-sm"
                                     onClick={() => {
@@ -944,44 +1106,57 @@ export default function CalendarPage() {
             </button>
 
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
-                        <h2 className="mb-4 text-xl font-bold">
-                            {selectedEventId ? '일정 수정' : '일정 추가'}
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={closeForm}>
+                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
 
-                        </h2>
+                        <div className="mb-4 grid gap-4 md:grid-cols-[1fr_280px]">
+                            <div>
+                                <div className="mb-3">
+                                    <p className="mb-1 text-sm">일정 제목</p>
+                                    <input
+                                        className="w-full rounded border p-2"
+                                        value={title}
+                                        maxLength={EVENT_TITLE_MAX_LENGTH}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                    />
+                                    <div className={`mt-1 text-right text-xs ${title.trim().length >= 45 ? 'text-red-500' : 'text-gray-500'}`}>
+                                        {title.trim().length} / {EVENT_TITLE_MAX_LENGTH}
+                                    </div>
+                                </div>
 
-                        <div className="mb-3">
-                            <p className="mb-1 text-sm">일정 제목</p>
-                            <input
-                                className="w-full rounded border p-2"
-                                value={title}
-                                maxLength={EVENT_TITLE_MAX_LENGTH}
-                                onChange={(e) => setTitle(e.target.value)}
-                            />
-                            <div
-                                className={`mt-1 text-right text-xs ${
-                                    title.trim().length >= 45 ? 'text-red-500' : 'text-gray-500'
-                                }`}
-                            >
-                                {title.trim().length} / {EVENT_TITLE_MAX_LENGTH}
+                                <div className="mb-3">
+                                    <p className="mb-1 text-sm">세부내용</p>
+                                    <textarea
+                                        className="min-h-28 w-full resize-y rounded border p-2"
+                                        value={detail}
+                                        maxLength={EVENT_DETAIL_MAX_LENGTH}
+                                        onChange={(e) => setDetail(e.target.value)}
+                                    />
+                                    <div className={`mt-1 text-right text-xs ${detail.trim().length >= 450 ? 'text-red-500' : 'text-gray-500'}`}>
+                                        {detail.trim().length} / {EVENT_DETAIL_MAX_LENGTH}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="mb-3">
-                            <p className="mb-1 text-sm">세부내용</p>
-                            <textarea
-                                className="min-h-28 w-full resize-y rounded border p-2"
-                                value={detail}
-                                maxLength={EVENT_DETAIL_MAX_LENGTH}
-                                onChange={(e) => setDetail(e.target.value)}
-                            />
-                            <div
-                                className={`mt-1 text-right text-xs ${
-                                    detail.trim().length >= 450 ? 'text-red-500' : 'text-gray-500'
-                                }`}
-                            >
-                                {detail.trim().length} / {EVENT_DETAIL_MAX_LENGTH}
+                            <div className="min-h-0 rounded border p-3">
+                                <div className="mb-2 flex items-center justify-between gap-2">
+                                    <p className="text-sm font-semibold">참석자</p>
+                                    <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
+                                </div>
+                                <div className="max-h-56 space-y-2 overflow-y-auto">
+                                    {attendees.map((attendee) => (
+                                        <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
+                                            <div className="min-w-0">
+                                                <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
+                                                <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '승인' : '미승인'}</p>
+                                            </div>
+                                            {!attendee.isOwner && detailEvent?.user_id !== myUserId && selectedEventId ? null : !attendee.isOwner && (
+                                                <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>삭제</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -1000,17 +1175,13 @@ export default function CalendarPage() {
                             <div>
                                 <p className="mb-1 text-sm">시작 시간</p>
                                 <TimeSelect
-                                value={startTime}
-                                slots={START_TIME_SLOTS}
-                                onChange={(val) => {
-                                    setStartTime(val);
-                                    const validEnds = isSameDate(startDate, endDate)
-                                        ? getValidEndSlots(val)
-                                        : START_TIME_SLOTS.concat('24:00');
-                                    if (!validEnds.includes(endTime)) {
-                                        setEndTime(validEnds[0] ?? '');
-                                    }
-                                }}
+                                    value={startTime}
+                                    slots={START_TIME_SLOTS}
+                                    onChange={(val) => {
+                                        setStartTime(val);
+                                        const validEnds = isSameDate(startDate, endDate) ? getValidEndSlots(val) : START_TIME_SLOTS.concat('24:00');
+                                        if (!validEnds.includes(endTime)) setEndTime(validEnds[0] ?? '');
+                                    }}
                                     disabled={isAllDay}
                                 />
                             </div>
@@ -1018,10 +1189,10 @@ export default function CalendarPage() {
                             <div>
                                 <p className="mb-1 text-sm">종료 시간</p>
                                 <TimeSelect
-                                value={endTime}
-                                slots={getEndTimeSlots()}
-                                onChange={setEndTime}
-                                startTime={startTime}
+                                    value={endTime}
+                                    slots={getEndTimeSlots()}
+                                    onChange={setEndTime}
+                                    startTime={startTime}
                                     disabled={isAllDay}
                                 />
                             </div>
@@ -1029,54 +1200,58 @@ export default function CalendarPage() {
 
                         <div className="mb-5 flex items-center justify-between gap-3 text-sm">
                             <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={isAllDay}
-                                    onChange={(e) => handleAllDayChange(e.target.checked)}
-                                />
+                                <input type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
                                 하루 종일
                             </label>
 
                             <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={!isHidden}
-                                    onChange={(e) => setIsHidden(!e.target.checked)}
-                                />
+                                <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
                                 상세 일정 함께 보기
                             </label>
                         </div>
 
                         <div className="flex items-center justify-between">
                             <div>
-                                {selectedEventId && (
-                                    <button
-                                        className="rounded bg-red-500 px-4 py-2 text-white"
-                                        onClick={handleDeleteEvent}
-                                    >
-                                        삭제
-                                    </button>
+                                {selectedEventId && detailEvent?.user_id === myUserId && (
+                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={handleDeleteEvent}>삭제</button>
                                 )}
                             </div>
 
                             <div className="flex gap-2">
-                                <button
-                                    className="rounded bg-gray-200 px-4 py-2"
-                                    onClick={() => {
-                                        setIsFormOpen(false);
-                                        resetForm();
-                                    }}
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    className="rounded bg-black px-4 py-2 text-white"
-                                    onClick={handleSaveEvent}
-                                >
-                                    {selectedEventId ? '수정' : '저장'}
-                                </button>
+                                <button className="rounded bg-gray-200 px-4 py-2" onClick={closeForm}>취소</button>
+                                <button className="rounded bg-black px-4 py-2 text-white" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
                             </div>
                         </div>
+
+                        {isInviteSearchOpen && (
+                            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setIsInviteSearchOpen(false)}>
+                                <div className="flex h-[70vh] w-full max-w-md flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold">친구 찾기</h3>
+                                        <button className="rounded bg-gray-200 px-3 py-1 text-sm" onClick={() => setIsInviteSearchOpen(false)}>닫기</button>
+                                    </div>
+                                    <div className="mb-3 flex gap-2">
+                                        <input
+                                            className="min-w-0 flex-1 rounded border p-2 text-sm"
+                                            placeholder="닉네임 검색"
+                                            value={friendSearchKeyword}
+                                            onChange={(e) => setFriendSearchKeyword(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') searchInviteFriends(); }}
+                                        />
+                                        <button className="rounded bg-black px-4 py-2 text-sm text-white" disabled={isFriendSearching} onClick={searchInviteFriends}>검색</button>
+                                    </div>
+                                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+                                        {friendSearchResults.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">검색 결과가 없습니다.</p>}
+                                        {friendSearchResults.map((profile) => (
+                                            <button key={profile.id} className="flex w-full items-center justify-between rounded border p-3 text-left hover:bg-gray-50" onClick={() => addInviteAttendee(profile)}>
+                                                <span className="font-semibold">{profile.nickname || '이름 없음'}</span>
+                                                <span className="text-xs text-gray-500">추가</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
