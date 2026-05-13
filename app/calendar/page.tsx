@@ -113,37 +113,46 @@ function isSameDate(start: string, end: string): boolean {
     return start === end;
 }
 
-function isLongSchedule(event: CalendarEvent): boolean {
-    return formatLocalDateString(new Date(event.start_at)) !== formatLocalDateString(new Date(event.end_at));
+function getDisplayPriority(event: CalendarEvent): number {
+    return event.is_allday ? 1 : 2;
 }
 
-function getDisplayPriority(event: CalendarEvent): number {
-    const isLong = isLongSchedule(event);
+function getDisplayRelationRank(event: CalendarEvent): number {
+    if (event.display_relation === 'my_owner') return 1;
+    if (event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted') return 2;
+    if (event.display_relation === 'other_owner') return 3;
+    return 4;
+}
 
-    if (event.display_relation === 'my_invite_pending') return isLong ? 1 : 3;
-    if (event.display_relation === 'my_owner' || event.display_relation === 'my_invite_accepted') return isLong ? 2 : 4;
-    return isLong ? 5 : 6;
+function getStartMinutes(event: CalendarEvent): number {
+    const start = new Date(event.start_at);
+    return start.getHours() * 60 + start.getMinutes();
 }
 
 function compareCalendarEvents(a: CalendarEvent, b: CalendarEvent): number {
     const priorityDiff = getDisplayPriority(a) - getDisplayPriority(b);
     if (priorityDiff !== 0) return priorityDiff;
 
-    const aLong = isLongSchedule(a);
-    const bLong = isLongSchedule(b);
-
-    if (aLong && bLong) {
-        const startDiff = new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
-        if (startDiff !== 0) return startDiff;
-
-        const endDiff = new Date(b.end_at).getTime() - new Date(a.end_at).getTime();
-        if (endDiff !== 0) return endDiff;
-    } else {
-        const startDiff = new Date(a.start_at).getTime() - new Date(b.start_at).getTime();
-        if (startDiff !== 0) return startDiff;
-    }
+    const startDiff = getStartMinutes(a) - getStartMinutes(b);
+    if (startDiff !== 0) return startDiff;
 
     return a.title.localeCompare(b.title, 'ko');
+}
+
+function getDateStringsInRange(startAt: string, endAt: string): string[] {
+    const startDateStr = formatLocalDateString(new Date(startAt));
+    const endDateStr = formatLocalDateString(new Date(endAt));
+    const dates: string[] = [];
+    const cursor = new Date(`${startDateStr}T00:00:00`);
+
+    // 긴 일정도 월간 캘린더에서는 이어진 막대가 아니라 날짜별 단일 칸으로 렌더링합니다.
+    // 같은 DB row를 여러 표시 인스턴스로 펼치므로 클릭/삭제는 원본 일정 하나에 연결됩니다.
+    for (let guard = 0; formatLocalDateString(cursor) <= endDateStr && guard < 370; guard += 1) {
+        dates.push(formatLocalDateString(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return dates;
 }
 
 function formatHourMinute(value: string): string {
@@ -379,7 +388,7 @@ export default function CalendarPage() {
             return invite.is_agree;
         });
 
-        const rank = (event: CalendarEvent) => getDisplayPriority(event);
+        const rank = (event: CalendarEvent) => getDisplayRelationRank(event);
         const merged = new Map<string, CalendarEvent>();
 
         ((ownedRows || []) as CalendarEvent[]).forEach((event) => {
@@ -1020,35 +1029,36 @@ export default function CalendarPage() {
         return isSameDate(startDate, endDate) ? getValidEndSlots(startTime) : START_TIME_SLOTS.concat('24:00');
     };
 
-    const calendarEvents = sortCalendarEvents(events).map((event) => {
-        const isOwner = event.display_relation === 'my_owner' || event.display_relation === 'my_invite_accepted';
-        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
-        const baseColor = isPendingMyInvite ? PENDING_INVITE_COLOR : isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
-        const displayTitle = event.is_hidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
+    const calendarEvents = sortCalendarEvents(events).flatMap((event) => {
+        const isMyEvent = event.display_relation === 'my_owner';
+        const isMyInvite = event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted';
+        const canSeeDetail = isMyEvent || isMyInvite;
+        const baseColor = isMyEvent ? MY_EVENT_COLOR : isMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
+        const displayTitle = event.is_hidden && !canSeeDetail ? HIDDEN_EVENT_TITLE : event.title;
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
+        const orderStartAt = getStartMinutes(event);
 
-        const startDateStr = formatLocalDateString(new Date(event.start_at));
-        const isMultiDay = isLongSchedule(event);
-
-        return {
-            id: String(event.id),
+        return getDateStringsInRange(event.start_at, event.end_at).map((dateStr) => ({
+            id: `${event.id}:${dateStr}`,
             title: displayTitle,
-            start: isMultiDay ? startDateStr : event.start_at,
-            end: isMultiDay ? formatLocalDateString(addDays(new Date(event.end_at), 1)) : event.end_at,
-            allDay: isMultiDay || event.is_allday,
+            start: dateStr,
+            allDay: true,
             orderPriority: getDisplayPriority(event),
+            orderStartAt,
             backgroundColor: color,
             borderColor: color,
             extendedProps: {
+                originalEventId: String(event.id),
+                displayDate: dateStr,
                 isHidden: event.is_hidden,
                 userId: event.user_id,
                 ownerName: ownerNameById.get(event.user_id) || '',
-                isOwner,
+                isOwner: isMyEvent,
+                isMyInvite,
                 orderPriority: getDisplayPriority(event),
-                longStartAt: new Date(event.start_at).getTime(),
-                longEndAt: new Date(event.end_at).getTime(),
+                orderStartAt,
             },
-        };
+        }));
     });
 
     const popupEvents = popupDate ? getEventsForDate(popupDate) : [];
@@ -1131,7 +1141,7 @@ export default function CalendarPage() {
                             displayEventTime={false}
                             eventDisplay="block"
                             eventOrderStrict={true}
-                            eventOrder="orderPriority,longStartAt,-longEndAt,title"
+                            eventOrder="orderPriority,orderStartAt,title"
                             eventContent={(arg) => (
                                 <div className="truncate text-[10px] font-semibold leading-none">{arg.event.title}</div>
                             )}
@@ -1165,10 +1175,10 @@ export default function CalendarPage() {
                             ) : (
                                 <ul className="space-y-2">
                                     {popupEvents.map((event) => {
-                                        const isOwner = event.display_relation === 'my_owner' || event.display_relation === 'my_invite_accepted';
-                                        const isMyInvite = event.invite_profile_id === myUserId;
+                                        const isOwner = event.display_relation === 'my_owner';
+                                        const isMyInvite = event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted';
                                         const isHiddenFromMe = event.is_hidden && !isOwner && !isMyInvite;
-                                        const color = event.display_relation === 'my_invite_pending' ? PENDING_INVITE_COLOR : isOwner ? MY_EVENT_COLOR : GROUP_EVENT_COLOR;
+                                        const color = isOwner ? MY_EVENT_COLOR : isMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
                                         const displayTitle = isHiddenFromMe ? HIDDEN_EVENT_TITLE : event.title;
                                         const ownerName = ownerNameById.get(event.user_id);
 
