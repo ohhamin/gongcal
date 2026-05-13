@@ -163,3 +163,7 @@ body {
     touch-action: none;
     user-select: none;
 }
+
+.fc .ourcal-range-selected .fc-daygrid-day-frame {
+    background: rgba(59, 130, 246, 0.16) !important;
+}

@@ -161,6 +161,11 @@ export default function CalendarPage() {
     const [friendSearchKeyword, setFriendSearchKeyword] = useState('');
     const [friendSearchResults, setFriendSearchResults] = useState<Person[]>([]);
     const [isFriendSearching, setIsFriendSearching] = useState(false);
+    const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
+    const calendarContainerRef = useRef<HTMLDivElement | null>(null);
+    const dragStartDateRef = useRef<string | null>(null);
+    const isRangeDraggingRef = useRef(false);
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
     const [comments, setComments] = useState<CommentRow[]>([]);
@@ -194,6 +199,70 @@ export default function CalendarPage() {
         setFriendSearchResults([]);
         resetForm();
     };
+
+    const normalizeDateRange = (startDateStr: string, endDateStr: string) => {
+        return startDateStr <= endDateStr
+            ? { start: startDateStr, end: endDateStr }
+            : { start: endDateStr, end: startDateStr };
+    };
+
+    const getDateFromPointer = (clientX: number, clientY: number): string | null => {
+        const target = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+        const dayCell = target?.closest('[data-date]');
+        return dayCell?.getAttribute('data-date') || null;
+    };
+
+    const clearRangeDrag = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        dragStartDateRef.current = null;
+        isRangeDraggingRef.current = false;
+        setDragRange(null);
+    };
+
+    const handleCalendarPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+        const dateStr = getDateFromPointer(event.clientX, event.clientY);
+        if (!dateStr) return;
+
+        dragStartDateRef.current = dateStr;
+        longPressTimerRef.current = setTimeout(() => {
+            isRangeDraggingRef.current = true;
+            setDragRange({ start: dateStr, end: dateStr });
+        }, 250);
+    };
+
+    const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!isRangeDraggingRef.current || !dragStartDateRef.current) return;
+        event.preventDefault();
+
+        const dateStr = getDateFromPointer(event.clientX, event.clientY);
+        if (!dateStr) return;
+
+        setDragRange(normalizeDateRange(dragStartDateRef.current, dateStr));
+    };
+
+    const handleCalendarPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+
+        if (!isRangeDraggingRef.current || !dragStartDateRef.current) {
+            clearRangeDrag();
+            return;
+        }
+
+        event.preventDefault();
+        const endDateStr = getDateFromPointer(event.clientX, event.clientY) || dragStartDateRef.current;
+        const selectedRange = normalizeDateRange(dragStartDateRef.current, endDateStr);
+        clearRangeDrag();
+        openCreateForm(selectedRange.start, selectedRange.end, true);
+    };
+
 
     // 대표 그룹의 수락 멤버 목록을 계산합니다. 그룹이 없으면 본인만 반환합니다.
     const fetchVisiblePeople = useCallback(async (): Promise<Person[]> => {
@@ -440,15 +509,44 @@ export default function CalendarPage() {
     const loadEventAttendees = async (eventId: string, ownerId: string) => {
         const { data, error } = await supabase
             .from('events_invite')
-            .select('event_id, profile_id, is_agree, profile:profiles(id, nickname)')
+            .select('event_id, profile_id, is_agree')
             .eq('event_id', Number(eventId));
-        if (error) { console.error(error); return; }
-        type InviteAttendeeRow = EventInvite & { profile: Person | Person[] | null };
-        const inviteAttendees = ((data || []) as InviteAttendeeRow[]).map((row) => {
-            const profile = normalizeProfile(row.profile);
-            return { profile_id: row.profile_id, nickname: profile?.nickname || '이름 없음', is_agree: row.is_agree, isOwner: false };
-        });
-        setAttendees([{ profile_id: ownerId, nickname: ownerNameById.get(ownerId) || '이름 없음', is_agree: true, isOwner: true }, ...inviteAttendees]);
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        const inviteRows = (data || []) as EventInvite[];
+        const invitedProfileIds = inviteRows.map((row) => row.profile_id);
+        const profileNameById = new Map<string, string | null>();
+
+        if (invitedProfileIds.length > 0) {
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, nickname')
+                .in('id', invitedProfileIds);
+
+            if (profilesError) {
+                console.error(profilesError);
+            } else {
+                ((profiles || []) as Person[]).forEach((profile) => {
+                    profileNameById.set(profile.id, profile.nickname);
+                });
+            }
+        }
+
+        const inviteAttendees = inviteRows.map((row) => ({
+            profile_id: row.profile_id,
+            nickname: profileNameById.get(row.profile_id) || '이름 없음',
+            is_agree: row.is_agree,
+            isOwner: false,
+        }));
+
+        setAttendees([
+            { profile_id: ownerId, nickname: ownerNameById.get(ownerId) || '이름 없음', is_agree: true, isOwner: true },
+            ...inviteAttendees,
+        ]);
     };
 
     const searchInviteFriends = async () => {
@@ -910,11 +1008,16 @@ export default function CalendarPage() {
         const displayTitle = event.is_hidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
 
+        const startDateStr = formatLocalDateString(new Date(event.start_at));
+        const endDateStr = formatLocalDateString(new Date(event.end_at));
+        const isMultiDay = startDateStr !== endDateStr;
+
         return {
             id: String(event.id),
             title: displayTitle,
-            start: event.start_at,
-            end: event.end_at,
+            start: isMultiDay ? startDateStr : event.start_at,
+            end: isMultiDay ? formatLocalDateString(addDays(new Date(event.end_at), 1)) : event.end_at,
+            allDay: isMultiDay || event.is_allday,
             backgroundColor: color,
             borderColor: color,
             extendedProps: {
@@ -945,7 +1048,18 @@ export default function CalendarPage() {
                 />
             </div>
 
-            <div className="relative min-h-0 flex-1">
+            <div
+                ref={calendarContainerRef}
+                className="relative min-h-0 flex-1"
+                onPointerDown={handleCalendarPointerDown}
+                onPointerMove={handleCalendarPointerMove}
+                onPointerUp={handleCalendarPointerUp}
+                onPointerCancel={clearRangeDrag}
+                onPointerLeave={(event) => {
+                    if (!isRangeDraggingRef.current) clearRangeDrag();
+                    else handleCalendarPointerMove(event);
+                }}
+            >
                 {currentUserQuery.isLoading || profileQuery.isLoading ? (
                     <CalendarLoading />
                 ) : (
@@ -969,6 +1083,11 @@ export default function CalendarPage() {
                             eventLongPressDelay={250}
                             select={openCreateFormFromSelect}
                             dayMaxEvents={3}
+                            dayCellClassNames={(arg) => {
+                                if (!dragRange) return [];
+                                const dateStr = formatLocalDateString(arg.date);
+                                return dateStr >= dragRange.start && dateStr <= dragRange.end ? ['ourcal-range-selected'] : [];
+                            }}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
                                 setPopupDate(formatLocalDateString(arg.date));
@@ -1270,9 +1389,9 @@ export default function CalendarPage() {
                                         <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
                                             <div className="min-w-0">
                                                 <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
-                                                <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '승인' : '미승인'}</p>
+                                                <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '' : '초대중'}</p>
                                             </div>
-                                            {!attendee.isOwner && detailEvent?.user_id !== myUserId && selectedEventId ? null : !attendee.isOwner && (
+                                            {!attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId) && (
                                                 <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>삭제</button>
                                             )}
                                         </div>
