@@ -59,7 +59,6 @@ type CommentQueryRow = Omit<CommentRow, 'profile'> & {
     profile: Person | Person[] | null;
 };
 
-const HIDDEN_EVENT_TITLE = '일정 있음';
 // 8자리 hex의 99는 약 60% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
 const HIDDEN_EVENT_COLOR_ALPHA = '99';
 const EVENT_TITLE_MAX_LENGTH = 50;
@@ -741,7 +740,7 @@ export default function DayPage({ params }: Props) {
                                     .filter((event) => event.user_id === person.id)
                                     .map((event) => {
                                         const isOwner = event.user_id === myUserId;
-                                        const displayTitle = event.is_hidden && !isOwner ? HIDDEN_EVENT_TITLE : event.title;
+                                        const displayTitle = event.is_hidden && !isOwner ? `🔒${person.nickname || '이름 없음'}` : event.title;
                                         const eventColor = event.is_hidden
                                             ? `${colors[index]}${HIDDEN_EVENT_COLOR_ALPHA}`
                                             : colors[index];

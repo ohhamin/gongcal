@@ -126,6 +126,40 @@ function getDisplayRelationRank(event: CalendarEvent): number {
     return 4;
 }
 
+function isMyOwnedEvent(event: CalendarEvent): boolean {
+    return event.display_relation === 'my_owner';
+}
+
+function isPendingMyInvite(event: CalendarEvent): boolean {
+    return event.display_relation === 'my_invite_pending';
+}
+
+function isAcceptedMyInvite(event: CalendarEvent): boolean {
+    return event.display_relation === 'my_invite_accepted';
+}
+
+function isMyInviteEvent(event: CalendarEvent): boolean {
+    return isPendingMyInvite(event) || isAcceptedMyInvite(event);
+}
+
+function canSeeEventDetail(event: CalendarEvent): boolean {
+    return isMyOwnedEvent(event) || isMyInviteEvent(event);
+}
+
+function getOwnerName(event: CalendarEvent, ownerNameById: Map<string, string>): string {
+    return ownerNameById.get(event.user_id) || '이름 없음';
+}
+
+function getEventDisplayTitle(event: CalendarEvent, ownerNameById: Map<string, string>): string {
+    return event.is_hidden && !canSeeEventDetail(event) ? `🔒${getOwnerName(event, ownerNameById)}` : event.title;
+}
+
+function getEventBaseColor(event: CalendarEvent): string {
+    if (isMyOwnedEvent(event) || isAcceptedMyInvite(event)) return MY_EVENT_COLOR;
+    if (isPendingMyInvite(event)) return PENDING_INVITE_COLOR;
+    return GROUP_EVENT_COLOR;
+}
+
 function getStartMinutes(event: CalendarEvent): number {
     const start = new Date(event.start_at);
     return start.getHours() * 60 + start.getMinutes();
@@ -431,7 +465,25 @@ export default function CalendarPage() {
             if (!current || rank(normalized) < rank(current)) merged.set(String(event.id), normalized);
         });
 
-        setEvents(sortCalendarEvents(Array.from(merged.values())));
+        const mergedEvents = Array.from(merged.values());
+        const knownProfileIds = new Set(visiblePeople.map((person) => person.id));
+        const missingOwnerIds = Array.from(new Set(mergedEvents.map((event) => event.user_id)))
+            .filter((ownerId) => !knownProfileIds.has(ownerId));
+
+        if (missingOwnerIds.length > 0) {
+            const { data: ownerProfiles, error: ownerProfileError } = await supabase
+                .from('profiles')
+                .select('id, nickname')
+                .in('id', missingOwnerIds);
+
+            if (ownerProfileError) {
+                console.error(ownerProfileError);
+            } else {
+                setPeople([...visiblePeople, ...((ownerProfiles || []) as Person[])]);
+            }
+        }
+
+        setEvents(sortCalendarEvents(mergedEvents));
     }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, sortCalendarEvents]);
 
     // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
@@ -884,9 +936,7 @@ export default function CalendarPage() {
     }, []);
 
     const openDetail = async (event: CalendarEvent) => {
-        const isOwner = event.user_id === myUserId;
-        const isMyInvite = event.invite_profile_id === myUserId;
-        if (!isOwner && !isMyInvite && event.is_hidden) return;
+        if (event.is_hidden && !canSeeEventDetail(event)) return;
 
         setDetailEvent(event);
         setCommentInput('');
@@ -1045,19 +1095,13 @@ export default function CalendarPage() {
     };
 
     const calendarEvents = sortCalendarEvents(events).flatMap((event) => {
-        const isMyEvent = event.display_relation === 'my_owner';
-        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
-        const isAcceptedMyInvite = event.display_relation === 'my_invite_accepted';
-        const canSeeDetail = isMyEvent || isPendingMyInvite || isAcceptedMyInvite;
-        const ownerName = ownerNameById.get(event.user_id) || '이름 없음';
-        const baseColor = isMyEvent || isAcceptedMyInvite ? MY_EVENT_COLOR : isPendingMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
-        const displayTitle = event.is_hidden && !canSeeDetail ? `🔒${ownerName}` : event.title;
+        const baseColor = getEventBaseColor(event);
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
         const orderStartAt = getStartMinutes(event);
 
         return getDateStringsInRange(event.start_at, event.end_at).map((dateStr) => ({
             id: `${event.id}:${dateStr}`,
-            title: displayTitle,
+            title: getEventDisplayTitle(event, ownerNameById),
             start: dateStr,
             allDay: true,
             orderPriority: getDisplayPriority(event),
@@ -1069,9 +1113,9 @@ export default function CalendarPage() {
                 displayDate: dateStr,
                 isHidden: event.is_hidden,
                 userId: event.user_id,
-                ownerName: ownerNameById.get(event.user_id) || '',
-                isOwner: isMyEvent,
-                isMyInvite: isPendingMyInvite || isAcceptedMyInvite,
+                ownerName: getOwnerName(event, ownerNameById),
+                isOwner: isMyOwnedEvent(event),
+                isMyInvite: isMyInviteEvent(event),
                 orderPriority: getDisplayPriority(event),
                 orderStartAt,
             },
@@ -1193,14 +1237,11 @@ export default function CalendarPage() {
                             ) : (
                                 <ul className="space-y-2">
                                     {popupEvents.map((event) => {
-                                        const isOwner = event.display_relation === 'my_owner';
-                                        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
-                                        const isAcceptedMyInvite = event.display_relation === 'my_invite_accepted';
-                                        const isMyInvite = isPendingMyInvite || isAcceptedMyInvite;
-                                        const isHiddenFromMe = event.is_hidden && !isOwner && !isMyInvite;
-                                        const color = isOwner || isAcceptedMyInvite ? MY_EVENT_COLOR : isPendingMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
-                                        const ownerName = ownerNameById.get(event.user_id) || '이름 없음';
-                                        const displayTitle = isHiddenFromMe ? `🔒${ownerName}` : event.title;
+                                        const isOwner = isMyOwnedEvent(event);
+                                        const isHiddenFromMe = event.is_hidden && !canSeeEventDetail(event);
+                                        const color = getEventBaseColor(event);
+                                        const ownerName = getOwnerName(event, ownerNameById);
+                                        const displayTitle = getEventDisplayTitle(event, ownerNameById);
 
                                         return (
                                             <li key={event.id}>
