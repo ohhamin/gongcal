@@ -1118,7 +1118,7 @@ export default function CalendarPage() {
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
-                            headerToolbar={{ left: 'prev', center: 'title', right: 'next' }}
+                            headerToolbar={{ start: 'prev', center: 'title', end: 'next' }}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}
