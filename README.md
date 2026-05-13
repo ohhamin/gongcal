@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.3.22**
+**현재 버전: v.0.3.23**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -144,8 +144,20 @@ npm install
 환경 변수를 설정합니다.
 
 ```bash
+cp .env.example .env.local
+```
+
+`.env.local`에 실제 Supabase 값을 입력합니다.
+
+```bash
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+로컬 로그인 확인을 위해 Supabase Dashboard의 Auth > URL Configuration > Redirect URLs에 아래 주소를 추가합니다.
+
+```text
+http://localhost:3000/auth/callback
 ```
 
 개발 서버를 실행합니다.
@@ -154,7 +166,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 npm run dev
 ```
 
-브라우저에서 <http://localhost:3000>을 열면 앱을 확인할 수 있습니다.
+브라우저에서 <http://localhost:3000>을 열면 앱을 확인할 수 있습니다. `next.config.ts`에서 `localhost:3000`과 `127.0.0.1:3000`을 개발 허용 origin으로 명시합니다.
 
 ## 스크립트
 
