@@ -57,7 +57,7 @@ body {
 /* 월간 캘린더는 고정 높이 안에서 6주를 균등 분배합니다. */
 .fc {
     height: 100% !important;
-    --ourcal-month-row-height: calc((100vh - 9.5rem) / 6);
+    --ourcal-month-row-height: calc((75vh - 8rem) / 6);
 }
 
 .fc .fc-toolbar {
@@ -127,18 +127,18 @@ body {
 }
 
 .fc .fc-daygrid-event {
-    min-height: 12px !important;
-    height: 12px !important;
+    min-height: 10px !important;
+    height: 10px !important;
     margin: 1px 1px !important;
     padding: 0 2px !important;
     border-radius: 3px !important;
-    line-height: 12px !important;
+    line-height: 10px !important;
     overflow: hidden !important;
 }
 
 .fc .fc-daygrid-event .fc-event-main {
     height: 12px !important;
-    line-height: 12px !important;
+    line-height: 10px !important;
     overflow: hidden !important;
 }
 
@@ -146,7 +146,7 @@ body {
     display: block !important;
     height: 12px !important;
     font-size: 0.62rem !important;
-    line-height: 12px !important;
+    line-height: 10px !important;
     padding: 0 2px !important;
     overflow: hidden !important;
 }
