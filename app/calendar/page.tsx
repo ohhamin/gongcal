@@ -74,7 +74,6 @@ type CommentQueryRow = Omit<CommentRow, 'profile'> & {
 const MY_EVENT_COLOR = '#3B82F6';
 const GROUP_EVENT_COLOR = '#10B981';
 const PENDING_INVITE_COLOR = '#F97316';
-const HIDDEN_EVENT_TITLE = '일정 있음';
 // 8자리 hex의 99는 약 60% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
 const HIDDEN_EVENT_COLOR_ALPHA = '99';
 const EVENT_TITLE_MAX_LENGTH = 50;
@@ -1047,10 +1046,12 @@ export default function CalendarPage() {
 
     const calendarEvents = sortCalendarEvents(events).flatMap((event) => {
         const isMyEvent = event.display_relation === 'my_owner';
-        const isMyInvite = event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted';
-        const canSeeDetail = isMyEvent || isMyInvite;
-        const baseColor = isMyEvent ? MY_EVENT_COLOR : isMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
-        const displayTitle = event.is_hidden && !canSeeDetail ? HIDDEN_EVENT_TITLE : event.title;
+        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
+        const isAcceptedMyInvite = event.display_relation === 'my_invite_accepted';
+        const canSeeDetail = isMyEvent || isPendingMyInvite || isAcceptedMyInvite;
+        const ownerName = ownerNameById.get(event.user_id) || '이름 없음';
+        const baseColor = isMyEvent || isAcceptedMyInvite ? MY_EVENT_COLOR : isPendingMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
+        const displayTitle = event.is_hidden && !canSeeDetail ? `🔒${ownerName}` : event.title;
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
         const orderStartAt = getStartMinutes(event);
 
@@ -1070,7 +1071,7 @@ export default function CalendarPage() {
                 userId: event.user_id,
                 ownerName: ownerNameById.get(event.user_id) || '',
                 isOwner: isMyEvent,
-                isMyInvite,
+                isMyInvite: isPendingMyInvite || isAcceptedMyInvite,
                 orderPriority: getDisplayPriority(event),
                 orderStartAt,
             },
@@ -1117,9 +1118,7 @@ export default function CalendarPage() {
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
-                            headerToolbar={{ left: '', center: 'prev,title,next', right: '' }}
-                            buttonIcons={false}
-                            buttonText={{ prev: '‹', next: '›' }}
+                            headerToolbar={{ left: 'prev', center: 'title', right: 'next' }}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}
@@ -1195,11 +1194,13 @@ export default function CalendarPage() {
                                 <ul className="space-y-2">
                                     {popupEvents.map((event) => {
                                         const isOwner = event.display_relation === 'my_owner';
-                                        const isMyInvite = event.display_relation === 'my_invite_pending' || event.display_relation === 'my_invite_accepted';
+                                        const isPendingMyInvite = event.display_relation === 'my_invite_pending';
+                                        const isAcceptedMyInvite = event.display_relation === 'my_invite_accepted';
+                                        const isMyInvite = isPendingMyInvite || isAcceptedMyInvite;
                                         const isHiddenFromMe = event.is_hidden && !isOwner && !isMyInvite;
-                                        const color = isOwner ? MY_EVENT_COLOR : isMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
-                                        const displayTitle = isHiddenFromMe ? HIDDEN_EVENT_TITLE : event.title;
-                                        const ownerName = ownerNameById.get(event.user_id);
+                                        const color = isOwner || isAcceptedMyInvite ? MY_EVENT_COLOR : isPendingMyInvite ? PENDING_INVITE_COLOR : GROUP_EVENT_COLOR;
+                                        const ownerName = ownerNameById.get(event.user_id) || '이름 없음';
+                                        const displayTitle = isHiddenFromMe ? `🔒${ownerName}` : event.title;
 
                                         return (
                                             <li key={event.id}>
