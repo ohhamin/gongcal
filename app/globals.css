@@ -42,10 +42,6 @@ body {
     display: none !important;
 }
 
-.fc .fc-col-header {
-    display: none !important;
-}
-
 .fc .fc-timegrid-slot {
     height: 28px !important;
 }
@@ -67,6 +63,22 @@ body {
 .fc .fc-toolbar-title {
     font-size: 1rem !important;
     font-weight: 700 !important;
+}
+
+.fc .fc-button {
+    border: 0 !important;
+    background: transparent !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    padding: 0 0.4rem !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+    padding: 2px 0 !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #6b7280 !important;
+    text-transform: lowercase;
 }
 
 .fc .fc-view-harness,
