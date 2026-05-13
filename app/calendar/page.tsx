@@ -65,6 +65,10 @@ type MyInvitedEventRpcRow = CalendarEvent & {
 
 type Person = Profile;
 
+type HolidayInfo = {
+    dateName: string;
+};
+
 type GroupMemberRow = {
     profile_id: string;
     profile: Person | Person[] | null;
@@ -99,6 +103,30 @@ function formatLocalDateString(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function formatLocdate(locdate: string): string | null {
+    const normalized = locdate.trim();
+    if (!/^\d{8}$/.test(normalized)) return null;
+    return `${normalized.slice(0, 4)}-${normalized.slice(4, 6)}-${normalized.slice(6, 8)}`;
+}
+
+function parseHolidayXml(xmlText: string): Record<string, HolidayInfo> {
+    const documentXml = new DOMParser().parseFromString(xmlText, 'text/xml');
+    const holidays: Record<string, HolidayInfo> = {};
+
+    documentXml.querySelectorAll('item').forEach((item) => {
+        const dateName = item.querySelector('dateName')?.textContent?.trim();
+        const locdate = item.querySelector('locdate')?.textContent?.trim();
+        if (!dateName || !locdate) return;
+
+        const dateKey = formatLocdate(locdate);
+        if (!dateKey) return;
+
+        holidays[dateKey] = { dateName };
+    });
+
+    return holidays;
 }
 
 function formatPopupDate(dateStr: string): string {
@@ -252,6 +280,7 @@ export default function CalendarPage() {
     const [friendSearchResults, setFriendSearchResults] = useState<Person[]>([]);
     const [isFriendSearching, setIsFriendSearching] = useState(false);
     const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
+    const [holidayByDate, setHolidayByDate] = useState<Record<string, HolidayInfo>>({});
     const calendarContainerRef = useRef<HTMLDivElement | null>(null);
     const calendarRef = useRef<FullCalendar | null>(null);
     const dragStartDateRef = useRef<string | null>(null);
@@ -269,6 +298,28 @@ export default function CalendarPage() {
             router.push('/login');
         }
     }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
+
+    useEffect(() => {
+        let isCanceled = false;
+
+        const loadHolidays = async () => {
+            try {
+                const response = await fetch('/holiday.xml', { cache: 'force-cache' });
+                if (!response.ok) return;
+
+                const xmlText = await response.text();
+                if (!isCanceled) setHolidayByDate(parseHolidayXml(xmlText));
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadHolidays();
+
+        return () => {
+            isCanceled = true;
+        };
+    }, []);
 
     const sortCalendarEvents = useCallback((items: CalendarEvent[]) => {
         return [...items].sort(compareCalendarEvents);
@@ -1279,9 +1330,30 @@ export default function CalendarPage() {
                             select={openCreateFormFromSelect}
                             dayMaxEvents={3}
                             dayCellClassNames={(arg) => {
-                                if (!dragRange) return [];
                                 const dateStr = formatLocalDateString(arg.date);
-                                return dateStr >= dragRange.start && dateStr <= dragRange.end ? ['ourcal-range-selected'] : [];
+                                const classNames: string[] = [];
+
+                                if (arg.date.getDay() === 0 || arg.date.getDay() === 6) classNames.push('ourcal-weekend');
+                                if (holidayByDate[dateStr]) classNames.push('ourcal-holiday');
+                                if (dragRange && dateStr >= dragRange.start && dateStr <= dragRange.end) classNames.push('ourcal-range-selected');
+
+                                return classNames;
+                            }}
+                            dayCellContent={(arg) => {
+                                const dateStr = formatLocalDateString(arg.date);
+                                const holiday = holidayByDate[dateStr];
+                                const isRedDay = Boolean(holiday) || arg.date.getDay() === 0 || arg.date.getDay() === 6;
+
+                                return (
+                                    <div className="ourcal-day-cell-content">
+                                        {holiday && (
+                                            <span className="ourcal-holiday-name" title={holiday.dateName}>
+                                                {holiday.dateName}
+                                            </span>
+                                        )}
+                                        <span className={isRedDay ? 'ourcal-red-day-number' : undefined}>{arg.date.getDate()}</span>
+                                    </div>
+                                );
                             }}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
