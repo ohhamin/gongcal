@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.3.21 - 2026-05-13
+
+### 업데이트 내용
+
+- 초대받은 일정의 참석하기/참석거절/참석취소 처리를 `respond_event_invite` RPC 우선 사용으로 변경했습니다.
+- 참석하기는 `events_invite.is_agree=true`로 업데이트하고, 참석거절/참석취소는 해당 `events_invite` row를 삭제하도록 명확히 분리했습니다.
+- 응답 완료 후 상세/목록 팝업을 닫고 월간 캘린더를 다시 조회해 수락한 초대 일정이 파란색으로 갱신되도록 했습니다.
+- README/package 기준 버전을 `v.0.3.20`에서 소규모 패치 버전 `v.0.3.21`로 업데이트했습니다.
+
+### 작업 메모
+
+- 운영 Supabase에 `supabase/respond_event_invite.sql`을 적용하면 RLS 영향을 받지 않고 초대 응답 처리가 안정적으로 동작합니다. RPC가 없으면 기존 직접 update/delete fallback을 시도합니다.
+
 ## v.0.3.20 - 2026-05-13
 
 ### 업데이트 내용
