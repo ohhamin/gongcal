@@ -477,6 +477,115 @@ export default function CalendarPage() {
         setAttendees((prev) => prev.filter((attendee) => attendee.isOwner || attendee.profile_id !== profileId));
     };
 
+    const rollbackSavedEvent = async ({
+        savedEventId,
+        previousEvent,
+        previousInvites,
+    }: {
+        savedEventId: number | null;
+        previousEvent: CalendarEvent | null;
+        previousInvites: EventInvite[];
+    }) => {
+        if (!savedEventId) return;
+
+        if (!previousEvent) {
+            await supabase.from('events_invite').delete().eq('event_id', savedEventId);
+            await supabase.from('events').delete().eq('id', savedEventId);
+            return;
+        }
+
+        await supabase
+            .from('events')
+            .update({
+                title: previousEvent.title,
+                detail: previousEvent.detail,
+                start_at: previousEvent.start_at,
+                end_at: previousEvent.end_at,
+                is_hidden: previousEvent.is_hidden,
+                is_allday: previousEvent.is_allday,
+            })
+            .eq('id', savedEventId);
+
+        await supabase.from('events_invite').delete().eq('event_id', savedEventId);
+        if (previousInvites.length > 0) {
+            await supabase.from('events_invite').insert(previousInvites);
+        }
+    };
+
+    const saveEventWithClientRollback = async ({
+        userId,
+        eventPayload,
+        invitePayload,
+    }: {
+        userId: string;
+        eventPayload: {
+            title: string;
+            detail: string | null;
+            start_at: string;
+            end_at: string;
+            is_hidden: boolean;
+            is_allday: boolean;
+        };
+        invitePayload: Array<{ profile_id: string; is_agree: boolean }>;
+    }) => {
+        const previousEvent = selectedEventId
+            ? events.find((event) => String(event.id) === selectedEventId) || null
+            : null;
+        let previousInvites: EventInvite[] = [];
+        let savedEventId = selectedEventId ? Number(selectedEventId) : null;
+
+        try {
+            if (selectedEventId) {
+                const { data: previousInviteRows, error: previousInviteError } = await supabase
+                    .from('events_invite')
+                    .select('event_id, profile_id, is_agree')
+                    .eq('event_id', Number(selectedEventId));
+
+                if (previousInviteError) throw previousInviteError;
+                previousInvites = (previousInviteRows || []) as EventInvite[];
+
+                const { error: updateError } = await supabase
+                    .from('events')
+                    .update(eventPayload)
+                    .eq('id', Number(selectedEventId))
+                    .eq('user_id', userId);
+
+                if (updateError) throw updateError;
+
+                const { error: deleteInviteError } = await supabase
+                    .from('events_invite')
+                    .delete()
+                    .eq('event_id', Number(selectedEventId));
+
+                if (deleteInviteError) throw deleteInviteError;
+            } else {
+                const { data, error } = await supabase
+                    .from('events')
+                    .insert({ ...eventPayload, user_id: userId })
+                    .select('id')
+                    .single();
+
+                if (error) throw error;
+                savedEventId = data?.id ? Number(data.id) : null;
+            }
+
+            if (!savedEventId) throw new Error('저장된 일정 ID를 확인하지 못했습니다.');
+
+            if (invitePayload.length > 0) {
+                const { error: inviteError } = await supabase.from('events_invite').insert(
+                    invitePayload.map((invite) => ({ ...invite, event_id: savedEventId })),
+                );
+
+                if (inviteError) throw inviteError;
+            }
+
+            return savedEventId;
+        } catch (error) {
+            await rollbackSavedEvent({ savedEventId, previousEvent, previousInvites });
+            throw error;
+        }
+    };
+
     const handleSaveEvent = async () => {
         if (!startDate || !endDate) return;
 
@@ -512,7 +621,6 @@ export default function CalendarPage() {
             return;
         }
 
-
         const eventPayload = {
             title: trimmedTitle,
             detail: trimmedDetail || null,
@@ -525,20 +633,31 @@ export default function CalendarPage() {
         const invitePayload = attendees
             .filter((attendee) => !attendee.isOwner)
             .map((attendee) => ({ profile_id: attendee.profile_id, is_agree: attendee.is_agree }));
-        let savedEventId = selectedEventId ? Number(selectedEventId) : null;
 
-        if (selectedEventId) {
-            const { error } = await supabase.from('events').update(eventPayload).eq('id', Number(selectedEventId)).eq('user_id', user.id);
-            if (error) { console.error(error); return; }
-            await supabase.from('events_invite').delete().eq('event_id', Number(selectedEventId));
-        } else {
-            const { data, error } = await supabase.from('events').insert({ ...eventPayload, user_id: user.id }).select('id').single();
-            if (error) { console.error(error); return; }
-            savedEventId = data?.id ? Number(data.id) : null;
-        }
-        if (savedEventId && invitePayload.length > 0) {
-            const { error: inviteError } = await supabase.from('events_invite').upsert(invitePayload.map((invite) => ({ ...invite, event_id: savedEventId })), { onConflict: 'event_id,profile_id' });
-            if (inviteError) { console.error(inviteError); alert('초대 저장 실패'); return; }
+        try {
+            // DB 함수가 배포되어 있으면 events/events_invite 저장을 실제 단일 트랜잭션으로 처리합니다.
+            const { error: rpcError } = await supabase.rpc('save_event_with_invites', {
+                p_event_id: selectedEventId ? Number(selectedEventId) : null,
+                p_title: eventPayload.title,
+                p_detail: eventPayload.detail,
+                p_start_at: eventPayload.start_at,
+                p_end_at: eventPayload.end_at,
+                p_is_hidden: eventPayload.is_hidden,
+                p_is_allday: eventPayload.is_allday,
+                p_invites: invitePayload,
+            });
+
+            if (rpcError) {
+                const isMissingRpc = rpcError.code === 'PGRST202' || rpcError.message.includes('save_event_with_invites');
+                if (!isMissingRpc) throw rpcError;
+
+                // 로컬/미배포 환경에서도 데이터가 어긋나지 않도록 실패 시 수동 롤백합니다.
+                await saveEventWithClientRollback({ userId: user.id, eventPayload, invitePayload });
+            }
+        } catch (error) {
+            console.error(error);
+            alert('일정 저장 실패. 변경사항을 롤백했습니다.');
+            return;
         }
 
         setIsFormOpen(false);
@@ -839,7 +958,7 @@ export default function CalendarPage() {
                             selectable={true}
                             selectLongPressDelay={300}
                             select={openCreateFormFromSelect}
-                            dayMaxEvents={3}
+                            dayMaxEvents={2}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
                                 setPopupDate(formatLocalDateString(arg.date));
@@ -859,17 +978,9 @@ export default function CalendarPage() {
                             }}
                             displayEventTime={false}
                             eventDisplay="block"
-                            eventContent={(arg) => {
-                                const ownerName = arg.event.extendedProps.ownerName as string;
-                                const isOwner = arg.event.extendedProps.isOwner as boolean;
-
-                                return (
-                                    <div className="leading-tight">
-                                        <div className="truncate text-[10px] font-semibold">{arg.event.title}</div>
-                                        {!isOwner && ownerName && <div className="truncate text-[9px] opacity-90">{ownerName}</div>}
-                                    </div>
-                                );
-                            }}
+                            eventContent={(arg) => (
+                                <div className="truncate text-[10px] font-semibold leading-none">{arg.event.title}</div>
+                            )}
                         />
 
                         {isCalendarLoading && (
@@ -1110,9 +1221,9 @@ export default function CalendarPage() {
                     <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                         <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
 
-                        <div className="mb-4 grid gap-4 md:grid-cols-[1fr_280px]">
-                            <div>
-                                <div className="mb-3">
+                        <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
+                            <div className="space-y-3">
+                                <div>
                                     <p className="mb-1 text-sm">일정 제목</p>
                                     <input
                                         className="w-full rounded border p-2"
@@ -1125,10 +1236,10 @@ export default function CalendarPage() {
                                     </div>
                                 </div>
 
-                                <div className="mb-3">
-                                    <p className="mb-1 text-sm">세부내용</p>
+                                <div>
+                                    <p className="mb-1 text-sm">세부일정</p>
                                     <textarea
-                                        className="min-h-28 w-full resize-y rounded border p-2"
+                                        className="min-h-40 w-full resize-y rounded border p-2"
                                         value={detail}
                                         maxLength={EVENT_DETAIL_MAX_LENGTH}
                                         onChange={(e) => setDetail(e.target.value)}
@@ -1139,12 +1250,12 @@ export default function CalendarPage() {
                                 </div>
                             </div>
 
-                            <div className="min-h-0 rounded border p-3">
+                            <div className="flex min-h-0 flex-col rounded border p-3">
                                 <div className="mb-2 flex items-center justify-between gap-2">
                                     <p className="text-sm font-semibold">참석자</p>
                                     <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
                                 </div>
-                                <div className="max-h-56 space-y-2 overflow-y-auto">
+                                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto md:max-h-64">
                                     {attendees.map((attendee) => (
                                         <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
                                             <div className="min-w-0">
@@ -1160,41 +1271,44 @@ export default function CalendarPage() {
                             </div>
                         </div>
 
-                        <div className="mb-3 grid grid-cols-2 gap-2">
-                            <div>
-                                <p className="mb-1 text-sm">시작 날짜</p>
-                                <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                            </div>
-                            <div>
-                                <p className="mb-1 text-sm">종료 날짜</p>
-                                <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-                            </div>
-                        </div>
-
-                        <div className="mb-3 grid grid-cols-2 gap-2">
-                            <div>
-                                <p className="mb-1 text-sm">시작 시간</p>
-                                <TimeSelect
-                                    value={startTime}
-                                    slots={START_TIME_SLOTS}
-                                    onChange={(val) => {
-                                        setStartTime(val);
-                                        const validEnds = isSameDate(startDate, endDate) ? getValidEndSlots(val) : START_TIME_SLOTS.concat('24:00');
-                                        if (!validEnds.includes(endTime)) setEndTime(validEnds[0] ?? '');
-                                    }}
-                                    disabled={isAllDay}
-                                />
+                        <div className="mb-3 grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-end">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <p className="mb-1 text-sm">시작 날짜</p>
+                                    <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-sm">시작 시간</p>
+                                    <TimeSelect
+                                        value={startTime}
+                                        slots={START_TIME_SLOTS}
+                                        onChange={(val) => {
+                                            setStartTime(val);
+                                            const validEnds = isSameDate(startDate, endDate) ? getValidEndSlots(val) : START_TIME_SLOTS.concat('24:00');
+                                            if (!validEnds.includes(endTime)) setEndTime(validEnds[0] ?? '');
+                                        }}
+                                        disabled={isAllDay}
+                                    />
+                                </div>
                             </div>
 
-                            <div>
-                                <p className="mb-1 text-sm">종료 시간</p>
-                                <TimeSelect
-                                    value={endTime}
-                                    slots={getEndTimeSlots()}
-                                    onChange={setEndTime}
-                                    startTime={startTime}
-                                    disabled={isAllDay}
-                                />
+                            <div className="hidden pb-3 text-sm text-gray-400 md:block">-</div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <p className="mb-1 text-sm">종료 날짜</p>
+                                    <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-sm">종료 시간</p>
+                                    <TimeSelect
+                                        value={endTime}
+                                        slots={getEndTimeSlots()}
+                                        onChange={setEndTime}
+                                        startTime={startTime}
+                                        disabled={isAllDay}
+                                    />
+                                </div>
                             </div>
                         </div>
 
