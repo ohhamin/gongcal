@@ -60,6 +60,12 @@ body {
     margin-bottom: 2px !important;
 }
 
+.fc .fc-toolbar-chunk {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
 .fc .fc-toolbar-title {
     font-size: 1rem !important;
     font-weight: 700 !important;
@@ -71,6 +77,7 @@ body {
     color: #111827 !important;
     box-shadow: none !important;
     padding: 0 0.4rem !important;
+    line-height: 1 !important;
 }
 
 .fc .fc-col-header-cell-cushion {

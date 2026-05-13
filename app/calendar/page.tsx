@@ -310,7 +310,7 @@ export default function CalendarPage() {
             return [];
         }
 
-        setMyUserId(currentUserQuery.data.id);
+        setMyUserId(myProfile.id);
 
         if (!myProfile.main_group_id) {
             return [myProfile as Person];
@@ -347,12 +347,13 @@ export default function CalendarPage() {
         if (!visibleRange) return;
 
         const currentUserId = currentUserQuery.data?.id;
+        const currentProfileId = profileQuery.data?.id;
         const visiblePeople = await fetchVisiblePeople();
         setPeople(visiblePeople);
         const peopleIds = visiblePeople.map((p) => p.id);
-        const inviteProfileIds = Array.from(new Set([...peopleIds, currentUserId].filter(Boolean)));
+        const inviteProfileIds = Array.from(new Set([...peopleIds, currentProfileId].filter(Boolean)));
 
-        if (peopleIds.length === 0 || !currentUserId) {
+        if (peopleIds.length === 0 || !currentUserId || !currentProfileId) {
             setEvents([]);
             return;
         }
@@ -371,7 +372,7 @@ export default function CalendarPage() {
 
         const { data: inviteRows, error: inviteError } = await supabase
             .from('events_invite')
-            .select('event_id, profile_id, is_agree, event:events(*)')
+            .select('event_id, profile_id, is_agree')
             .in('profile_id', inviteProfileIds);
 
         if (inviteError) {
@@ -379,16 +380,27 @@ export default function CalendarPage() {
             return;
         }
 
-        type InviteQueryRow = EventInvite & { event: CalendarEvent | CalendarEvent[] | null };
-        const visibleStart = visibleRange.start.getTime();
-        const visibleEnd = visibleRange.end.getTime();
-        const normalizedInviteRows = ((inviteRows || []) as InviteQueryRow[]).filter((invite) => {
-            const event = Array.isArray(invite.event) ? invite.event[0] : invite.event;
-            if (!event) return false;
-            const eventStart = new Date(event.start_at).getTime();
-            const eventEnd = new Date(event.end_at).getTime();
-            if (!(eventStart < visibleEnd && eventEnd >= visibleStart)) return false;
-            if (invite.profile_id === currentUserId) return true;
+        const inviteEventIds = Array.from(new Set(((inviteRows || []) as EventInvite[]).map((invite) => invite.event_id)));
+        const { data: inviteEventRows, error: inviteEventError } = inviteEventIds.length > 0
+            ? await supabase
+                .from('events')
+                .select('*')
+                .in('id', inviteEventIds)
+                .lt('start_at', visibleRange.end.toISOString())
+                .gte('end_at', visibleRange.start.toISOString())
+            : { data: [], error: null };
+
+        if (inviteEventError) {
+            console.error(inviteEventError);
+            return;
+        }
+
+        const inviteEventById = new Map(
+            ((inviteEventRows || []) as CalendarEvent[]).map((event) => [String(event.id), event]),
+        );
+        const normalizedInviteRows = ((inviteRows || []) as EventInvite[]).filter((invite) => {
+            if (!inviteEventById.has(String(invite.event_id))) return false;
+            if (invite.profile_id === currentProfileId) return true;
             return invite.is_agree;
         });
 
@@ -400,14 +412,14 @@ export default function CalendarPage() {
                 ...event,
                 id: String(event.id),
                 display_profile_id: event.user_id,
-                display_relation: event.user_id === currentUserId ? 'my_owner' : 'other_owner',
+                display_relation: event.user_id === currentProfileId ? 'my_owner' : 'other_owner',
             });
         });
 
         normalizedInviteRows.forEach((invite) => {
-            const event = Array.isArray(invite.event) ? invite.event[0] : invite.event;
+            const event = inviteEventById.get(String(invite.event_id));
             if (!event) return;
-            const isMe = invite.profile_id === currentUserId;
+            const isMe = invite.profile_id === currentProfileId;
             const normalized: CalendarEvent = {
                 ...event,
                 id: String(event.id),
@@ -421,7 +433,7 @@ export default function CalendarPage() {
         });
 
         setEvents(sortCalendarEvents(Array.from(merged.values())));
-    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, sortCalendarEvents]);
+    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, sortCalendarEvents]);
 
     // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
     useEffect(() => {
@@ -1106,6 +1118,8 @@ export default function CalendarPage() {
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
                             headerToolbar={{ left: '', center: 'prev,title,next', right: '' }}
+                            buttonIcons={false}
+                            buttonText={{ prev: '‹', next: '›' }}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}

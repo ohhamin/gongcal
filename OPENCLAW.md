@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.3.13 - 2026-05-13
+
+### 업데이트 내용
+
+- 초대받은 일정 조회를 `events_invite.profile_id` → `events_invite.event_id` → `events.id` 순서의 명시적인 2단계 조회로 변경했습니다.
+- 현재 사용자 판정에 auth user id 대신 현재 프로필 id를 사용해 `events_invite.profile_id` 비교 기준을 맞췄습니다.
+- 월간 캘린더 이전/다음 월 버튼이 제목 양옆에 가로로 배치되도록 toolbar chunk flex 스타일과 텍스트 화살표를 적용했습니다.
+- README/package 기준 버전을 `v.0.3.12`에서 소규모 패치 버전 `v.0.3.13`으로 업데이트했습니다.
+
+### 작업 메모
+
+- `events_invite.is_agree=false`인 현재 프로필 초대도 필터링하지 않고 표시하며, 수락 전 확인이 쉽도록 일반 일정보다 우선 노출합니다.
+
 ## v.0.3.12 - 2026-05-13
 
 ### 업데이트 내용
