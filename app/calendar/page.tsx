@@ -1228,9 +1228,9 @@ export default function CalendarPage() {
     return (
         <div
             className="flex flex-col bg-white"
-            style={{ height: 'calc(75vh - 4rem)' }}
+            style={{ height: 'calc(87.5vh - 4rem)' }}
         >
-            <div className="mb-1 flex shrink-0 items-center justify-between gap-3 px-1">
+            <div className="mb-3 flex shrink-0 items-center justify-between gap-3 px-1 pb-1">
                 <h1 className="text-xl font-bold">우리캘린더</h1>
                 <GroupSelector
                     onChange={() => {

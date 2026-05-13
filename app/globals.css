@@ -53,11 +53,10 @@ body {
 /* 월간 캘린더는 고정 높이 안에서 6주를 균등 분배합니다. */
 .fc {
     height: 100% !important;
-    --ourcal-month-row-height: calc((75vh - 8rem) / 6);
 }
 
 .fc .fc-toolbar {
-    margin-bottom: 2px !important;
+    margin-bottom: 6px !important;
 }
 
 .fc .fc-toolbar-chunk {
@@ -95,6 +94,7 @@ body {
 .fc .fc-daygrid-body table,
 .fc .fc-scrollgrid-sync-table {
     height: 100% !important;
+    table-layout: fixed !important;
 }
 
 .fc .fc-daygrid-body tbody,
@@ -104,23 +104,23 @@ body {
 
 .fc .fc-daygrid-body tr,
 .fc .fc-scrollgrid-sync-table tr {
-    height: var(--ourcal-month-row-height) !important;
-    max-height: var(--ourcal-month-row-height) !important;
+    height: calc(100% / 6) !important;
+    max-height: calc(100% / 6) !important;
 }
 
 .fc .fc-daygrid-day {
-    height: var(--ourcal-month-row-height) !important;
-    max-height: var(--ourcal-month-row-height) !important;
-    overflow: visible !important;
+    height: calc(100% / 6) !important;
+    max-height: calc(100% / 6) !important;
+    overflow: hidden !important;
 }
 
 .fc .fc-daygrid-day-frame {
     display: flex !important;
     min-height: 0 !important;
     height: 100% !important;
-    max-height: var(--ourcal-month-row-height) !important;
+    max-height: 100% !important;
     flex-direction: column !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     padding: 1px !important;
 }
 
