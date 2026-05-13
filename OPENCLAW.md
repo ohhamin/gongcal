@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.3.20 - 2026-05-13
+
+### 업데이트 내용
+
+- 월간 캘린더의 초대받은 일정 조회를 `get_my_invited_events` RPC 우선 사용으로 변경했습니다.
+- `events_invite.profile_id = 현재 profiles.id`인 초대 row와 연결된 `events` 데이터를 RLS 영향 없이 가져오도록 Supabase SQL을 추가했습니다.
+- RPC가 아직 DB에 없으면 기존 직접 조회 fallback을 유지합니다.
+- README/package 기준 버전을 `v.0.3.19`에서 소규모 패치 버전 `v.0.3.20`으로 업데이트했습니다.
+
+### 작업 메모
+
+- 운영 Supabase에 `supabase/get_my_invited_events.sql`을 적용해야 월간 캘린더에서 초대받은 일정이 안정적으로 표시됩니다.
+
 ## v.0.3.19 - 2026-05-13
 
 ### 업데이트 내용

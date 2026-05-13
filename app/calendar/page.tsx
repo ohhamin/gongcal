@@ -58,6 +58,11 @@ type CalendarEvent = {
     invite_is_agree?: boolean;
 };
 
+type MyInvitedEventRpcRow = CalendarEvent & {
+    invite_profile_id: string;
+    invite_is_agree: boolean;
+};
+
 type Person = Profile;
 
 type GroupMemberRow = {
@@ -410,39 +415,69 @@ export default function CalendarPage() {
             return;
         }
 
-        const { data: inviteRows, error: inviteError } = await supabase
-            .from('events_invite')
-            .select('event_id, profile_id, is_agree')
-            .in('profile_id', inviteProfileIds);
-
-        if (inviteError) {
-            console.error(inviteError);
-            return;
-        }
-
-        const inviteEventIds = Array.from(new Set(((inviteRows || []) as EventInvite[]).map((invite) => invite.event_id)));
-        const { data: inviteEventRows, error: inviteEventError } = inviteEventIds.length > 0
-            ? await supabase
-                .from('events')
-                .select('*')
-                .in('id', inviteEventIds)
-                .lt('start_at', visibleRange.end.toISOString())
-                .gte('end_at', visibleRange.start.toISOString())
-            : { data: [], error: null };
-
-        if (inviteEventError) {
-            console.error(inviteEventError);
-            return;
-        }
-
-        const inviteEventById = new Map(
-            ((inviteEventRows || []) as CalendarEvent[]).map((event) => [String(event.id), event]),
-        );
-        const normalizedInviteRows = ((inviteRows || []) as EventInvite[]).filter((invite) => {
-            if (!inviteEventById.has(String(invite.event_id))) return false;
-            if (invite.profile_id === currentProfileId) return true;
-            return invite.is_agree;
+        const inviteEventById = new Map<string, CalendarEvent>();
+        let normalizedInviteRows: EventInvite[] = [];
+        const { data: myInvitedRows, error: myInvitedError } = await supabase.rpc('get_my_invited_events', {
+            p_range_start: visibleRange.start.toISOString(),
+            p_range_end: visibleRange.end.toISOString(),
         });
+
+        if (!myInvitedError) {
+            normalizedInviteRows = ((myInvitedRows || []) as MyInvitedEventRpcRow[]).map((row) => {
+                inviteEventById.set(String(row.id), {
+                    id: String(row.id),
+                    title: row.title,
+                    detail: row.detail,
+                    start_at: row.start_at,
+                    end_at: row.end_at,
+                    user_id: row.user_id,
+                    is_hidden: row.is_hidden,
+                    is_allday: row.is_allday,
+                });
+
+                return {
+                    event_id: Number(row.id),
+                    profile_id: row.invite_profile_id,
+                    is_agree: row.invite_is_agree,
+                };
+            });
+        } else {
+            console.error(myInvitedError);
+
+            const { data: inviteRows, error: inviteError } = await supabase
+                .from('events_invite')
+                .select('event_id, profile_id, is_agree')
+                .in('profile_id', inviteProfileIds);
+
+            if (inviteError) {
+                console.error(inviteError);
+                return;
+            }
+
+            const inviteEventIds = Array.from(new Set(((inviteRows || []) as EventInvite[]).map((invite) => invite.event_id)));
+            const { data: inviteEventRows, error: inviteEventError } = inviteEventIds.length > 0
+                ? await supabase
+                    .from('events')
+                    .select('*')
+                    .in('id', inviteEventIds)
+                    .lt('start_at', visibleRange.end.toISOString())
+                    .gte('end_at', visibleRange.start.toISOString())
+                : { data: [], error: null };
+
+            if (inviteEventError) {
+                console.error(inviteEventError);
+                return;
+            }
+
+            ((inviteEventRows || []) as CalendarEvent[]).forEach((event) => {
+                inviteEventById.set(String(event.id), event);
+            });
+            normalizedInviteRows = ((inviteRows || []) as EventInvite[]).filter((invite) => {
+                if (!inviteEventById.has(String(invite.event_id))) return false;
+                if (invite.profile_id === currentProfileId) return true;
+                return invite.is_agree;
+            });
+        }
 
         const rank = (event: CalendarEvent) => getDisplayRelationRank(event);
         const merged = new Map<string, CalendarEvent>();
