@@ -1,5 +1,19 @@
 # OPENCLAW
 
+## v.0.3.9 - 2026-05-13
+
+### 업데이트 내용
+
+- 월간 캘린더 드래그 선택 후 첫 번째 날짜에 하늘색 배경이 남던 문제를 수정했습니다.
+- 드래그 종료/FullCalendar select 완료 시 `calendarApi.unselect()`를 호출하고, 선택 상태를 명시적으로 초기화합니다.
+- 여러 날짜에 걸친 일정 막대가 첫 날짜 셀에서만 보이던 문제를 수정했습니다.
+- 다일 일정 segment가 다음 날짜 셀까지 이어질 수 있도록 월간 셀/프레임/이벤트 영역의 horizontal clipping을 제거했습니다.
+- README/package 기준 버전을 `v.0.3.8`에서 소규모 패치 버전 `v.0.3.9`로 업데이트했습니다.
+
+### 작업 메모
+
+- 원인은 `unselectAuto=false`와 커스텀 드래그 fallback이 함께 쓰이면서 FullCalendar의 native highlight가 남을 수 있었던 점, 그리고 `overflow:hidden`이 다일 일정 segment를 첫 셀에서 잘라내던 점입니다.
+
 ## v.0.3.8 - 2026-05-13
 
 ### 업데이트 내용

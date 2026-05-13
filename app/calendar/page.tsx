@@ -163,6 +163,7 @@ export default function CalendarPage() {
     const [isFriendSearching, setIsFriendSearching] = useState(false);
     const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
     const calendarContainerRef = useRef<HTMLDivElement | null>(null);
+    const calendarRef = useRef<FullCalendar | null>(null);
     const dragStartDateRef = useRef<string | null>(null);
     const isRangeDraggingRef = useRef(false);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -219,6 +220,7 @@ export default function CalendarPage() {
         }
         dragStartDateRef.current = null;
         isRangeDraggingRef.current = false;
+        calendarRef.current?.getApi().unselect();
         setDragRange(null);
     };
 
@@ -467,6 +469,8 @@ export default function CalendarPage() {
     };
 
     const openCreateFormFromSelect = (info: DateSelectArg) => {
+        info.view.calendar.unselect();
+        setDragRange(null);
         const selectedStart = formatLocalDateString(info.start);
         const selectedEnd = formatLocalDateString(addDays(info.end, -1));
         openCreateForm(selectedStart, selectedEnd, true);
@@ -1065,6 +1069,7 @@ export default function CalendarPage() {
                 ) : (
                     <>
                         <FullCalendar
+                            ref={calendarRef}
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
@@ -1077,7 +1082,7 @@ export default function CalendarPage() {
                             eventClick={handleEventClick}
                             selectable={true}
                             selectMirror={true}
-                            unselectAuto={false}
+                            unselectAuto={true}
                             longPressDelay={250}
                             selectLongPressDelay={250}
                             eventLongPressDelay={250}
