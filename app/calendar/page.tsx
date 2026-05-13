@@ -1481,17 +1481,20 @@ export default function CalendarPage() {
                                     <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
                                 </div>
                                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto md:max-h-64">
-                                    {attendees.map((attendee) => (
-                                        <div key={attendee.profile_id} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
-                                            <div className="min-w-0">
+                                    {attendees.map((attendee) => {
+                                        const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
+                                        const canCancelInvite = !attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId);
+
+                                        return (
+                                            <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded border p-2 text-xs">
                                                 <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
-                                                <p className="text-gray-500">{attendee.isOwner ? '소유자' : attendee.is_agree ? '' : '초대중'}</p>
+                                                <p className="shrink-0 text-gray-500">{statusText}</p>
+                                                {canCancelInvite && (
+                                                    <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>초대취소</button>
+                                                )}
                                             </div>
-                                            {!attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId) && (
-                                                <button className="shrink-0 text-red-500" onClick={() => removeInviteAttendee(attendee.profile_id)}>삭제</button>
-                                            )}
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
