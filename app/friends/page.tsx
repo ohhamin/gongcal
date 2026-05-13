@@ -277,8 +277,8 @@ export default function FriendsPage() {
                 ))}
             </div>
             {open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={resetSearchModal}>
+                    <div className="relative flex h-[70vh] w-full max-w-md flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                         <button className="absolute top-4 right-4 rounded bg-gray-200 px-3 py-1 text-sm" onClick={resetSearchModal}>
                             취소
                         </button>
@@ -301,7 +301,7 @@ export default function FriendsPage() {
                             </button>
                         </div>
 
-                        <div className="max-h-80 space-y-2 overflow-y-auto">
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                             {searchResults.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">검색 결과가 없습니다.</p>}
                             {searchResults.map((profile) => (
                                 <button
