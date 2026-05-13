@@ -92,7 +92,7 @@ body {
 .fc .fc-daygrid-day {
     height: var(--ourcal-month-row-height) !important;
     max-height: var(--ourcal-month-row-height) !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 
 .fc .fc-daygrid-day-frame {
@@ -101,7 +101,7 @@ body {
     height: 100% !important;
     max-height: var(--ourcal-month-row-height) !important;
     flex-direction: column !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     padding: 1px !important;
 }
 
@@ -119,7 +119,7 @@ body {
     min-height: 0 !important;
     flex: 1 1 auto !important;
     margin-top: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 
 .fc .fc-daygrid-event-harness {
