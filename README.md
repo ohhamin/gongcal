@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.3.20**
+**현재 버전: v.0.3.21**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -118,6 +118,7 @@ Supabase SQL Editor에서 아래 파일을 실행하세요.
 supabase/save_event_with_invites.sql
 supabase/get_event_invite_attendees.sql
 supabase/get_my_invited_events.sql
+supabase/respond_event_invite.sql
 ```
 
 ## 기술 스택
@@ -183,4 +184,5 @@ supabase/
   save_event_with_invites.sql # 일정+초대 저장 RPC
   get_event_invite_attendees.sql # 일정 참석자 조회 RPC
   get_my_invited_events.sql # 월간 내 초대 일정 조회 RPC
+  respond_event_invite.sql # 초대 참석/거절/참석취소 RPC
 ```

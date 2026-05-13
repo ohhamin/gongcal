@@ -1036,20 +1036,54 @@ export default function CalendarPage() {
         openEditForm(detailEvent);
     };
 
+    const refreshInviteAfterResponse = async () => {
+        setDetailEvent(null);
+        setPopupDate(null);
+        await fetchEvents();
+    };
+
     const handleAcceptInvite = async () => {
         if (!detailEvent || !myUserId) return;
         const ok = confirm('초대를 받으시겠습니까?'); if (!ok) return;
-        const { error } = await supabase.from('events_invite').update({ is_agree: true }).eq('event_id', Number(detailEvent.id)).eq('profile_id', myUserId);
-        if (error) { console.error(error); alert('초대 수락 실패'); return; }
-        setDetailEvent(null); fetchEvents();
+
+        const { error: rpcError } = await supabase.rpc('respond_event_invite', {
+            p_event_id: Number(detailEvent.id),
+            p_is_agree: true,
+        });
+
+        if (rpcError) {
+            console.error(rpcError);
+            const { error } = await supabase
+                .from('events_invite')
+                .update({ is_agree: true })
+                .eq('event_id', Number(detailEvent.id))
+                .eq('profile_id', myUserId);
+            if (error) { console.error(error); alert('초대 수락 실패'); return; }
+        }
+
+        await refreshInviteAfterResponse();
     };
 
     const handleCancelInvite = async () => {
         if (!detailEvent || !myUserId) return;
         const ok = confirm(detailEvent.invite_is_agree ? '참석을 취소하시겠습니까?' : '초대를 받지 않으시겠습니까?'); if (!ok) return;
-        const { error } = await supabase.from('events_invite').delete().eq('event_id', Number(detailEvent.id)).eq('profile_id', myUserId);
-        if (error) { console.error(error); alert('초대 취소 실패'); return; }
-        setDetailEvent(null); setPopupDate(null); fetchEvents();
+
+        const { error: rpcError } = await supabase.rpc('respond_event_invite', {
+            p_event_id: Number(detailEvent.id),
+            p_is_agree: false,
+        });
+
+        if (rpcError) {
+            console.error(rpcError);
+            const { error } = await supabase
+                .from('events_invite')
+                .delete()
+                .eq('event_id', Number(detailEvent.id))
+                .eq('profile_id', myUserId);
+            if (error) { console.error(error); alert('초대 취소 실패'); return; }
+        }
+
+        await refreshInviteAfterResponse();
     };
 
     const handleCreateComment = async () => {
