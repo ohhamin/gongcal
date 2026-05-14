@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.4.2**
+**현재 버전: v.0.4.3**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -129,6 +129,13 @@ flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 - 댓글 작성일 오름차순 목록
 - 댓글 최대 100자 제한
 
+### 알림
+
+- 오른쪽 상단 🔔 버튼으로 알림 페이지 이동
+- 읽지 않은 알림이 있으면 🔔 버튼 왼쪽 위에 빨간 점 표시
+- 알림 페이지 진입 시 내 알림 목록을 조회하고 읽지 않은 알림을 읽음 처리
+- 일정 초대와 친구 요청 시 `notifications` 테이블에 알림 생성
+
 ### 네비게이션/페이지
 
 - 하단 이모지 네비게이션으로 캘린더/친구관리/그룹관리/설정 이동
@@ -142,6 +149,7 @@ flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 Supabase SQL Editor에서 아래 파일을 실행하세요.
 
 ```text
+web/supabase/create_notifications.sql
 web/supabase/save_event_with_invites.sql
 web/supabase/get_event_invite_attendees.sql
 web/supabase/get_my_invited_events.sql
