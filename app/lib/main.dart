@@ -3,7 +3,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 const String defaultWebUrl = String.fromEnvironment(
   'OURCAL_WEB_URL',
-  defaultValue: 'https://ourcal.vercel.app',
+  defaultValue: 'https://gongcal.vercel.app',
 );
 
 void main() {
