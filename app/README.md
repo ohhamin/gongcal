@@ -4,7 +4,7 @@ Flutter 기반 OURCAL 모바일 껍데기입니다. 현재는 웹 앱을 WebView
 
 ## 실행
 
-기본 웹 주소는 `https://ourcal.vercel.app`입니다. 다른 주소를 띄우려면 `OURCAL_WEB_URL`을 dart-define으로 넘깁니다.
+기본 웹 주소는 `https://gongcal.vercel.app`입니다. 다른 주소를 띄우려면 `OURCAL_WEB_URL`을 dart-define으로 넘깁니다.
 
 ```bash
 flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000

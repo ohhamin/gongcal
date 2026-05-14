@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.4.2 - 2026-05-14
+
+### 업데이트 내용
+
+- Vercel이 monorepo 루트에서 기존 Next.js 앱을 찾지 못해 랜딩 URL이 404가 나는 문제를 해결하기 위해 루트 `vercel.json`을 추가했습니다.
+- Vercel install/build/dev/output 경로를 `web/` 기준으로 명시했습니다.
+- Flutter WebView shell의 기본 URL을 `https://gongcal.vercel.app`로 변경했습니다.
+- README/package 기준 버전을 `v.0.4.1`에서 `v.0.4.2`로 업데이트했습니다.
+
+### 작업 메모
+
+- Vercel Project Settings에서 Root Directory를 따로 `web`으로 바꾸지 않아도 repo 설정만으로 `web/.next` 결과를 배포하도록 맞췄습니다.
+
 ## v.0.4.1 - 2026-05-13
 
 ### 업데이트 내용
