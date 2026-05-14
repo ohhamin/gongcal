@@ -1,5 +1,20 @@
 # OPENCLAW
 
+## v.0.4.4 - 2026-05-14
+
+### 업데이트 내용
+
+- 알림 버튼의 unread 상태를 페이지 이동 시마다 DB에서 다시 조회하도록 변경했습니다.
+- React Query 캐시가 이전 페이지의 unread 값을 잠시 재사용하지 않도록 `staleTime: 0`, `gcTime: 0`, `refetchOnMount: always`를 적용했습니다.
+- 알림 페이지에서 unread를 읽음 처리한 뒤 알림 unread query를 invalidate하도록 했습니다.
+- 알림 버튼 크기를 기존 대비 약 2/3로 줄였습니다.
+- 알림 페이지(`/notifications`)에서는 오른쪽 상단 알림 버튼이 보이지 않도록 숨겼습니다.
+- README/package 기준 버전을 `v.0.4.3`에서 `v.0.4.4`로 업데이트했습니다.
+
+### 작업 메모
+
+- Hamin 요청대로 무거운 `next build` 검증은 실행하지 않았고, 가벼운 `npm run web:lint`만 실행했습니다.
+
 ## v.0.4.3 - 2026-05-14
 
 ### 업데이트 내용

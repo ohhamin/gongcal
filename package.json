@@ -1,6 +1,6 @@
 {
   "name": "ourcal-monorepo",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": true,
   "scripts": {
     "web:dev": "npm --prefix web run dev",
