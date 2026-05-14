@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
 
@@ -26,6 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default function NotificationsPage() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const myProfileQuery = useMyProfile();
     const profileId = myProfileQuery.data?.id;
 
@@ -61,11 +62,16 @@ export default function NotificationsPage() {
                 .eq('profile_id', profileId)
                 .eq('is_read', false);
 
-            if (error) console.error(error);
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            await queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
         };
 
         markUnreadAsRead();
-    }, [notifications, profileId]);
+    }, [notifications, profileId, queryClient]);
 
     return (
         <main className="min-h-screen bg-gray-50">
