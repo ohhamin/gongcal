@@ -914,6 +914,31 @@ export default function CalendarPage() {
         }
     };
 
+    const createEventInviteNotifications = async (
+        eventId: number,
+        invitePayload: Array<{ profile_id: string; is_agree: boolean }>,
+        previousInviteProfileIds: Set<string>,
+    ) => {
+        const newInviteProfileIds = invitePayload
+            .map((invite) => invite.profile_id)
+            .filter((profileId, index, profileIds) => !previousInviteProfileIds.has(profileId) && profileIds.indexOf(profileId) === index);
+
+        if (newInviteProfileIds.length === 0) return;
+
+        const { error } = await supabase.from('notifications').insert(
+            newInviteProfileIds.map((profileId) => ({
+                profile_id: profileId,
+                type: 'event_invite',
+                title: '일정 초대',
+                message: '새로운 일정이 초대가 되었어요.',
+                related_id: eventId,
+            })),
+        );
+
+        // 알림 저장 실패가 일정 저장 자체를 막으면 사용성이 나빠지므로 best-effort로만 처리합니다.
+        if (error) console.error(error);
+    };
+
     const handleSaveEvent = async () => {
         if (!startDate || !endDate) return;
 
@@ -962,9 +987,22 @@ export default function CalendarPage() {
             .filter((attendee) => !attendee.isOwner)
             .map((attendee) => ({ profile_id: attendee.profile_id, is_agree: attendee.is_agree }));
 
+        let savedEventIdForNotifications: number | null = null;
+        const previousInviteProfileIds = new Set<string>();
+
         try {
+            if (selectedEventId) {
+                const { data: previousInviteRows, error: previousInviteError } = await supabase
+                    .from('events_invite')
+                    .select('profile_id')
+                    .eq('event_id', Number(selectedEventId));
+
+                if (previousInviteError) throw previousInviteError;
+                (previousInviteRows || []).forEach((invite) => previousInviteProfileIds.add(String(invite.profile_id)));
+            }
+
             // DB 함수가 배포되어 있으면 events/events_invite 저장을 실제 단일 트랜잭션으로 처리합니다.
-            const { error: rpcError } = await supabase.rpc('save_event_with_invites', {
+            const { data: savedEventId, error: rpcError } = await supabase.rpc('save_event_with_invites', {
                 p_event_id: selectedEventId ? Number(selectedEventId) : null,
                 p_title: eventPayload.title,
                 p_detail: eventPayload.detail,
@@ -980,12 +1018,18 @@ export default function CalendarPage() {
 
                 if (isMissingRpc && invitePayload.length === 0) {
                     // 초대가 없는 일정은 RPC가 아직 배포되지 않은 환경에서도 저장할 수 있습니다.
-                    await saveEventWithClientRollback({ userId: user.id, eventPayload, invitePayload });
+                    savedEventIdForNotifications = await saveEventWithClientRollback({ userId: user.id, eventPayload, invitePayload });
                 } else if (isMissingRpc) {
                     throw new Error('초대 저장 RPC(save_event_with_invites)가 DB에 아직 적용되지 않았습니다. supabase/save_event_with_invites.sql을 먼저 적용해야 참석자 초대 저장이 가능합니다.');
                 } else {
                     throw rpcError;
                 }
+            } else {
+                savedEventIdForNotifications = savedEventId ? Number(savedEventId) : selectedEventId ? Number(selectedEventId) : null;
+            }
+
+            if (savedEventIdForNotifications) {
+                await createEventInviteNotifications(savedEventIdForNotifications, invitePayload, previousInviteProfileIds);
             }
         } catch (error) {
             console.error(error);

@@ -120,6 +120,19 @@ export default function FriendsPage() {
         setSearchPage(page);
     };
 
+    const createFriendRequestNotification = async (profile: Profile, friendshipId: number | null) => {
+        const { error } = await supabase.from('notifications').insert({
+            profile_id: profile.id,
+            type: 'friend_request',
+            title: '친구 요청',
+            message: '새로운 친구 요청이 도착했어요.',
+            related_id: friendshipId,
+        });
+
+        // 친구 요청 자체는 성공했는데 알림만 실패하는 상황을 막기 위해 best-effort로만 처리합니다.
+        if (error) console.error(error);
+    };
+
     const handleRequestFriend = async (profile: Profile) => {
         const user = currentUserQuery.data;
 
@@ -174,6 +187,7 @@ export default function FriendsPage() {
             return;
         }
 
+        await createFriendRequestNotification(profile, null);
         await fetchFriends();
         await searchProfiles(searchPage);
     };
