@@ -1,5 +1,20 @@
 # OPENCLAW
 
+## v.0.4.5 - 2026-05-16
+
+### 업데이트 내용
+
+- GitHub Actions에서 `dev` 브랜치 기준 Flutter release APK를 빌드하고 artifact로 업로드하는 `Build Flutter APK` 워크플로를 추가했습니다.
+- Android release signing을 `android/key.properties` 기반으로 구성하고, CI에서는 GitHub Secrets의 keystore/base64 값을 복원해 고정 서명키로 빌드하도록 했습니다.
+- Flutter WebView에서 카카오 OAuth 중 발생할 수 있는 `kakaokompassauth`, `kakaolink` 등 외부 스킴을 Android 외부 앱으로 넘기도록 처리했습니다.
+- README에 GitHub Actions APK 빌드, Android signing secrets, Kakao Developers 키 해시 등록 안내를 추가했습니다.
+- README/package 기준 버전을 `v.0.4.4`에서 `v.0.4.5`로 업데이트했습니다.
+
+### 작업 메모
+
+- 로컬 환경에는 Flutter CLI가 없어 Docker Flutter SDK로 `flutter analyze`, `flutter test`를 검증했습니다.
+- GitHub Actions의 release APK 빌드는 Android signing secrets가 없으면 의도적으로 실패하도록 구성했습니다.
+
 ## v.0.4.4 - 2026-05-14
 
 ### 업데이트 내용

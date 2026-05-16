@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 const String defaultWebUrl = String.fromEnvironment(
@@ -51,6 +52,7 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
         NavigationDelegate(
           onProgress: (progress) => setState(() => _progress = progress),
           onPageStarted: (_) => setState(() => _errorMessage = null),
+          onNavigationRequest: _handleNavigationRequest,
           onWebResourceError: (error) {
             setState(() {
               _errorMessage = '웹 화면을 불러오지 못했습니다. (${error.errorCode})';
@@ -59,6 +61,38 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
         ),
       )
       ..loadRequest(Uri.parse(defaultWebUrl));
+  }
+
+  Future<NavigationDecision> _handleNavigationRequest(
+    NavigationRequest request,
+  ) async {
+    final uri = Uri.tryParse(request.url);
+    final scheme = uri?.scheme.toLowerCase();
+
+    if (uri == null || scheme == null) {
+      return NavigationDecision.prevent;
+    }
+
+    if (scheme == 'http' || scheme == 'https' || scheme == 'about') {
+      return NavigationDecision.navigate;
+    }
+
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')),
+        );
+      }
+    }
+
+    return NavigationDecision.prevent;
   }
 
   Future<bool> _handleBack() async {

@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.4.4**
+**현재 버전: v.0.4.5**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -170,6 +170,7 @@ web/supabase/respond_event_invite.sql
 - FullCalendar
 - Flutter
 - webview_flutter
+- url_launcher
 
 ## 시작하기
 
@@ -205,6 +206,31 @@ npm run web:dev
 ```
 
 브라우저에서 <http://localhost:3000>을 열면 앱을 확인할 수 있습니다. `next.config.ts`에서 `localhost:3000`과 `127.0.0.1:3000`을 개발 허용 origin으로 명시합니다.
+
+
+## Android APK 빌드
+
+`dev` 브랜치에 push되면 GitHub Actions가 Flutter APK를 빌드하고 artifact로 업로드합니다. 수동 빌드는 GitHub Actions의 `Build Flutter APK` 워크플로에서 `workflow_dispatch`로 실행할 수 있습니다.
+
+카카오 OAuth 로그인이 APK에서도 동작하도록 WebView에서 `http/https` 외부 스킴을 감지하면 Android 외부 앱으로 넘깁니다. 카카오톡 앱 연동을 위해 Android manifest에는 `kakaokompassauth`, `kakaolink` 조회 스킴을 추가했습니다.
+
+릴리즈 APK는 고정된 keystore로 서명해야 Kakao Developers의 Android 키 해시가 안정적으로 유지됩니다. GitHub repo secrets에 아래 값을 등록하세요.
+
+```text
+ANDROID_KEYSTORE_BASE64      # upload-keystore.jks를 base64 인코딩한 값
+ANDROID_KEYSTORE_PASSWORD
+ANDROID_KEY_ALIAS
+ANDROID_KEY_PASSWORD
+```
+
+keystore 생성 예시:
+
+```bash
+keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+base64 -w 0 upload-keystore.jks
+```
+
+GitHub Actions에서 나온 release APK의 서명 키 해시를 Kakao Developers > 내 애플리케이션 > 플랫폼 > Android에 등록해야 카카오 로그인이 정상 동작합니다.
 
 ## 스크립트
 
