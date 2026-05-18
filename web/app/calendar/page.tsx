@@ -205,12 +205,19 @@ function getStartMinutes(event: CalendarEvent): number {
     return start.getHours() * 60 + start.getMinutes();
 }
 
+function getOwnershipSortRank(event: CalendarEvent): number {
+    return isMyOwnedEvent(event) ? 0 : 1;
+}
+
 function compareCalendarEvents(a: CalendarEvent, b: CalendarEvent): number {
     const priorityDiff = getDisplayPriority(a) - getDisplayPriority(b);
     if (priorityDiff !== 0) return priorityDiff;
 
     const startDiff = getStartMinutes(a) - getStartMinutes(b);
     if (startDiff !== 0) return startDiff;
+
+    const ownershipDiff = getOwnershipSortRank(a) - getOwnershipSortRank(b);
+    if (ownershipDiff !== 0) return ownershipDiff;
 
     return a.title.localeCompare(b.title, 'ko');
 }
@@ -256,6 +263,7 @@ export default function CalendarPage() {
 
     const [people, setPeople] = useState<Person[]>([]);
     const [events, setEvents] = useState<CalendarEvent[]>([]);
+    const [commentCountByEventId, setCommentCountByEventId] = useState<Record<string, number>>({});
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
     const [isCalendarLoading, setIsCalendarLoading] = useState(true);
@@ -468,6 +476,7 @@ export default function CalendarPage() {
 
         if (peopleIds.length === 0 || !currentUserId || !currentProfileId) {
             setEvents([]);
+            setCommentCountByEventId({});
             return;
         }
 
@@ -593,6 +602,26 @@ export default function CalendarPage() {
             }
         }
 
+        const eventIds = mergedEvents.map((event) => Number(event.id)).filter(Number.isFinite);
+        const nextCommentCountByEventId: Record<string, number> = {};
+
+        if (eventIds.length > 0) {
+            const { data: commentRows, error: commentCountError } = await supabase
+                .from('comments')
+                .select('events_id')
+                .in('events_id', eventIds);
+
+            if (commentCountError) {
+                console.error(commentCountError);
+            } else {
+                ((commentRows || []) as Array<{ events_id: number }>).forEach((comment) => {
+                    const eventId = String(comment.events_id);
+                    nextCommentCountByEventId[eventId] = (nextCommentCountByEventId[eventId] || 0) + 1;
+                });
+            }
+        }
+
+        setCommentCountByEventId(nextCommentCountByEventId);
         setEvents(sortCalendarEvents(mergedEvents));
     }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, sortCalendarEvents]);
 
@@ -1044,8 +1073,8 @@ export default function CalendarPage() {
         fetchEvents();
     };
 
-    const handleDeleteEvent = async () => {
-        if (!selectedEventId || !myUserId) return;
+    const handleDeleteEventById = async (eventId: string) => {
+        if (!myUserId) return;
 
         const ok = confirm('일정을 삭제할까요?');
         if (!ok) return;
@@ -1053,7 +1082,7 @@ export default function CalendarPage() {
         const { error: commentDeleteError } = await supabase
             .from('comments')
             .delete()
-            .eq('events_id', Number(selectedEventId));
+            .eq('events_id', Number(eventId));
 
         if (commentDeleteError) {
             console.error(commentDeleteError);
@@ -1061,7 +1090,7 @@ export default function CalendarPage() {
             return;
         }
 
-        await supabase.from('events_invite').delete().eq('event_id', Number(selectedEventId));
+        await supabase.from('events_invite').delete().eq('event_id', Number(eventId));
 
         const { error } = await supabase
             .from('events')
@@ -1079,6 +1108,11 @@ export default function CalendarPage() {
         setDetailEvent(null);
         resetForm();
         fetchEvents();
+    };
+
+    const handleDeleteEvent = async () => {
+        if (!selectedEventId) return;
+        await handleDeleteEventById(selectedEventId);
     };
 
     const fetchComments = useCallback(async (eventId: string) => {
@@ -1307,6 +1341,10 @@ export default function CalendarPage() {
 
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
 
+    const canShowPopupCommentCount = (event: CalendarEvent): boolean => {
+        return isMyOwnedEvent(event) || !event.is_hidden;
+    };
+
     const getEndTimeSlots = () => {
         return isSameDate(startDate, endDate) ? getValidEndSlots(startTime) : START_TIME_SLOTS.concat('24:00');
     };
@@ -1315,6 +1353,7 @@ export default function CalendarPage() {
         const baseColor = getEventBaseColor(event);
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
         const orderStartAt = getStartMinutes(event);
+        const orderOwnerRank = getOwnershipSortRank(event);
 
         return getDateStringsInRange(event.start_at, event.end_at).map((dateStr) => ({
             id: `${event.id}:${dateStr}`,
@@ -1335,6 +1374,8 @@ export default function CalendarPage() {
                 isMyInvite: isMyInviteEvent(event),
                 orderPriority: getDisplayPriority(event),
                 orderStartAt,
+                orderOwnerRank,
+                orderTitle: event.title,
             },
         }));
     });
@@ -1441,10 +1482,20 @@ export default function CalendarPage() {
                             displayEventTime={false}
                             eventDisplay="block"
                             eventOrderStrict={true}
-                            eventOrder="orderPriority,orderStartAt,title"
-                            eventContent={(arg) => (
-                                <div className="truncate text-[10px] font-semibold leading-none">{arg.event.title}</div>
-                            )}
+                            eventOrder="orderPriority,orderStartAt,orderOwnerRank,orderTitle"
+                            eventContent={(arg) => {
+                                const isOwner = Boolean(arg.event.extendedProps.isOwner);
+                                const isHidden = Boolean(arg.event.extendedProps.isHidden);
+                                const ownerName = String(arg.event.extendedProps.ownerName || '');
+                                const shouldShowOwnerName = !isOwner && !isHidden && ownerName.length > 0;
+
+                                return (
+                                    <div className="truncate text-[10px] font-semibold leading-none">
+                                        <span>{arg.event.title}</span>
+                                        {shouldShowOwnerName && <span className="ml-1 opacity-80">{ownerName}</span>}
+                                    </div>
+                                );
+                            }}
                         />
 
                         {isCalendarLoading && (
@@ -1480,30 +1531,46 @@ export default function CalendarPage() {
                                         const color = getEventBaseColor(event);
                                         const ownerName = getOwnerName(event, ownerNameById);
                                         const displayTitle = getEventDisplayTitle(event, ownerNameById);
+                                        const commentCount = commentCountByEventId[String(event.id)] || 0;
 
                                         return (
                                             <li key={event.id}>
-                                                <button
-                                                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left ${
-                                                        isHiddenFromMe ? 'cursor-default' : 'hover:bg-gray-50'
-                                                    }`}
-                                                    onClick={() => {
-                                                        if (isHiddenFromMe) return;
-                                                        handleListEventClick(event);
-                                                    }}
-                                                >
-                                                    <span
-                                                        className="h-3 w-3 shrink-0 rounded-full"
-                                                        style={{ backgroundColor: color }}
-                                                    />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-semibold">{displayTitle}</p>
-                                                        <p className="text-xs text-gray-500">
-                                                            {formatEventTimeLabel(event)}
-                                                            {!isOwner && ownerName ? ` · ${ownerName}` : ''}
-                                                        </p>
-                                                    </div>
-                                                </button>
+                                                <div className="flex items-center gap-2 rounded-lg border p-3">
+                                                    <button
+                                                        className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
+                                                            isHiddenFromMe ? 'cursor-default' : 'hover:bg-gray-50'
+                                                        }`}
+                                                        onClick={() => {
+                                                            if (isHiddenFromMe) return;
+                                                            handleListEventClick(event);
+                                                        }}
+                                                    >
+                                                        <span
+                                                            className="h-3 w-3 shrink-0 rounded-full"
+                                                            style={{ backgroundColor: color }}
+                                                        />
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate text-sm font-semibold">{displayTitle}</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                {formatEventTimeLabel(event)}
+                                                                {!isOwner && ownerName && !isHiddenFromMe ? ` · ${ownerName}` : ''}
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                    {canShowPopupCommentCount(event) && (
+                                                        <span className="shrink-0 text-xs font-semibold text-gray-500" aria-label={`댓글 ${commentCount}개`}>
+                                                            📝{commentCount}
+                                                        </span>
+                                                    )}
+                                                    {isOwner && (
+                                                        <button
+                                                            className="shrink-0 rounded bg-red-500 px-3 py-1 text-xs font-semibold text-white"
+                                                            onClick={() => handleDeleteEventById(event.id)}
+                                                        >
+                                                            삭제
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </li>
                                         );
                                     })}
