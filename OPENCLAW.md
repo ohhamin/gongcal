@@ -1,5 +1,35 @@
 # OPENCLAW
 
+## v.0.4.6 - 2026-05-18
+
+### 업데이트 내용
+
+- 월간 캘린더에서 타인의 공개 일정 제목 옆에도 소유자 닉네임을 표시하도록 변경했습니다.
+- 같은 표시 우선순위와 시작 시간의 일정은 내 일정이 먼저 오고, 이후 일정 제목 오름차순으로 정렬되도록 보강했습니다.
+- 날짜별 일정 목록 팝업에서 타인의 비공개 일정은 하단 닉네임을 중복 표시하지 않도록 수정했습니다.
+- 날짜별 일정 목록 팝업에 내 일정 삭제 버튼을 추가하고, 기존 일정 수정 화면의 삭제 흐름과 동일하게 댓글/초대/일정을 삭제하도록 연결했습니다.
+- 날짜별 일정 목록 팝업에서 내 일정과 타인의 공개 일정 오른쪽에 댓글 수를 `📝N` 형태로 표시하도록 추가했습니다.
+- README/package 기준 버전을 `v.0.4.5`에서 `v.0.4.6`으로 업데이트했습니다.
+
+### 작업 메모
+
+- 댓글 수는 현재 월간 캘린더 조회 범위의 일정 ID를 기준으로 `comments.events_id`를 집계해 표시합니다.
+
+## v.0.4.5 - 2026-05-16
+
+### 업데이트 내용
+
+- GitHub Actions에서 `dev` 브랜치 기준 Flutter release APK를 빌드하고 artifact로 업로드하는 `Build Flutter APK` 워크플로를 추가했습니다.
+- Android release signing을 `android/key.properties` 기반으로 구성하고, CI에서는 GitHub Secrets의 keystore/base64 값을 복원해 고정 서명키로 빌드하도록 했습니다.
+- Flutter WebView에서 카카오 OAuth 중 발생할 수 있는 `kakaokompassauth`, `kakaolink` 등 외부 스킴을 Android 외부 앱으로 넘기도록 처리했습니다.
+- README에 GitHub Actions APK 빌드, Android signing secrets, Kakao Developers 키 해시 등록 안내를 추가했습니다.
+- README/package 기준 버전을 `v.0.4.4`에서 `v.0.4.5`로 업데이트했습니다.
+
+### 작업 메모
+
+- 로컬 환경에는 Flutter CLI가 없어 Docker Flutter SDK로 `flutter analyze`, `flutter test`를 검증했습니다.
+- GitHub Actions의 release APK 빌드는 Android signing secrets가 없으면 의도적으로 실패하도록 구성했습니다.
+
 ## v.0.4.4 - 2026-05-14
 
 ### 업데이트 내용
