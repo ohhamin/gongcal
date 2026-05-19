@@ -1387,8 +1387,14 @@ export default function CalendarPage() {
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
     const isGroupFilterEnabled = masterFilterMode === MASTER_FILTER_GROUP;
 
-    const resetMemberFilters = () => {
-        setSelectedMemberIds(new Set(filterPeople.map((person) => person.id)));
+    const resetMemberFilters = (peopleToReset: Person[] = filterPeople) => {
+        setSelectedMemberIds(new Set(peopleToReset.map((person) => person.id)));
+    };
+
+    const handleMasterFilterChange = (nextMode: typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP) => {
+        setMasterFilterMode(nextMode);
+        resetMemberFilters();
+        if (nextMode === MASTER_FILTER_MY_ONLY) setIsMemberFilterOpen(false);
     };
 
     const toggleMemberFilter = (profileId: string) => {
@@ -1478,21 +1484,14 @@ export default function CalendarPage() {
                             <button
                                 className={`rounded-full px-2 py-1 ${!isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
                                 aria-label="내 일정만 보기"
-                                onClick={() => {
-                                    setMasterFilterMode(MASTER_FILTER_MY_ONLY);
-                                    resetMemberFilters();
-                                    setIsMemberFilterOpen(false);
-                                }}
+                                onClick={() => handleMasterFilterChange(MASTER_FILTER_MY_ONLY)}
                             >
                                 👤
                             </button>
                             <button
                                 className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
                                 aria-label="그룹 일정 함께 보기"
-                                onClick={() => {
-                                    setMasterFilterMode(MASTER_FILTER_GROUP);
-                                    resetMemberFilters();
-                                }}
+                                onClick={() => handleMasterFilterChange(MASTER_FILTER_GROUP)}
                             >
                                 👥
                             </button>
