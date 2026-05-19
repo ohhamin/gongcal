@@ -5,14 +5,29 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
-import { useCurrentUser } from '@/lib/useCurrentProfile';
+import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
 
 export default function SettingsPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
     const currentUserQuery = useCurrentUser();
+    const profileQuery = useMyProfile();
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+
+    const inviteCode = profileQuery.data?.id.slice(0, 8) || '';
+
+    const copyInviteCode = async () => {
+        if (!inviteCode) return;
+
+        try {
+            await navigator.clipboard.writeText(inviteCode);
+            alert('초대코드를 복사했습니다.');
+        } catch (error) {
+            console.error(error);
+            alert('초대코드 복사 실패');
+        }
+    };
 
     const handleLogout = async () => {
         const ok = confirm('로그아웃할까요?');
@@ -103,6 +118,17 @@ export default function SettingsPage() {
 
     return (
         <main className="relative min-h-[520px] rounded-2xl bg-white p-5 shadow">
+            <div className="mb-6 rounded-xl border bg-gray-50 p-4">
+                <p className="text-lg font-bold">{profileQuery.data?.nickname || '이름 없음'}</p>
+                <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                    <span>초대코드</span>
+                    <span className="font-mono font-semibold text-gray-900">{inviteCode || '-'}</span>
+                    <button className="rounded bg-white px-2 py-1 shadow-sm ring-1 ring-black/10" onClick={copyInviteCode} disabled={!inviteCode} aria-label="초대코드 복사">
+                        📋
+                    </button>
+                </div>
+            </div>
+
             <h1 className="mb-4 text-2xl font-bold">설정</h1>
             <p className="text-gray-700">설정 페이지입니다.</p>
 

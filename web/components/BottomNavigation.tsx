@@ -5,8 +5,7 @@ import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
     { href: '/calendar', label: '📅', title: '캘린더' },
-    { href: '/friends', label: '🤝', title: '친구관리' },
-    { href: '/groups', label: '👥', title: '그룹관리' },
+    { href: '/groups', label: '👥', title: '친구/그룹관리' },
     { href: '/settings', label: '⚙️', title: '설정' },
 ];
 
@@ -21,7 +20,7 @@ export default function BottomNavigation() {
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-white/95 shadow-lg backdrop-blur">
-            <div className="mx-auto grid max-w-5xl grid-cols-4">
+            <div className="mx-auto grid max-w-5xl grid-cols-3">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
