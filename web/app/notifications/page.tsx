@@ -67,9 +67,6 @@ export default function NotificationsPage() {
                 return;
             }
 
-            queryClient.setQueryData<NotificationItem[]>(['notifications', 'list', profileId], (current) => {
-                return current?.map((notification) => ({ ...notification, is_read: true })) || current;
-            });
             await queryClient.invalidateQueries({ queryKey: ['notifications', 'unread'] });
         };
 
