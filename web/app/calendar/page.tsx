@@ -136,6 +136,10 @@ function formatPopupDate(dateStr: string): string {
     return `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일`;
 }
 
+function formatCalendarTitle(arg: { date: { year: number; month: number } }): string {
+    return `${arg.date.year} ${String(arg.date.month + 1).padStart(2, '0')}`;
+}
+
 function addDays(date: Date, days: number): Date {
     const next = new Date(date);
     next.setDate(next.getDate() + days);
@@ -270,6 +274,7 @@ export default function CalendarPage() {
     const [masterFilterMode, setMasterFilterMode] = useState<typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP>(MASTER_FILTER_GROUP);
     const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
     const [isMemberFilterOpen, setIsMemberFilterOpen] = useState(false);
+    const previousGroupIdRef = useRef<number | null | undefined>(undefined);
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
     const [isCalendarLoading, setIsCalendarLoading] = useState(true);
@@ -476,14 +481,18 @@ export default function CalendarPage() {
         const currentUserId = currentUserQuery.data?.id;
         const currentProfileId = profileQuery.data?.id;
         const visiblePeople = await fetchVisiblePeople();
+        const hasGroupChanged = previousGroupIdRef.current !== profileQuery.data?.main_group_id;
+        previousGroupIdRef.current = profileQuery.data?.main_group_id;
+
         setPeople(visiblePeople);
         setFilterPeople(visiblePeople);
         setSelectedMemberIds((prev) => {
             const visibleIds = visiblePeople.map((person) => person.id);
-            const next = new Set<string>();
+            if (hasGroupChanged || filterPeople.length === 0) return new Set(visibleIds);
 
+            const next = new Set<string>();
             visibleIds.forEach((id) => {
-                if (filterPeople.length === 0 || prev.has(id)) next.add(id);
+                if (prev.has(id)) next.add(id);
             });
 
             if (next.size === prev.size && Array.from(next).every((id) => prev.has(id))) return prev;
@@ -643,7 +652,7 @@ export default function CalendarPage() {
 
         setCommentCountByEventId(nextCommentCountByEventId);
         setEvents(sortCalendarEvents(mergedEvents));
-    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, filterPeople.length, sortCalendarEvents]);
+    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, profileQuery.data?.main_group_id, filterPeople.length, sortCalendarEvents]);
 
     // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
     useEffect(() => {
@@ -1378,6 +1387,10 @@ export default function CalendarPage() {
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
     const isGroupFilterEnabled = masterFilterMode === MASTER_FILTER_GROUP;
 
+    const resetMemberFilters = () => {
+        setSelectedMemberIds(new Set(filterPeople.map((person) => person.id)));
+    };
+
     const toggleMemberFilter = (profileId: string) => {
         setSelectedMemberIds((prev) => {
             const next = new Set(prev);
@@ -1455,6 +1468,7 @@ export default function CalendarPage() {
                             setDetailEvent(null);
                             setIsFormOpen(false);
                             setMasterFilterMode(MASTER_FILTER_GROUP);
+                            setFilterPeople([]);
                             setSelectedMemberIds(new Set());
                             setIsMemberFilterOpen(false);
                         }}
@@ -1466,6 +1480,7 @@ export default function CalendarPage() {
                                 aria-label="내 일정만 보기"
                                 onClick={() => {
                                     setMasterFilterMode(MASTER_FILTER_MY_ONLY);
+                                    resetMemberFilters();
                                     setIsMemberFilterOpen(false);
                                 }}
                             >
@@ -1474,7 +1489,10 @@ export default function CalendarPage() {
                             <button
                                 className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
                                 aria-label="그룹 일정 함께 보기"
-                                onClick={() => setMasterFilterMode(MASTER_FILTER_GROUP)}
+                                onClick={() => {
+                                    setMasterFilterMode(MASTER_FILTER_GROUP);
+                                    resetMemberFilters();
+                                }}
                             >
                                 👥
                             </button>
@@ -1548,6 +1566,7 @@ export default function CalendarPage() {
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
                             headerToolbar={{ start: 'prev', center: 'title', end: 'next' }}
+                            titleFormat={formatCalendarTitle}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}
