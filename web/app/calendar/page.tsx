@@ -97,6 +97,8 @@ const EVENT_DETAIL_MAX_LENGTH = 500;
 const COMMENT_MAX_LENGTH = 100;
 const DEFAULT_START_TIME: TimeValue = '09:00';
 const DEFAULT_END_TIME: TimeValue = '22:00';
+const MASTER_FILTER_MY_ONLY = 'my-only';
+const MASTER_FILTER_GROUP = 'group';
 
 function formatLocalDateString(date: Date): string {
     const year = date.getFullYear();
@@ -262,8 +264,12 @@ export default function CalendarPage() {
     const profileQuery = useMyProfile();
 
     const [people, setPeople] = useState<Person[]>([]);
+    const [filterPeople, setFilterPeople] = useState<Person[]>([]);
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [commentCountByEventId, setCommentCountByEventId] = useState<Record<string, number>>({});
+    const [masterFilterMode, setMasterFilterMode] = useState<typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP>(MASTER_FILTER_GROUP);
+    const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
+    const [isMemberFilterOpen, setIsMemberFilterOpen] = useState(false);
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
     const [isCalendarLoading, setIsCalendarLoading] = useState(true);
@@ -471,11 +477,25 @@ export default function CalendarPage() {
         const currentProfileId = profileQuery.data?.id;
         const visiblePeople = await fetchVisiblePeople();
         setPeople(visiblePeople);
+        setFilterPeople(visiblePeople);
+        setSelectedMemberIds((prev) => {
+            const visibleIds = visiblePeople.map((person) => person.id);
+            const next = new Set<string>();
+
+            visibleIds.forEach((id) => {
+                if (filterPeople.length === 0 || prev.has(id)) next.add(id);
+            });
+
+            if (next.size === prev.size && Array.from(next).every((id) => prev.has(id))) return prev;
+            return next;
+        });
         const peopleIds = visiblePeople.map((p) => p.id);
         const inviteProfileIds = Array.from(new Set([...peopleIds, currentProfileId].filter(Boolean)));
 
         if (peopleIds.length === 0 || !currentUserId || !currentProfileId) {
             setEvents([]);
+            setPeople([]);
+            setFilterPeople([]);
             setCommentCountByEventId({});
             return;
         }
@@ -623,7 +643,7 @@ export default function CalendarPage() {
 
         setCommentCountByEventId(nextCommentCountByEventId);
         setEvents(sortCalendarEvents(mergedEvents));
-    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, sortCalendarEvents]);
+    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, filterPeople.length, sortCalendarEvents]);
 
     // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
     useEffect(() => {
@@ -1073,32 +1093,48 @@ export default function CalendarPage() {
         fetchEvents();
     };
 
-    const handleDeleteEventById = async (eventId: string) => {
-        if (!myUserId) return;
-
-        const ok = confirm('일정을 삭제할까요?');
-        if (!ok) return;
+    const deleteEventWithClientFallback = async (eventId: string) => {
+        const ownerUserId = currentUserQuery.data?.id || myUserId;
+        if (!ownerUserId) throw new Error('현재 사용자 정보를 확인할 수 없습니다.');
 
         const { error: commentDeleteError } = await supabase
             .from('comments')
             .delete()
             .eq('events_id', Number(eventId));
 
-        if (commentDeleteError) {
-            console.error(commentDeleteError);
-            alert('댓글 삭제 실패');
-            return;
-        }
+        if (commentDeleteError) throw commentDeleteError;
 
-        await supabase.from('events_invite').delete().eq('event_id', Number(eventId));
+        const { error: inviteDeleteError } = await supabase.from('events_invite').delete().eq('event_id', Number(eventId));
+        if (inviteDeleteError) throw inviteDeleteError;
 
-        const { error } = await supabase
+        const { error: eventDeleteError } = await supabase
             .from('events')
             .delete()
-            .eq('id', Number(selectedEventId))
-            .eq('user_id', myUserId);
+            .eq('id', Number(eventId))
+            .eq('user_id', ownerUserId);
 
-        if (error) {
+        if (eventDeleteError) throw eventDeleteError;
+    };
+
+    const handleDeleteEventById = async (eventId: string) => {
+        if (!myUserId) return;
+
+        const ok = confirm('일정을 삭제할까요?');
+        if (!ok) return;
+
+        try {
+            const { error: rpcError } = await supabase.rpc('delete_event_cascade', {
+                p_event_id: Number(eventId),
+            });
+
+            if (rpcError) {
+                const isMissingRpc = rpcError.code === 'PGRST202' || rpcError.message.includes('delete_event_cascade');
+                if (!isMissingRpc) throw rpcError;
+
+                // delete_event_cascade.sql이 아직 배포되지 않은 환경에서도 기존 클라이언트 삭제 경로로 동작하게 둡니다.
+                await deleteEventWithClientFallback(eventId);
+            }
+        } catch (error) {
             console.error(error);
             alert('삭제 실패');
             return;
@@ -1340,6 +1376,28 @@ export default function CalendarPage() {
     };
 
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
+    const isGroupFilterEnabled = masterFilterMode === MASTER_FILTER_GROUP;
+
+    const toggleMemberFilter = (profileId: string) => {
+        setSelectedMemberIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(profileId)) next.delete(profileId);
+            else next.add(profileId);
+            return next;
+        });
+    };
+
+    const getFilterProfileId = (event: CalendarEvent): string => {
+        return event.display_profile_id || event.user_id;
+    };
+
+    const isEventVisibleByMemberFilter = (event: CalendarEvent): boolean => {
+        const filterProfileId = getFilterProfileId(event);
+        if (!isGroupFilterEnabled) return filterProfileId === myUserId;
+        return selectedMemberIds.has(filterProfileId);
+    };
+
+    const filteredEvents = events.filter(isEventVisibleByMemberFilter);
 
     const canShowPopupCommentCount = (event: CalendarEvent): boolean => {
         return isMyOwnedEvent(event) || !event.is_hidden;
@@ -1349,7 +1407,7 @@ export default function CalendarPage() {
         return isSameDate(startDate, endDate) ? getValidEndSlots(startTime) : START_TIME_SLOTS.concat('24:00');
     };
 
-    const calendarEvents = sortCalendarEvents(events).flatMap((event) => {
+    const calendarEvents = sortCalendarEvents(filteredEvents).flatMap((event) => {
         const baseColor = getEventBaseColor(event);
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
         const orderStartAt = getStartMinutes(event);
@@ -1380,23 +1438,92 @@ export default function CalendarPage() {
         }));
     });
 
-    const popupEvents = popupDate ? getEventsForDate(popupDate) : [];
+    const popupEvents = popupDate ? getEventsForDate(popupDate).filter(isEventVisibleByMemberFilter) : [];
 
     return (
         <div
             className="flex flex-col bg-white"
             style={{ height: 'calc(87.5vh - 4rem)' }}
         >
-            <div className="mb-3 flex shrink-0 items-center justify-between gap-3 px-1 pb-1">
+            <div className="mb-3 flex shrink-0 items-start justify-between gap-3 px-1 pb-1">
                 <h1 className="text-xl font-bold">우리캘린더</h1>
-                <GroupSelector
-                    onChange={() => {
-                        setIsCalendarLoading(true);
-                        setPopupDate(null);
-                        setDetailEvent(null);
-                        setIsFormOpen(false);
-                    }}
-                />
+                <div className="flex flex-col items-end gap-2">
+                    <GroupSelector
+                        onChange={() => {
+                            setIsCalendarLoading(true);
+                            setPopupDate(null);
+                            setDetailEvent(null);
+                            setIsFormOpen(false);
+                            setMasterFilterMode(MASTER_FILTER_GROUP);
+                            setSelectedMemberIds(new Set());
+                            setIsMemberFilterOpen(false);
+                        }}
+                    />
+                    <div className="flex items-center gap-2">
+                        <div className="flex rounded-full border bg-gray-100 p-0.5 text-sm" aria-label="일정 표시 범위 선택">
+                            <button
+                                className={`rounded-full px-2 py-1 ${!isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
+                                aria-label="내 일정만 보기"
+                                onClick={() => {
+                                    setMasterFilterMode(MASTER_FILTER_MY_ONLY);
+                                    setIsMemberFilterOpen(false);
+                                }}
+                            >
+                                👤
+                            </button>
+                            <button
+                                className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
+                                aria-label="그룹 일정 함께 보기"
+                                onClick={() => setMasterFilterMode(MASTER_FILTER_GROUP)}
+                            >
+                                👥
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <button
+                                className="rounded border bg-white px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                                disabled={!isGroupFilterEnabled}
+                                onClick={() => setIsMemberFilterOpen((prev) => !prev)}
+                            >
+                                멤버 {selectedMemberIds.size}/{filterPeople.length}
+                            </button>
+                            {isMemberFilterOpen && (
+                                <div className="absolute right-0 z-30 mt-1 w-48 rounded-lg border bg-white p-2 shadow-lg">
+                                    {filterPeople.length === 0 ? (
+                                        <p className="px-2 py-1 text-xs text-gray-500">멤버가 없습니다.</p>
+                                    ) : (
+                                        filterPeople.map((person) => {
+                                            const checked = selectedMemberIds.has(person.id);
+
+                                            return (
+                                                <label key={person.id} className="flex items-center justify-between gap-3 rounded px-2 py-1 text-sm hover:bg-gray-50">
+                                                    <span className="truncate">{person.id === myUserId ? '나' : person.nickname || '이름 없음'}</span>
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={checked}
+                                                        disabled={!isGroupFilterEnabled}
+                                                        className={`h-5 w-9 rounded-full p-0.5 transition ${
+                                                            checked ? 'bg-blue-600' : 'bg-gray-300'
+                                                        } disabled:opacity-40`}
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            toggleMemberFilter(person.id);
+                                                        }}
+                                                    >
+                                                        <span
+                                                            className={`block h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-4' : 'translate-x-0'}`}
+                                                        />
+                                                    </button>
+                                                </label>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div
