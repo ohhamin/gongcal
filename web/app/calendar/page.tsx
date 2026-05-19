@@ -1388,7 +1388,9 @@ export default function CalendarPage() {
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
     const isGroupFilterEnabled = masterFilterMode === MASTER_FILTER_GROUP;
 
-    const handleMasterFilterChange = (nextMode: typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP) => {
+    const handleMasterFilterToggle = () => {
+        const nextMode = isGroupFilterEnabled ? MASTER_FILTER_MY_ONLY : MASTER_FILTER_GROUP;
+
         flushSync(() => {
             setMasterFilterMode(nextMode);
             setSelectedMemberIds(new Set(filterPeople.map((person) => person.id)));
@@ -1479,22 +1481,21 @@ export default function CalendarPage() {
                         }}
                     />
                     <div className="flex items-center gap-2">
-                        <div className="flex rounded-full border bg-gray-100 p-0.5 text-sm" aria-label="일정 표시 범위 선택">
-                            <button
-                                className={`rounded-full px-2 py-1 ${!isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
-                                aria-label="내 일정만 보기"
-                                onClick={() => handleMasterFilterChange(MASTER_FILTER_MY_ONLY)}
-                            >
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isGroupFilterEnabled}
+                            className="flex rounded-full border bg-gray-100 p-0.5 text-sm"
+                            aria-label="일정 표시 범위 전환"
+                            onClick={handleMasterFilterToggle}
+                        >
+                            <span className={`rounded-full px-2 py-1 ${!isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`} aria-hidden="true">
                                 👤
-                            </button>
-                            <button
-                                className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`}
-                                aria-label="그룹 일정 함께 보기"
-                                onClick={() => handleMasterFilterChange(MASTER_FILTER_GROUP)}
-                            >
+                            </span>
+                            <span className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`} aria-hidden="true">
                                 👥
-                            </button>
-                        </div>
+                            </span>
+                        </button>
                         <div className="relative">
                             <button
                                 className="rounded border bg-white px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
