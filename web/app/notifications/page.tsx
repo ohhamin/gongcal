@@ -48,6 +48,9 @@ export default function NotificationsPage() {
             return (data || []) as NotificationItem[];
         },
         enabled: Boolean(profileId),
+        staleTime: 0,
+        gcTime: 0,
+        refetchOnMount: 'always',
     });
 
     const notifications = useMemo(() => notificationsQuery.data || [], [notificationsQuery.data]);

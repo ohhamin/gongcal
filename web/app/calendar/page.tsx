@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { flushSync } from 'react-dom';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -1387,14 +1388,12 @@ export default function CalendarPage() {
     const ownerNameById = new Map(people.map((p) => [p.id, p.nickname || '이름 없음']));
     const isGroupFilterEnabled = masterFilterMode === MASTER_FILTER_GROUP;
 
-    const resetMemberFilters = (peopleToReset: Person[] = filterPeople) => {
-        setSelectedMemberIds(new Set(peopleToReset.map((person) => person.id)));
-    };
-
     const handleMasterFilterChange = (nextMode: typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP) => {
-        setMasterFilterMode(nextMode);
-        resetMemberFilters();
-        if (nextMode === MASTER_FILTER_MY_ONLY) setIsMemberFilterOpen(false);
+        flushSync(() => {
+            setMasterFilterMode(nextMode);
+            setSelectedMemberIds(new Set(filterPeople.map((person) => person.id)));
+            if (nextMode === MASTER_FILTER_MY_ONLY) setIsMemberFilterOpen(false);
+        });
     };
 
     const toggleMemberFilter = (profileId: string) => {

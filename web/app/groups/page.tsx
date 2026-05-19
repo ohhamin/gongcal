@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import FriendsPanel from '@/components/FriendsPanel';
 import {
     GROUP_LIMIT,
     GROUP_MEMBER_LIMIT,
@@ -49,6 +50,7 @@ export default function GroupsPage() {
     const [isNameChecked, setIsNameChecked] = useState(false);
     const [isEditNameChecked, setIsEditNameChecked] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'friends' | 'groups'>('friends');
 
     const isSelectedGroupOwner = Boolean(selectedGroup?.is_owner);
 
@@ -482,17 +484,36 @@ export default function GroupsPage() {
 
     return (
         <main className="rounded-2xl bg-white p-5 shadow">
-            <div className="mb-5 flex items-center justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-bold">그룹관리</h1>
-                    <p className="mt-1 text-sm text-gray-500">그룹은 최대 {GROUP_LIMIT}개, 그룹원은 최대 {GROUP_MEMBER_LIMIT}명까지 가능합니다.</p>
-                </div>
-                <button className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400" onClick={() => setIsCreateOpen(true)} disabled={groups.length >= GROUP_LIMIT}>
-                    추가
+            <div className="mb-5 flex rounded-full border bg-gray-100 p-1 text-sm font-semibold">
+                <button
+                    className={`flex-1 rounded-full px-4 py-2 ${activeTab === 'friends' ? 'bg-white shadow' : 'text-gray-500'}`}
+                    onClick={() => setActiveTab('friends')}
+                >
+                    친구
+                </button>
+                <button
+                    className={`flex-1 rounded-full px-4 py-2 ${activeTab === 'groups' ? 'bg-white shadow' : 'text-gray-500'}`}
+                    onClick={() => setActiveTab('groups')}
+                >
+                    그룹
                 </button>
             </div>
 
-            <div className="space-y-3">
+            {activeTab === 'friends' ? (
+                <FriendsPanel />
+            ) : (
+                <>
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                        <div>
+                            <h1 className="text-2xl font-bold">그룹관리</h1>
+                            <p className="mt-1 text-sm text-gray-500">그룹은 최대 {GROUP_LIMIT}개, 그룹원은 최대 {GROUP_MEMBER_LIMIT}명까지 가능합니다.</p>
+                        </div>
+                        <button className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400" onClick={() => setIsCreateOpen(true)} disabled={groups.length >= GROUP_LIMIT}>
+                            추가
+                        </button>
+                    </div>
+
+                    <div className="space-y-3">
                 {groups.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">참여 중이거나 초대받은 그룹이 없습니다.</p>}
 
                 {groups.map((group) => (
@@ -672,6 +693,8 @@ export default function GroupsPage() {
                         </div>
                     </div>
                 </div>
+            )}
+                </>
             )}
         </main>
     );
