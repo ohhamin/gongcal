@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
-    { href: '/calendar', label: '📅', title: '캘린더' },
-    { href: '/groups', label: '👥', title: '친구/그룹관리' },
-    { href: '/settings', label: '⚙️', title: '설정' },
+    { href: '/calendar', label: '▦', title: '캘린더' },
+    { href: '/groups', label: '◯', title: '친구' },
+    { href: '/settings', label: '⚙', title: '설정' },
 ];
 
 const HIDDEN_PREFIXES = ['/login', '/auth', '/setup-profile'];
@@ -19,8 +19,8 @@ export default function BottomNavigation() {
     }
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-white/95 shadow-lg backdrop-blur">
-            <div className="mx-auto grid max-w-5xl grid-cols-3">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--oc-divider)] bg-white/95 shadow-[0_-10px_30px_rgba(11,15,31,0.08)] backdrop-blur">
+            <div className="mx-auto grid max-w-md grid-cols-3 pb-[env(safe-area-inset-bottom)]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -28,13 +28,14 @@ export default function BottomNavigation() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`px-2 py-3 text-center text-2xl font-semibold ${
-                                isActive ? 'opacity-100' : 'opacity-35'
+                            className={`flex flex-col items-center gap-1 px-2 py-2.5 text-center transition ${
+                                isActive ? 'text-[var(--oc-primary)]' : 'text-[var(--oc-text-tertiary)]'
                             }`}
                             title={item.title}
                             aria-label={item.title}
                         >
-                            <span aria-hidden="true">{item.label}</span>
+                            <span className="text-2xl leading-none" aria-hidden="true">{item.label}</span>
+                            <span className="text-[10px] font-semibold leading-none tracking-[-0.01em]">{item.title}</span>
                         </Link>
                     );
                 })}

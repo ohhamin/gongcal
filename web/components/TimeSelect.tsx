@@ -14,7 +14,7 @@ interface TimeSelectProps {
 export default function TimeSelect({ value, slots, onChange, startTime, disabled, placeholder }: TimeSelectProps) {
     return (
         <select
-            className="w-full rounded border bg-white p-2 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="w-full rounded-xl border border-[var(--oc-divider-strong)] bg-white p-2.5 text-sm outline-none transition focus:border-[var(--oc-primary)] disabled:cursor-not-allowed disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}

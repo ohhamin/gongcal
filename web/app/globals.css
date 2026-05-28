@@ -2,7 +2,21 @@
 
 :root {
     --background: #ffffff;
-    --foreground: #111827;
+    --foreground: #111122;
+    --oc-bg: #ffffff;
+    --oc-surface: #ffffff;
+    --oc-surface-2: #f7f8fb;
+    --oc-tint: #e8edfb;
+    --oc-primary: #1e3a8a;
+    --oc-primary-strong: #162c6e;
+    --oc-text: #111122;
+    --oc-text-secondary: #76768a;
+    --oc-text-tertiary: #bababf;
+    --oc-divider: #f0f0f5;
+    --oc-divider-strong: #e0e0eb;
+    --oc-sunday: #e34545;
+    --oc-saturday: #3656c2;
+    --oc-elevation: 0 8px 32px rgba(11, 15, 31, 0.18);
     color-scheme: light;
 }
 
@@ -30,7 +44,7 @@ body {
 
 .fc,
 .fc * {
-    color: #111827;
+    color: var(--oc-text);
 }
 
 .fc-event,
@@ -56,7 +70,7 @@ body {
 }
 
 .fc .fc-toolbar {
-    margin-bottom: 6px !important;
+    margin-bottom: 8px !important;
 }
 
 .fc .fc-toolbar-chunk {
@@ -66,24 +80,44 @@ body {
 }
 
 .fc .fc-toolbar-title {
-    font-size: 1rem !important;
-    font-weight: 700 !important;
+    color: var(--oc-text) !important;
+    font-size: 1.08rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
 }
 
 .fc .fc-button {
+    width: 32px !important;
+    height: 32px !important;
     border: 0 !important;
+    border-radius: 999px !important;
     background: transparent !important;
-    color: #111827 !important;
+    color: var(--oc-text-secondary) !important;
     box-shadow: none !important;
-    padding: 0 0.4rem !important;
+    padding: 0 !important;
     line-height: 1 !important;
 }
 
+.fc .fc-button:hover,
+.fc .fc-button:focus-visible {
+    background: var(--oc-surface-2) !important;
+}
+
+.fc .fc-scrollgrid,
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: var(--oc-divider) !important;
+}
+
+.fc .fc-col-header-cell {
+    background: var(--oc-surface) !important;
+}
+
 .fc .fc-col-header-cell-cushion {
-    padding: 2px 0 !important;
+    padding: 4px 0 !important;
     font-size: 0.68rem !important;
-    font-weight: 700 !important;
-    color: #6b7280 !important;
+    font-weight: 800 !important;
+    color: var(--oc-text-secondary) !important;
     text-transform: lowercase;
 }
 
@@ -95,6 +129,12 @@ body {
 .fc .fc-scrollgrid-sync-table {
     height: 100% !important;
     table-layout: fixed !important;
+}
+
+.fc .fc-scrollgrid {
+    overflow: hidden !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--oc-divider) !important;
 }
 
 .fc .fc-daygrid-body tbody,
@@ -112,6 +152,11 @@ body {
     height: calc(100% / 6) !important;
     max-height: calc(100% / 6) !important;
     overflow: hidden !important;
+    background: var(--oc-surface) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other {
+    background: #fafbfe !important;
 }
 
 .fc .fc-daygrid-day-frame {
@@ -121,7 +166,7 @@ body {
     max-height: 100% !important;
     flex-direction: column !important;
     overflow: hidden !important;
-    padding: 1px !important;
+    padding: 2px !important;
 }
 
 .fc .fc-daygrid-day-top {
@@ -132,7 +177,22 @@ body {
 
 .fc .fc-daygrid-day-number {
     width: 100% !important;
-    padding: 1px 2px !important;
+    padding: 2px 3px !important;
+}
+
+.fc .fc-day-today {
+    background: var(--oc-tint) !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number span:last-child {
+    display: inline-flex;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--oc-primary);
+    color: white !important;
 }
 
 .ourcal-day-cell-content {
@@ -145,17 +205,17 @@ body {
 }
 
 .ourcal-red-day-number {
-    color: #dc2626;
-    font-weight: 700;
+    color: var(--oc-sunday);
+    font-weight: 800;
 }
 
 .ourcal-holiday-name {
     min-width: 0;
     max-width: 3.8rem;
     overflow: hidden;
-    color: #dc2626;
+    color: var(--oc-sunday);
     font-size: 0.5rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -173,43 +233,37 @@ body {
 }
 
 .fc .fc-daygrid-event {
-    min-height: 10px !important;
-    height: 10px !important;
+    min-height: 12px !important;
+    height: 12px !important;
     margin: 1px 1px !important;
-    padding: 0 2px !important;
-    border-radius: 3px !important;
-    line-height: 10px !important;
+    padding: 0 3px !important;
+    border-radius: 4px !important;
+    line-height: 12px !important;
     overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(11, 15, 31, 0.12) !important;
 }
 
 .fc .fc-daygrid-event .fc-event-main {
-    height: 10px !important;
-    line-height: 10px !important;
+    height: 12px !important;
+    line-height: 12px !important;
     overflow: hidden !important;
 }
 
 .fc .fc-daygrid-more-link {
     display: block !important;
     height: 12px !important;
+    color: var(--oc-primary) !important;
     font-size: 0.62rem !important;
+    font-weight: 800 !important;
     line-height: 10px !important;
     padding: 0 2px !important;
     overflow: hidden !important;
 }
 
 .fc .fc-highlight {
-    inset: 0 !important;
-    height: 100% !important;
-    background: rgba(59, 130, 246, 0.16) !important;
+    background: rgba(30, 58, 138, 0.12) !important;
 }
 
-/* 모바일 롱프레스 드래그 선택이 브라우저 스크롤/텍스트 선택에 먹히지 않도록 합니다. */
-.fc .fc-daygrid-day,
-.fc .fc-daygrid-day-frame {
-    touch-action: none;
-    user-select: none;
-}
-
-.fc .ourcal-range-selected .fc-daygrid-day-frame {
-    background: rgba(59, 130, 246, 0.16) !important;
+.ourcal-range-selected {
+    background: rgba(30, 58, 138, 0.14) !important;
 }
