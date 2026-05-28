@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.4.14 - 2026-05-28
+
+### 업데이트 내용
+
+- `OC.zip` 매핑 기준에 맞춰 `screens-friends-settings.jsx`의 친구 화면 카드/멤버 리스트/초대코드 UI를 `FriendsPanel`에 반영했습니다.
+- `screens-calendar.jsx`의 모바일 bottom sheet 흐름을 월간 캘린더 날짜 팝업에 더 가깝게 반영했습니다.
+- `screens-add-event.jsx`의 full-height bottom sheet, 입력 필드, 공개 설정 카드, 참석자 초대 모달 스타일을 일정 추가/수정 폼에 반영했습니다.
+- README/package 기준 버전을 `v.0.4.13`에서 `v.0.4.14`로 업데이트했습니다.
+
+### 작업 메모
+
+- 기존 DB/이벤트 로직은 유지하고 JSX 시안의 레이아웃·색상·간격·시트 패턴을 OURCAL 컴포넌트에 맞춰 이식했습니다.
+
 ## v.0.4.13 - 2026-05-28
 
 ### 업데이트 내용
