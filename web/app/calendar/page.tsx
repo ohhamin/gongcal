@@ -1656,8 +1656,9 @@ export default function CalendarPage() {
             </div>
 
             {popupDate && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={() => setPopupDate(null)}>
-                    <div className="flex h-[65vh] w-full max-w-md flex-col overflow-hidden rounded-[24px] bg-white shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
+                    <div className="flex h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]" onClick={(e) => e.stopPropagation()}>
+                        <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
                             <button
@@ -1726,7 +1727,7 @@ export default function CalendarPage() {
                             )}
                         </div>
 
-                        <div className="shrink-0 border-t p-4">
+                        <div className="shrink-0 border-t border-[var(--oc-divider)] bg-white p-4">
                             <button
                                 className="w-full rounded-2xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20"
                                 onClick={() => openCreateForm(popupDate)}
@@ -1911,14 +1912,17 @@ export default function CalendarPage() {
             </button>
 
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={closeForm}>
-                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[24px] bg-white p-5 shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
-
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={closeForm}>
+                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]" onClick={(e) => e.stopPropagation()}>
+                        <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
+                        <div className="border-b border-[var(--oc-divider)] px-5 pb-4 pt-3">
+                            <h2 className="text-xl font-extrabold tracking-[-0.03em]">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
+                        </div>
+                        <div className="min-h-0 flex-1 overflow-y-auto p-5">
                         <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
                             <div className="space-y-3">
                                 <div>
-                                    <p className="mb-1 text-sm">일정 제목</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">일정 제목</p>
                                     <input
                                         className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-3 outline-none focus:border-[var(--oc-primary)]"
                                         value={title}
@@ -1931,7 +1935,7 @@ export default function CalendarPage() {
                                 </div>
 
                                 <div>
-                                    <p className="mb-1 text-sm">세부일정</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">세부일정</p>
                                     <input
                                         className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-3 outline-none focus:border-[var(--oc-primary)]"
                                         value={detail}
@@ -1971,11 +1975,11 @@ export default function CalendarPage() {
                         <div className="mb-3 grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-end">
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <p className="mb-1 text-sm">시작 날짜</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">시작 날짜</p>
                                     <input type="date" className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-2.5 text-sm outline-none focus:border-[var(--oc-primary)]" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-sm">시작 시간</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">시작 시간</p>
                                     <TimeSelect
                                         value={startTime}
                                         slots={START_TIME_SLOTS}
@@ -1993,11 +1997,11 @@ export default function CalendarPage() {
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <p className="mb-1 text-sm">종료 날짜</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">종료 날짜</p>
                                     <input type="date" className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-2.5 text-sm outline-none focus:border-[var(--oc-primary)]" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                                 </div>
                                 <div>
-                                    <p className="mb-1 text-sm">종료 시간</p>
+                                    <p className="mb-1.5 text-sm font-bold text-[var(--oc-text-secondary)]">종료 시간</p>
                                     <TimeSelect
                                         value={endTime}
                                         slots={getEndTimeSlots()}
@@ -2009,26 +2013,26 @@ export default function CalendarPage() {
                             </div>
                         </div>
 
-                        <div className="mb-5 flex items-center justify-between gap-3 text-sm">
-                            <label className="flex items-center gap-2">
-                                <input type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
+                        <div className="mb-5 rounded-2xl border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-3 text-sm">
+                            <label className="mb-3 flex items-center gap-2 font-semibold text-[var(--oc-text-secondary)]">
+                                <input className="accent-[var(--oc-primary)]" type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
                                 하루 종일
                             </label>
 
-                            <div className="flex items-center gap-2">
-                                <label className="flex items-center gap-2">
-                                    <input type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
+                            <div className="flex items-center justify-between gap-2">
+                                <label className="flex items-center gap-2 font-semibold text-[var(--oc-text-secondary)]">
+                                    <input className="accent-[var(--oc-primary)]" type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
                                     상세 일정 함께 보기
                                 </label>
                                 <div className="relative inline-flex">
                                     {isVisibilityTooltipOpen && (
-                                        <div className="absolute bottom-full left-1/2 mb-2 w-56 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-center text-xs text-white shadow-lg">
+                                        <div className="absolute bottom-full left-1/2 mb-2 w-60 -translate-x-1/2 rounded-xl bg-[var(--oc-text)] px-3 py-2 text-center text-xs leading-relaxed text-white shadow-[var(--oc-elevation)]">
                                             구성원에게는 시간만 노출되고 &apos;🔒&apos;로 표시됩니다.
                                         </div>
                                     )}
                                     <button
                                         type="button"
-                                        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gray-400 text-[10px] font-bold text-gray-600"
+                                        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--oc-divider-strong)] text-[10px] font-bold text-[var(--oc-text-secondary)]"
                                         aria-label="상세 일정 함께 보기 안내"
                                         onClick={showVisibilityTooltip}
                                     >
@@ -2038,40 +2042,42 @@ export default function CalendarPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
+                        </div>
+                        <div className="flex shrink-0 items-center justify-between border-t border-[var(--oc-divider)] bg-white px-5 py-3">
                             <div>
                                 {selectedEventId && detailEvent?.user_id === myUserId && (
-                                    <button className="rounded bg-red-500 px-4 py-2 text-white" onClick={handleDeleteEvent}>삭제</button>
+                                    <button className="rounded-xl bg-red-500 px-4 py-2 font-bold text-white" onClick={handleDeleteEvent}>삭제</button>
                                 )}
                             </div>
 
                             <div className="flex gap-2">
-                                <button className="rounded-xl bg-[var(--oc-surface-2)] px-4 py-2 font-semibold text-[var(--oc-text-secondary)]" onClick={closeForm}>취소</button>
-                                <button className="rounded-xl bg-[var(--oc-primary)] px-4 py-2 font-bold text-white shadow-lg shadow-blue-900/20" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
+                                <button className="rounded-xl bg-[var(--oc-surface-2)] px-5 py-2.5 font-semibold text-[var(--oc-text-secondary)]" onClick={closeForm}>취소</button>
+                                <button className="rounded-xl bg-[var(--oc-primary)] px-6 py-2.5 font-bold text-white shadow-lg shadow-blue-900/20" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
                             </div>
                         </div>
 
                         {isInviteSearchOpen && (
-                            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setIsInviteSearchOpen(false)}>
-                                <div className="flex h-[70vh] w-full max-w-md flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setIsInviteSearchOpen(false)}>
+                                <div className="flex h-[58vh] w-full max-w-md flex-col rounded-t-[24px] bg-white p-5 shadow-[var(--oc-elevation)] sm:rounded-[24px]" onClick={(e) => e.stopPropagation()}>
+                                    <div className="mx-auto mb-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
                                     <div className="mb-4 flex items-center justify-between">
                                         <h3 className="text-lg font-bold">친구 찾기</h3>
                                         <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-sm font-semibold text-[var(--oc-text-secondary)]" onClick={() => setIsInviteSearchOpen(false)}>닫기</button>
                                     </div>
                                     <div className="mb-3 flex gap-2">
                                         <input
-                                            className="min-w-0 flex-1 rounded border p-2 text-sm"
+                                            className="min-w-0 flex-1 rounded-xl border border-[var(--oc-divider-strong)] p-3 text-sm outline-none focus:border-[var(--oc-primary)]"
                                             placeholder="닉네임 검색"
                                             value={friendSearchKeyword}
                                             onChange={(e) => setFriendSearchKeyword(e.target.value)}
                                             onKeyDown={(e) => { if (e.key === 'Enter') searchInviteFriends(); }}
                                         />
-                                        <button className="rounded bg-black px-4 py-2 text-sm text-white" disabled={isFriendSearching} onClick={searchInviteFriends}>검색</button>
+                                        <button className="rounded-xl bg-[var(--oc-primary)] px-4 py-2 text-sm font-bold text-white disabled:opacity-40" disabled={isFriendSearching} onClick={searchInviteFriends}>검색</button>
                                     </div>
                                     <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                                        {friendSearchResults.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">검색 결과가 없습니다.</p>}
+                                        {friendSearchResults.length === 0 && <p className="rounded-2xl border border-[var(--oc-divider)] p-4 text-center text-sm text-[var(--oc-text-secondary)]">검색 결과가 없습니다.</p>}
                                         {friendSearchResults.map((profile) => (
-                                            <button key={profile.id} className="flex w-full items-center justify-between rounded border p-3 text-left hover:bg-gray-50" onClick={() => addInviteAttendee(profile)}>
+                                            <button key={profile.id} className="flex w-full items-center justify-between rounded-2xl border border-[var(--oc-divider)] p-3 text-left hover:bg-[var(--oc-surface-2)]" onClick={() => addInviteAttendee(profile)}>
                                                 <span className="font-semibold">{profile.nickname || '이름 없음'}</span>
                                                 <span className="text-xs text-gray-500">추가</span>
                                             </button>
