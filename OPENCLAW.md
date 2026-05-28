@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.4.13 - 2026-05-28
+
+### 업데이트 내용
+
+- `OC.zip` 디자인 시안의 네이비 팔레트와 모바일 앱형 레이아웃을 OURCAL 웹 UI에 반영했습니다.
+- 전역 디자인 토큰, FullCalendar 월간 그리드, 하단 탭바, 그룹 선택/멤버 필터, 일정 팝업/폼의 라운드·그림자·색상 스타일을 통일했습니다.
+- README/package 기준 버전을 `v.0.4.12`에서 `v.0.4.13`으로 업데이트했습니다.
+
+### 작업 메모
+
+- `OC.zip` 내부의 `theme.js`, `screens-calendar.jsx`, `screens-core.jsx`, `screens-add-event.jsx`를 기준으로 적용했습니다.
+- `npm run web:lint`, `tsc --noEmit`, `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` 더미 값을 넣은 `npm run web:build`로 검증했습니다.
+
 ## v.0.4.12 - 2026-05-28
 
 ### 업데이트 내용

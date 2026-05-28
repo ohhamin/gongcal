@@ -1462,11 +1462,14 @@ export default function CalendarPage() {
 
     return (
         <div
-            className="flex flex-col bg-white"
-            style={{ height: 'calc(87.5vh - 4rem)' }}
+            className="mx-auto flex max-w-md flex-col rounded-[28px] bg-[var(--oc-surface)] text-[var(--oc-text)]"
+            style={{ height: 'calc(100vh - 8.5rem)' }}
         >
             <div className="mb-3 flex shrink-0 items-start justify-between gap-3 px-1 pb-1">
-                <h1 className="text-xl font-bold">우리캘린더</h1>
+                <div>
+                    <p className="text-[11px] font-semibold tracking-[-0.01em] text-[var(--oc-text-secondary)]">함께 쓰는 우리만의 캘린더</p>
+                    <h1 className="text-2xl font-extrabold tracking-[-0.04em]">우리캘린더</h1>
+                </div>
                 <div className="flex flex-col items-end gap-2">
                     <GroupSelector
                         onChange={() => {
@@ -1485,27 +1488,27 @@ export default function CalendarPage() {
                             type="button"
                             role="switch"
                             aria-checked={isGroupFilterEnabled}
-                            className="flex rounded-full border bg-gray-100 p-0.5 text-sm"
+                            className="flex rounded-full border border-[var(--oc-divider-strong)] bg-[var(--oc-surface-2)] p-0.5 text-sm shadow-sm"
                             aria-label="일정 표시 범위 전환"
                             onClick={handleMasterFilterToggle}
                         >
-                            <span className={`rounded-full px-2 py-1 ${!isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`} aria-hidden="true">
+                            <span className={`rounded-full px-2 py-1 transition ${!isGroupFilterEnabled ? 'bg-white text-[var(--oc-primary)] shadow' : 'text-[var(--oc-text-secondary)]'}`} aria-hidden="true">
                                 👤
                             </span>
-                            <span className={`rounded-full px-2 py-1 ${isGroupFilterEnabled ? 'bg-white shadow' : 'text-gray-500'}`} aria-hidden="true">
+                            <span className={`rounded-full px-2 py-1 transition ${isGroupFilterEnabled ? 'bg-white text-[var(--oc-primary)] shadow' : 'text-[var(--oc-text-secondary)]'}`} aria-hidden="true">
                                 👥
                             </span>
                         </button>
                         <div className="relative">
                             <button
-                                className="rounded border bg-white px-2 py-1 text-xs disabled:bg-gray-100 disabled:text-gray-400"
+                                className="rounded-xl border border-[var(--oc-divider-strong)] bg-white px-2.5 py-1.5 text-xs font-semibold text-[var(--oc-text)] shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
                                 disabled={!isGroupFilterEnabled}
                                 onClick={() => setIsMemberFilterOpen((prev) => !prev)}
                             >
                                 멤버 {selectedMemberIds.size}/{filterPeople.length}
                             </button>
                             {isMemberFilterOpen && (
-                                <div className="absolute right-0 z-30 mt-1 w-48 rounded-lg border bg-white p-2 shadow-lg">
+                                <div className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-[var(--oc-divider)] bg-white p-2 shadow-[var(--oc-elevation)]">
                                     {filterPeople.length === 0 ? (
                                         <p className="px-2 py-1 text-xs text-gray-500">멤버가 없습니다.</p>
                                     ) : (
@@ -1513,7 +1516,7 @@ export default function CalendarPage() {
                                             const checked = selectedMemberIds.has(person.id);
 
                                             return (
-                                                <label key={person.id} className="flex items-center justify-between gap-3 rounded px-2 py-1 text-sm hover:bg-gray-50">
+                                                <label key={person.id} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm hover:bg-[var(--oc-surface-2)]">
                                                     <span className="truncate">{person.id === myUserId ? '나' : person.nickname || '이름 없음'}</span>
                                                     <button
                                                         type="button"
@@ -1521,7 +1524,7 @@ export default function CalendarPage() {
                                                         aria-checked={checked}
                                                         disabled={!isGroupFilterEnabled}
                                                         className={`h-5 w-9 rounded-full p-0.5 transition ${
-                                                            checked ? 'bg-blue-600' : 'bg-gray-300'
+                                                            checked ? 'bg-[var(--oc-primary)]' : 'bg-[var(--oc-divider-strong)]'
                                                         } disabled:opacity-40`}
                                                         onClick={(event) => {
                                                             event.preventDefault();
@@ -1545,7 +1548,7 @@ export default function CalendarPage() {
 
             <div
                 ref={calendarContainerRef}
-                className="relative min-h-0 flex-1"
+                className="relative min-h-0 flex-1 overflow-hidden rounded-[24px] border border-[var(--oc-divider)] bg-white shadow-sm"
                 onPointerDown={handleCalendarPointerDown}
                 onPointerMove={handleCalendarPointerMove}
                 onPointerUp={handleCalendarPointerUp}
@@ -1644,7 +1647,7 @@ export default function CalendarPage() {
                         />
 
                         {isCalendarLoading && (
-                            <div className="absolute inset-0 z-10 bg-white">
+                            <div className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm">
                                 <CalendarLoading />
                             </div>
                         )}
@@ -1653,12 +1656,12 @@ export default function CalendarPage() {
             </div>
 
             {popupDate && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4" onClick={() => setPopupDate(null)}>
-                    <div className="flex h-[65vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex shrink-0 items-center justify-between border-b p-4">
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={() => setPopupDate(null)}>
+                    <div className="flex h-[65vh] w-full max-w-md flex-col overflow-hidden rounded-[24px] bg-white shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
                             <button
-                                className="rounded bg-gray-200 px-3 py-1 text-sm"
+                                className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-sm font-semibold text-[var(--oc-text-secondary)]"
                                 onClick={() => setPopupDate(null)}
                             >
                                 닫기
@@ -1680,7 +1683,7 @@ export default function CalendarPage() {
 
                                         return (
                                             <li key={event.id}>
-                                                <div className="flex items-center gap-2 rounded-lg border p-3">
+                                                <div className="flex items-center gap-2 rounded-2xl border border-[var(--oc-divider)] bg-white p-3 shadow-sm">
                                                     <button
                                                         className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
                                                             isHiddenFromMe ? 'cursor-default' : 'hover:bg-gray-50'
@@ -1725,7 +1728,7 @@ export default function CalendarPage() {
 
                         <div className="shrink-0 border-t p-4">
                             <button
-                                className="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white"
+                                className="w-full rounded-2xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20"
                                 onClick={() => openCreateForm(popupDate)}
                             >
                                 일정 추가
@@ -1736,8 +1739,8 @@ export default function CalendarPage() {
             )}
 
             {detailEvent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setDetailEvent(null)}>
-                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={() => setDetailEvent(null)}>
+                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-5 shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
                         <div className="mb-4 flex items-start justify-between gap-3">
                             <h2 className="text-xl font-bold">{detailEvent.title}</h2>
 
@@ -1760,7 +1763,7 @@ export default function CalendarPage() {
                                     <button className="rounded bg-red-500 px-3 py-1 text-sm text-white" onClick={handleCancelInvite}>참석취소</button>
                                 )}
                                 <button
-                                    className="rounded bg-gray-200 px-3 py-1 text-sm"
+                                    className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-sm font-semibold text-[var(--oc-text-secondary)]"
                                     onClick={() => {
                                         setDetailEvent(null);
                                         handleCancelEditComment();
@@ -1879,7 +1882,7 @@ export default function CalendarPage() {
                                                         취소
                                                     </button>
                                                     <button
-                                                        className="rounded bg-black px-3 py-1 text-xs text-white"
+                                                        className="rounded-xl bg-[var(--oc-text)] px-3 py-1.5 text-xs font-semibold text-white"
                                                         onClick={() => handleUpdateComment(comment)}
                                                     >
                                                         저장
@@ -1900,7 +1903,7 @@ export default function CalendarPage() {
             )}
 
             <button
-                className="fixed right-5 bottom-20 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-black text-2xl font-bold text-white shadow-lg"
+                className="fixed right-5 bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--oc-primary)] text-3xl font-bold text-white shadow-xl shadow-blue-900/25 transition hover:bg-[var(--oc-primary-strong)]"
                 aria-label="일정 추가"
                 onClick={() => openCreateForm()}
             >
@@ -1908,8 +1911,8 @@ export default function CalendarPage() {
             </button>
 
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={closeForm}>
-                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={closeForm}>
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[24px] bg-white p-5 shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
                         <h2 className="mb-4 text-xl font-bold">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
 
                         <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px]">
@@ -1917,7 +1920,7 @@ export default function CalendarPage() {
                                 <div>
                                     <p className="mb-1 text-sm">일정 제목</p>
                                     <input
-                                        className="w-full rounded border p-2"
+                                        className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-3 outline-none focus:border-[var(--oc-primary)]"
                                         value={title}
                                         maxLength={EVENT_TITLE_MAX_LENGTH}
                                         onChange={(e) => setTitle(e.target.value)}
@@ -1930,7 +1933,7 @@ export default function CalendarPage() {
                                 <div>
                                     <p className="mb-1 text-sm">세부일정</p>
                                     <input
-                                        className="w-full rounded border p-2"
+                                        className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-3 outline-none focus:border-[var(--oc-primary)]"
                                         value={detail}
                                         maxLength={EVENT_DETAIL_MAX_LENGTH}
                                         onChange={(e) => setDetail(e.target.value)}
@@ -1941,10 +1944,10 @@ export default function CalendarPage() {
                                 </div>
                             </div>
 
-                            <div className="flex min-h-0 flex-col rounded border p-3">
+                            <div className="flex min-h-0 flex-col rounded-2xl border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-3">
                                 <div className="mb-2 flex items-center justify-between gap-2">
                                     <p className="text-sm font-semibold">참석자</p>
-                                    <button className="rounded bg-black px-3 py-1 text-xs text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
+                                    <button className="rounded-xl bg-[var(--oc-text)] px-3 py-1.5 text-xs font-semibold text-white" onClick={() => setIsInviteSearchOpen(true)}>초대</button>
                                 </div>
                                 <div className="h-[15vh] min-h-0 space-y-2 overflow-y-auto pr-1">
                                     {attendees.map((attendee) => {
@@ -1952,7 +1955,7 @@ export default function CalendarPage() {
                                         const canCancelInvite = !attendee.isOwner && (!selectedEventId || detailEvent?.user_id === myUserId);
 
                                         return (
-                                            <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded border p-2 text-xs">
+                                            <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-xl border border-[var(--oc-divider)] bg-white p-2 text-xs">
                                                 <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
                                                 <p className="shrink-0 text-gray-500">{statusText}</p>
                                                 {canCancelInvite && (
@@ -1969,7 +1972,7 @@ export default function CalendarPage() {
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <p className="mb-1 text-sm">시작 날짜</p>
-                                    <input type="date" className="w-full rounded border p-2 text-sm" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                                    <input type="date" className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-2.5 text-sm outline-none focus:border-[var(--oc-primary)]" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                                 </div>
                                 <div>
                                     <p className="mb-1 text-sm">시작 시간</p>
@@ -1991,7 +1994,7 @@ export default function CalendarPage() {
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
                                     <p className="mb-1 text-sm">종료 날짜</p>
-                                    <input type="date" className="w-full rounded border p-2 text-sm" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                                    <input type="date" className="w-full rounded-xl border border-[var(--oc-divider-strong)] p-2.5 text-sm outline-none focus:border-[var(--oc-primary)]" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                                 </div>
                                 <div>
                                     <p className="mb-1 text-sm">종료 시간</p>
@@ -2043,8 +2046,8 @@ export default function CalendarPage() {
                             </div>
 
                             <div className="flex gap-2">
-                                <button className="rounded bg-gray-200 px-4 py-2" onClick={closeForm}>취소</button>
-                                <button className="rounded bg-black px-4 py-2 text-white" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
+                                <button className="rounded-xl bg-[var(--oc-surface-2)] px-4 py-2 font-semibold text-[var(--oc-text-secondary)]" onClick={closeForm}>취소</button>
+                                <button className="rounded-xl bg-[var(--oc-primary)] px-4 py-2 font-bold text-white shadow-lg shadow-blue-900/20" onClick={handleSaveEvent}>{selectedEventId ? '수정' : '저장'}</button>
                             </div>
                         </div>
 
@@ -2053,7 +2056,7 @@ export default function CalendarPage() {
                                 <div className="flex h-[70vh] w-full max-w-md flex-col rounded-2xl bg-white p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
                                     <div className="mb-4 flex items-center justify-between">
                                         <h3 className="text-lg font-bold">친구 찾기</h3>
-                                        <button className="rounded bg-gray-200 px-3 py-1 text-sm" onClick={() => setIsInviteSearchOpen(false)}>닫기</button>
+                                        <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-sm font-semibold text-[var(--oc-text-secondary)]" onClick={() => setIsInviteSearchOpen(false)}>닫기</button>
                                     </div>
                                     <div className="mb-3 flex gap-2">
                                         <input
