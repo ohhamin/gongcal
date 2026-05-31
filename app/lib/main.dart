@@ -65,7 +65,7 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
         ),
       );
 
-    _fcmBridge = FcmBridge(_controller);
+    _fcmBridge = FcmBridge(_controller, defaultWebUrl);
     _fcmBridge.initialize();
     _controller.loadRequest(Uri.parse(defaultWebUrl));
   }

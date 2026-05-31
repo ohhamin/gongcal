@@ -15,9 +15,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class FcmBridge {
-  FcmBridge(this._controller);
+  FcmBridge(this._controller, this._baseWebUrl);
 
   final WebViewController _controller;
+  final String _baseWebUrl;
   String? _token;
 
   Future<void> initialize() async {
@@ -37,6 +38,13 @@ class FcmBridge {
         _token = token;
         await injectTokenIntoWebView();
       });
+
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        await _openNotificationPath(initialMessage);
+      }
+
+      FirebaseMessaging.onMessageOpenedApp.listen(_openNotificationPath);
     } catch (error) {
       // FCM 설정 파일이 아직 없거나 플랫폼 설정이 미완성이어도 WebView 앱 실행은 막지 않습니다.
       debugPrint('FCM initialization skipped: $error');
@@ -62,6 +70,17 @@ class FcmBridge {
       await _controller.runJavaScript(script);
     } catch (error) {
       debugPrint('FCM token injection failed: $error');
+    }
+  }
+
+  Future<void> _openNotificationPath(RemoteMessage message) async {
+    final path = message.data['path'] ?? '/notifications';
+    final uri = Uri.parse(_baseWebUrl).resolve(path);
+
+    try {
+      await _controller.loadRequest(uri);
+    } catch (error) {
+      debugPrint('FCM notification navigation failed: $error');
     }
   }
 

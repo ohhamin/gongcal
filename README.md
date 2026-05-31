@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.4.15**
+**현재 버전: v.0.4.16**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -143,6 +143,8 @@ flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 - 오른쪽 상단 🔔 버튼으로 알림 페이지 이동
 - 읽지 않은 알림이 있으면 🔔 버튼 왼쪽 위에 빨간 점 표시
 - Flutter 앱에서 FCM 토큰을 발급받아 WebView에 전달하고, 로그인된 프로필의 `push_tokens` 테이블에 등록하는 기본 흐름 추가
+- 친구 요청, 일정 초대, 그룹 초대 알림 생성 시 대상 프로필의 활성 FCM 토큰으로 푸시 발송
+- 현재 푸시 클릭 진입점은 모두 `/notifications`로 통일
 - 페이지 이동 시마다 알림 unread 상태를 DB에서 다시 조회해 읽음 상태를 동기화
 - 알림 페이지에서는 상단 🔔 버튼 숨김
 - 알림 페이지 진입 시 내 알림 목록을 조회하고 읽지 않은 알림을 읽음 처리
@@ -257,7 +259,18 @@ app/ios/Runner/GoogleService-Info.plist  # iOS 프로젝트 생성 후 사용
 
 현재 Android 패키지명은 `app/android/app/build.gradle.kts`의 `applicationId` 기준 `com.example.ourcal_app`입니다. iOS 프로젝트 폴더는 아직 레포에 없으므로 iOS 앱 빌드가 필요해지면 `flutter create --platforms=ios .`로 생성한 뒤 `ios/Runner.xcodeproj/project.pbxproj`의 `PRODUCT_BUNDLE_IDENTIFIER`를 Firebase iOS Bundle ID로 등록해야 합니다.
 
-Supabase SQL Editor에서 `web/supabase/create_push_tokens.sql`을 실행하면 모바일 FCM 토큰 저장용 `push_tokens` 테이블과 RLS 정책이 생성됩니다.
+Supabase SQL Editor에서 `web/supabase/create_push_tokens.sql`을 실행하면 모바일 FCM 토큰 저장용 `push_tokens` 테이블과 RLS 정책이 생성됩니다. 그룹 초대 알림을 위해 `web/supabase/create_notifications.sql`도 다시 실행해 `group_request` type 제약조건을 반영하세요.
+
+Vercel에는 FCM 발송 API가 사용할 서버 환경변수를 등록해야 합니다.
+
+```text
+SUPABASE_SERVICE_ROLE_KEY
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
+```
+
+GitHub Actions APK 빌드는 `OURCAL_ENABLE_FCM=true`로 release APK를 생성합니다. Firebase Android 설정 파일을 repo에 두지 않을 경우 `GOOGLE_SERVICES_JSON_BASE64` secret에 `google-services.json`을 base64 인코딩해서 등록하세요.
 
 FCM 활성화 APK 빌드 예시:
 

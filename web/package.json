@@ -1,6 +1,6 @@
 {
     "name": "ourcal",
-    "version": "0.4.15",
+    "version": "0.4.16",
     "private": true,
     "scripts": {
         "dev": "next dev",
@@ -17,6 +17,7 @@
         "@supabase/ssr": "^0.10.3",
         "@supabase/supabase-js": "^2.105.4",
         "@tanstack/react-query": "^5.100.10",
+        "google-auth-library": "^10.6.2",
         "next": "16.2.6",
         "react": "19.2.4",
         "react-dom": "19.2.4"

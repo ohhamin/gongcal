@@ -13,6 +13,7 @@ import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
 import TimeSelect from '@/components/TimeSelect';
 import { normalizeProfile, Profile } from '@/lib/groups';
+import { createNotificationWithPush } from '@/lib/pushNotifications';
 import { supabase } from '@/lib/supabase';
 import {
     START_TIME_SLOTS,
@@ -984,18 +985,17 @@ export default function CalendarPage() {
 
         if (newInviteProfileIds.length === 0) return;
 
-        const { error } = await supabase.from('notifications').insert(
-            newInviteProfileIds.map((profileId) => ({
-                profile_id: profileId,
-                type: 'event_invite',
-                title: '일정 초대',
-                message: '새로운 일정이 초대가 되었어요.',
-                related_id: eventId,
-            })),
+        await Promise.all(
+            newInviteProfileIds.map((profileId) =>
+                createNotificationWithPush({
+                    profileId,
+                    type: 'event_invite',
+                    title: '일정 초대',
+                    message: '새로운 일정이 초대가 되었어요.',
+                    relatedId: eventId,
+                }),
+            ),
         );
-
-        // 알림 저장 실패가 일정 저장 자체를 막으면 사용성이 나빠지므로 best-effort로만 처리합니다.
-        if (error) console.error(error);
     };
 
     const handleSaveEvent = async () => {
