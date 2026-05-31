@@ -21,8 +21,8 @@ export default function BottomNavigation() {
     }
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur">
-            <div className="mx-auto grid max-w-md grid-cols-3 pb-[5vh]">
+        <nav className="fixed inset-x-0 bottom-0 z-40 h-[var(--oc-nav-height)] bg-white/95 backdrop-blur">
+            <div className="mx-auto grid h-full max-w-md grid-cols-3 pb-[7.5vh]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 

@@ -129,7 +129,7 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
           padding: EdgeInsets.only(
             top:
                 MediaQuery.paddingOf(context).top +
-                MediaQuery.sizeOf(context).height * 0.075,
+                MediaQuery.sizeOf(context).height * 0.05,
             bottom: MediaQuery.paddingOf(context).bottom,
           ),
           child: Stack(

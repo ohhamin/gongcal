@@ -156,7 +156,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <main className="mx-auto max-w-md px-4 pt-3 text-[var(--oc-text)]">
+        <main className="mx-auto max-w-md px-[5vw] pt-3 text-[var(--oc-text)]">
             <div className="px-1 pb-3 pt-1">
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em]">설정</h1>
                 <p className="mt-1 text-xs font-medium tracking-[-0.01em] text-[var(--oc-text-secondary)]">계정과 OURCAL 사용 정보를 관리합니다.</p>

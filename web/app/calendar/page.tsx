@@ -1492,7 +1492,7 @@ export default function CalendarPage() {
     return (
         <div
             className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
-            style={{ height: 'calc(100dvh - var(--oc-nav-height))' }}
+            style={{ height: 'calc(100dvh - var(--oc-nav-height) + 1px)' }}
         >
             <div className="mb-2 flex shrink-0 flex-col gap-2 px-3 pb-1">
                 <div className="flex items-center justify-between gap-2">

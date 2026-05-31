@@ -492,7 +492,7 @@ export default function GroupsPage() {
     const filteredFriends = friends.filter((friend) => (friend.nickname || '').includes(friendSearch.trim()));
 
     return (
-        <main className="mx-auto max-w-md px-4 pt-3 text-[var(--oc-text)]">
+        <main className="mx-auto max-w-md px-[5vw] pt-3 text-[var(--oc-text)]">
             <div className="mb-4 flex rounded-[14px] border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-1 text-sm font-semibold">
                 <button
                     className={`flex-1 rounded-[10px] px-4 py-2 transition ${activeTab === 'friends' ? 'bg-white text-[var(--oc-text)] shadow-sm' : 'text-[var(--oc-text-secondary)]'}`}
@@ -509,7 +509,7 @@ export default function GroupsPage() {
             </div>
 
             {activeTab === 'friends' ? (
-                <div className="-mx-4">
+                <div className="-mx-[5vw]">
                     <FriendsPanel />
                 </div>
             ) : (
