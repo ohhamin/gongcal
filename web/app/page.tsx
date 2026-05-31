@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import CalendarLoading from '@/components/CalendarLoading';
+import OurcalSplash from '@/components/OurcalSplash';
 import { supabase } from '@/lib/supabase';
 
 // 서버 미들웨어(proxy.ts)가 인증된 사용자를 /calendar로, 미인증 사용자를 /login으로 리다이렉트합니다.
@@ -30,5 +30,5 @@ export default function Home() {
         };
     }, [router]);
 
-    return <CalendarLoading message="자동 로그인을 확인하는 중입니다." />;
+    return <OurcalSplash message="자동 로그인을 확인하는 중입니다." />;
 }

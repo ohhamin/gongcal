@@ -11,6 +11,7 @@ import { DateSelectArg, DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
 import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
+import Icon from '@/components/Icon';
 import NotificationButton from '@/components/NotificationButton';
 import TimeSelect from '@/components/TimeSelect';
 import { normalizeProfile, Profile } from '@/lib/groups';
@@ -1491,7 +1492,7 @@ export default function CalendarPage() {
     return (
         <div
             className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
-            style={{ height: 'calc(100vh - 8.25rem)' }}
+            style={{ height: 'calc(100dvh - 5.35rem)' }}
         >
             <div className="mb-2 flex shrink-0 flex-col gap-2 px-3 pb-1">
                 <div className="flex items-center justify-between gap-2">
@@ -1502,7 +1503,7 @@ export default function CalendarPage() {
                             aria-label="이전 월"
                             onClick={goToPreviousMonth}
                         >
-                            ‹
+                            <Icon name="chevL" size={18} color="currentColor" />
                         </button>
                         <span className="min-w-[5.6rem] text-center text-lg font-bold tracking-[-0.02em] text-[var(--oc-text)]">
                             {formatMonthNavLabel(calendarMonthDate)}
@@ -1513,7 +1514,7 @@ export default function CalendarPage() {
                             aria-label="다음 월"
                             onClick={goToNextMonth}
                         >
-                            ›
+                            <Icon name="chevR" size={18} color="currentColor" />
                         </button>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1525,11 +1526,13 @@ export default function CalendarPage() {
                             aria-label="일정 표시 범위 전환"
                             onClick={handleMasterFilterToggle}
                         >
-                            <span className={`rounded-full px-3 py-1.5 transition ${!isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
-                                👤 나
+                            <span className={`flex items-center gap-1 rounded-full px-3 py-1.5 transition ${!isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
+                                <Icon name="user" size={14} color="currentColor" />
+                                나
                             </span>
-                            <span className={`rounded-full px-3 py-1.5 transition ${isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
-                                👥 그룹
+                            <span className={`flex items-center gap-1 rounded-full px-3 py-1.5 transition ${isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
+                                <Icon name="users" size={14} color="currentColor" />
+                                그룹
                             </span>
                         </button>
                         <NotificationButton className="relative grid h-8 w-8 place-items-center rounded-full bg-[var(--oc-surface-2)] text-base ring-1 ring-[var(--oc-divider)]" />

@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 
+import Icon from '@/components/Icon';
 import { supabase } from '@/lib/supabase';
 import { useMyProfile } from '@/lib/useCurrentProfile';
 
@@ -48,7 +49,7 @@ export default function NotificationButton({ className }: Props) {
             title="알림"
             aria-label="알림"
         >
-            <span aria-hidden="true">🔔</span>
+            <Icon name="bell" size={16} color="currentColor" />
             {unreadQuery.data && <span className="absolute top-1 left-1 h-2 w-2 rounded-full bg-red-500 ring-1 ring-white" aria-hidden="true" />}
         </Link>
     );
