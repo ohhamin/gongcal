@@ -1490,10 +1490,10 @@ export default function CalendarPage() {
 
     return (
         <div
-            className="mx-auto flex max-w-md flex-col rounded-[28px] bg-[var(--oc-surface)] text-[var(--oc-text)]"
-            style={{ height: 'calc(100vh - 8.5rem)' }}
+            className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
+            style={{ height: 'calc(100vh - 8.25rem)' }}
         >
-            <div className="mb-3 flex shrink-0 flex-col gap-2 px-1 pb-1">
+            <div className="mb-2 flex shrink-0 flex-col gap-2 px-3 pb-1">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
                         <button
@@ -1535,7 +1535,7 @@ export default function CalendarPage() {
                         <NotificationButton className="relative grid h-8 w-8 place-items-center rounded-full bg-[var(--oc-surface-2)] text-base ring-1 ring-[var(--oc-divider)]" />
                     </div>
                 </div>
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                <div className="flex items-start justify-end gap-0">
                     <GroupSelector
                         onChange={() => {
                             setIsCalendarLoading(true);
@@ -1548,7 +1548,7 @@ export default function CalendarPage() {
                             setIsMemberFilterOpen(false);
                         }}
                     />
-                    <div className="relative">
+                    <div className="relative pl-3">
                         <button
                             className="h-9 rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold text-[var(--oc-text)] shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
                             disabled={!isGroupFilterEnabled}
@@ -1594,7 +1594,7 @@ export default function CalendarPage() {
 
             <div
                 ref={calendarContainerRef}
-                className="relative min-h-0 flex-1 overflow-hidden rounded-[24px] border border-[var(--oc-divider)] bg-white shadow-sm"
+                className="relative -mx-0 min-h-0 flex-1 overflow-hidden bg-white"
                 onPointerDown={handleCalendarPointerDown}
                 onPointerMove={handleCalendarPointerMove}
                 onPointerUp={handleCalendarPointerUp}
@@ -1660,7 +1660,7 @@ export default function CalendarPage() {
                                 return 'none';
                             }}
                             datesSet={handleCalendarDatesSet}
-                            dayHeaderFormat={{ weekday: 'short' }}
+                            dayHeaderContent={(arg) => ['일', '월', '화', '수', '목', '금', '토'][arg.date.getDay()]}
                             displayEventTime={false}
                             eventDisplay="block"
                             eventOrderStrict={true}
