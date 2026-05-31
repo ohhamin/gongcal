@@ -85,17 +85,20 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
     }
 
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('외부 로그인 앱을 열 수 없습니다.')));
       }
     }
 
@@ -124,7 +127,9 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
         body: Padding(
           // WebView는 edge-to-edge로 깔되, 시스템 영역과 겹치지 않게 Flutter shell에서 보정합니다.
           padding: EdgeInsets.only(
-            top: MediaQuery.paddingOf(context).top + 10,
+            top:
+                MediaQuery.paddingOf(context).top +
+                MediaQuery.sizeOf(context).height * 0.075,
             bottom: MediaQuery.paddingOf(context).bottom,
           ),
           child: Stack(

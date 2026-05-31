@@ -45,7 +45,7 @@ function SettingsSection({ title, children, sub }: { title: string; children: Re
     return (
         <section className="mt-4">
             <h2 className="px-5 pb-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--oc-text-secondary)]">{title}</h2>
-            <div className="overflow-hidden border-y border-[var(--oc-divider)] bg-white">{children}</div>
+            <div className="overflow-hidden rounded-2xl border border-[var(--oc-divider)] bg-white">{children}</div>
             {sub && <p className="px-5 pt-2 text-[11px] tracking-[-0.01em] text-[var(--oc-text-tertiary)]">{sub}</p>}
         </section>
     );
@@ -156,7 +156,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <main className="mx-auto max-w-md text-[var(--oc-text)]">
+        <main className="mx-auto max-w-md px-4 pt-3 text-[var(--oc-text)]">
             <div className="px-1 pb-3 pt-1">
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em]">설정</h1>
                 <p className="mt-1 text-xs font-medium tracking-[-0.01em] text-[var(--oc-text-secondary)]">계정과 OURCAL 사용 정보를 관리합니다.</p>
