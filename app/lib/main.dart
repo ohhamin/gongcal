@@ -121,6 +121,7 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
       },
       child: Scaffold(
         body: SafeArea(
+          bottom: false,
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),

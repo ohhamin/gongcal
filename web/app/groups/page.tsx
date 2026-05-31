@@ -492,16 +492,16 @@ export default function GroupsPage() {
     const filteredFriends = friends.filter((friend) => (friend.nickname || '').includes(friendSearch.trim()));
 
     return (
-        <main className="rounded-2xl bg-white p-5 shadow">
-            <div className="mb-5 flex rounded-full border bg-gray-100 p-1 text-sm font-semibold">
+        <main className="mx-auto max-w-md text-[var(--oc-text)]">
+            <div className="mb-4 flex rounded-full border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-1 text-sm font-semibold">
                 <button
-                    className={`flex-1 rounded-full px-4 py-2 ${activeTab === 'friends' ? 'bg-white shadow' : 'text-gray-500'}`}
+                    className={`flex-1 rounded-full px-4 py-2 transition ${activeTab === 'friends' ? 'bg-white text-[var(--oc-text)] shadow' : 'text-[var(--oc-text-secondary)]'}`}
                     onClick={() => setActiveTab('friends')}
                 >
                     친구
                 </button>
                 <button
-                    className={`flex-1 rounded-full px-4 py-2 ${activeTab === 'groups' ? 'bg-white shadow' : 'text-gray-500'}`}
+                    className={`flex-1 rounded-full px-4 py-2 transition ${activeTab === 'groups' ? 'bg-white text-[var(--oc-text)] shadow' : 'text-[var(--oc-text-secondary)]'}`}
                     onClick={() => setActiveTab('groups')}
                 >
                     그룹
@@ -512,47 +512,69 @@ export default function GroupsPage() {
                 <FriendsPanel />
             ) : (
                 <>
-                    <div className="mb-5 flex items-center justify-between gap-3">
-                        <div>
-                            <h1 className="text-2xl font-bold">그룹관리</h1>
-                            <p className="mt-1 text-sm text-gray-500">그룹은 최대 {GROUP_LIMIT}개, 그룹원은 최대 {GROUP_MEMBER_LIMIT}명까지 가능합니다.</p>
+                    <div className="mb-4 flex items-start justify-between gap-4 px-1">
+                        <div className="min-w-0 flex-1">
+                            <h1 className="text-2xl font-extrabold tracking-[-0.04em]">그룹 관리</h1>
+                            <p className="mt-1 max-w-60 text-xs leading-5 tracking-[-0.01em] text-[var(--oc-text-secondary)]">
+                                그룹은 최대 {GROUP_LIMIT}개, 그룹원은 최대 {GROUP_MEMBER_LIMIT}명까지 가능합니다.
+                            </p>
                         </div>
-                        <button className="rounded bg-black px-4 py-2 text-white disabled:bg-gray-400" onClick={() => setIsCreateOpen(true)} disabled={groups.length >= GROUP_LIMIT}>
+                        <button
+                            className="flex shrink-0 items-center gap-1 rounded-xl bg-[var(--oc-primary)] px-4 py-2.5 text-sm font-bold tracking-[-0.01em] text-white shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
+                            onClick={() => setIsCreateOpen(true)}
+                            disabled={groups.length >= GROUP_LIMIT}
+                        >
+                            <span aria-hidden="true">＋</span>
                             추가
                         </button>
                     </div>
 
-                    <div className="space-y-3">
-                {groups.length === 0 && <p className="rounded border p-4 text-sm text-gray-500">참여 중이거나 초대받은 그룹이 없습니다.</p>}
-
-                {groups.map((group) => (
-                    <div key={`${group.id}-${group.profile_id}`} className="flex items-center justify-between gap-3 rounded-xl border p-4">
-                        <button className="min-w-0 flex-1 text-left" onClick={() => openGroupDetail(group)}>
-                            <p className="truncate font-semibold">{group.group_name}</p>
-                            <p className="text-sm text-gray-500">
-                                {group.is_accepted ? (group.is_owner ? '소유자' : '참여중') : '초대 대기'}
+                    <div className="space-y-3 pb-6">
+                        {groups.length === 0 && (
+                            <p className="rounded-2xl border border-[var(--oc-divider)] bg-white p-5 text-center text-sm text-[var(--oc-text-secondary)]">
+                                참여 중이거나 초대받은 그룹이 없습니다.
                             </p>
-                        </button>
+                        )}
 
-                        <div className="flex shrink-0 gap-2">
-                            {!group.is_accepted ? (
-                                <>
-                                    <button className="rounded bg-black px-3 py-2 text-sm text-white" onClick={() => handleAcceptInvite(group)}>
-                                        초대 수락
+                        {groups.map((group) => {
+                            const isOwner = group.is_owner;
+                            const statusLabel = group.is_accepted ? (isOwner ? '소유자' : '참여중') : '초대 대기';
+
+                            return (
+                                <div key={`${group.id}-${group.profile_id}`} className="flex items-center gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white p-4 shadow-sm">
+                                    <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openGroupDetail(group)}>
+                                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--oc-tint)] text-[var(--oc-primary)]" aria-hidden="true">
+                                            👥
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate text-[15px] font-bold tracking-[-0.02em]">{group.group_name}</span>
+                                            <span className="mt-1 block text-xs text-[var(--oc-text-secondary)]">{statusLabel}</span>
+                                        </span>
                                     </button>
-                                    <button className="rounded bg-gray-200 px-3 py-2 text-sm" onClick={() => handleLeaveOrReject(group, '초대를 거절할까요?')}>
-                                        초대 거절
-                                    </button>
-                                </>
-                            ) : (
-                                <button className="rounded bg-red-500 px-3 py-2 text-sm text-white" onClick={() => handleLeaveOrReject(group, '그룹에서 탈퇴할까요?')}>
-                                    탈퇴
-                                </button>
-                            )}
-                        </div>
+
+                                    <div className="flex shrink-0 gap-2">
+                                        {!group.is_accepted ? (
+                                            <>
+                                                <button className="rounded-xl bg-[var(--oc-primary)] px-3 py-2 text-xs font-bold text-white" onClick={() => handleAcceptInvite(group)}>
+                                                    수락
+                                                </button>
+                                                <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--oc-text-secondary)]" onClick={() => handleLeaveOrReject(group, '초대를 거절할까요?')}>
+                                                    거절
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="rounded-xl bg-red-50 px-4 py-2 text-xs font-bold text-red-500"
+                                                onClick={() => (isOwner ? openGroupDetail(group) : handleLeaveOrReject(group, '그룹에서 탈퇴할까요?'))}
+                                            >
+                                                {isOwner ? '관리' : '탈퇴'}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                ))}
-            </div>
 
             {selectedGroup && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">

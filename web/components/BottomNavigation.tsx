@@ -19,8 +19,8 @@ export default function BottomNavigation() {
     }
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--oc-divider)] bg-white/95 shadow-[0_-6px_18px_rgba(11,15,31,0.06)] backdrop-blur">
-            <div className="mx-auto grid max-w-md grid-cols-3 pb-[max(env(safe-area-inset-bottom),4px)]">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--oc-divider)] bg-white/95 shadow-[0_-10px_30px_rgba(11,15,31,0.08)] backdrop-blur">
+            <div className="mx-auto grid max-w-md grid-cols-3 pb-[env(safe-area-inset-bottom)]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -28,14 +28,14 @@ export default function BottomNavigation() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center gap-0.5 px-2 py-1.5 text-center transition ${
+                            className={`flex flex-col items-center gap-1 px-2 py-2.5 text-center transition ${
                                 isActive ? 'text-[var(--oc-primary)]' : 'text-[var(--oc-text-tertiary)]'
                             }`}
                             title={item.title}
                             aria-label={item.title}
                         >
-                            <span className="text-xl leading-none" aria-hidden="true">{item.label}</span>
-                            <span className="text-[9px] font-semibold leading-none tracking-[-0.01em]">{item.title}</span>
+                            <span className="text-2xl leading-none" aria-hidden="true">{item.label}</span>
+                            <span className="text-[10px] font-semibold leading-none tracking-[-0.01em]">{item.title}</span>
                         </Link>
                     );
                 })}

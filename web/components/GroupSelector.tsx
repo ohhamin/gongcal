@@ -45,7 +45,7 @@ export default function GroupSelector({ onChange }: Props) {
 
     return (
         <select
-            className="rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 py-2 text-xs font-semibold text-[var(--oc-text)] shadow-sm outline-none transition focus:border-[var(--oc-primary)] disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
+            className="h-9 w-full rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold text-[var(--oc-text)] shadow-sm outline-none transition focus:border-[var(--oc-primary)] disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
             value={selectedValue}
             onChange={(e) => handleChange(e.target.value)}
             disabled={loading || !profile}
