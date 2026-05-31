@@ -109,16 +109,20 @@ body {
     border-color: var(--oc-divider) !important;
 }
 
+.fc-theme-standard .fc-scrollgrid {
+    border-right-width: 0 !important;
+    border-left-width: 0 !important;
+}
+
 .fc .fc-col-header-cell {
     background: var(--oc-surface) !important;
 }
 
 .fc .fc-col-header-cell-cushion {
     padding: 4px 0 !important;
-    font-size: 0.68rem !important;
+    font-size: 0.72rem !important;
     font-weight: 800 !important;
     color: var(--oc-text-secondary) !important;
-    text-transform: lowercase;
 }
 
 .fc .fc-view-harness,
@@ -133,8 +137,11 @@ body {
 
 .fc .fc-scrollgrid {
     overflow: hidden !important;
-    border-radius: 18px !important;
-    border: 1px solid var(--oc-divider) !important;
+    border-radius: 0 !important;
+    border-top: 1px solid var(--oc-divider) !important;
+    border-bottom: 1px solid var(--oc-divider) !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
 }
 
 .fc .fc-daygrid-body tbody,
@@ -171,13 +178,16 @@ body {
 
 .fc .fc-daygrid-day-top {
     flex: 0 0 auto !important;
+    justify-content: center !important;
     font-size: 0.68rem !important;
     line-height: 1 !important;
+    text-align: center !important;
 }
 
 .fc .fc-daygrid-day-number {
     width: 100% !important;
-    padding: 2px 3px !important;
+    padding: 2px 0 !important;
+    text-align: center !important;
 }
 
 .fc .fc-day-today {
@@ -199,9 +209,10 @@ body {
     display: flex;
     width: 100%;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 2px;
     min-width: 0;
+    text-align: center;
 }
 
 .ourcal-red-day-number {

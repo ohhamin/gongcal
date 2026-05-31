@@ -34,8 +34,8 @@ export default function RootLayout({
         <html lang="ko">
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <QueryProvider>
-                    <main className="min-h-screen bg-[var(--oc-bg)] px-3 pt-4 pb-24 sm:px-5">
-                        <div className="mx-auto w-full max-w-5xl">{children}</div>
+                    <main className="min-h-screen bg-[var(--oc-bg)] pt-4 pb-[4.25rem]">
+                        <div className="w-full">{children}</div>
                     </main>
                     <PushTokenRegistrar />
                     <BottomNavigation />
