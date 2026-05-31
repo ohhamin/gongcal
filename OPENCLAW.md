@@ -1,5 +1,18 @@
 # OPENCLAW
 
+## v.0.4.17 - 2026-05-31
+
+### 업데이트 내용
+
+- 모바일 앱 WebView에서 하단 네비게이션이 과하게 높아 보이지 않도록 네비게이션 패딩, 아이콘 크기, 라벨 크기, 본문 하단 여백을 줄였습니다.
+- 로그인 화면에 Google OAuth 로그인 버튼을 추가했습니다.
+- README/package 기준 버전을 `v.0.4.16`에서 `v.0.4.17`로 업데이트했습니다.
+
+### 작업 메모
+
+- Google OAuth는 기존 Supabase OAuth 콜백(`/auth/callback`) 흐름을 그대로 사용합니다.
+- Android 로컬 빌드 산출물인 `app/android/.kotlin/`을 gitignore에 추가했습니다.
+
 ## v.0.4.16 - 2026-05-31
 
 ### 업데이트 내용
