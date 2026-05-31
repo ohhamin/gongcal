@@ -1,11 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import { supabase } from '@/lib/supabase';
 import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
+
+type SettingsRowProps = {
+    icon: string;
+    label: string;
+    sub?: string;
+    right?: ReactNode;
+    danger?: boolean;
+    last?: boolean;
+    onClick?: () => void;
+};
+
+function SettingsRow({ icon, label, sub, right, danger, last, onClick }: SettingsRowProps) {
+    return (
+        <button
+            type="button"
+            className={`flex w-full items-center gap-3 px-5 py-3.5 text-left transition hover:bg-[var(--oc-surface-2)] ${last ? '' : 'border-b border-[var(--oc-divider)]'}`}
+            onClick={onClick}
+        >
+            <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-[9px] text-sm ${
+                    danger ? 'bg-red-50 text-red-500' : 'bg-[var(--oc-tint)] text-[var(--oc-primary)]'
+                }`}
+                aria-hidden="true"
+            >
+                {icon}
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className={`block text-sm font-medium tracking-[-0.01em] ${danger ? 'text-red-500' : 'text-[var(--oc-text)]'}`}>{label}</span>
+                {sub && <span className="mt-0.5 block text-[11px] tracking-[-0.01em] text-[var(--oc-text-secondary)]">{sub}</span>}
+            </span>
+            {right ?? <span className="text-[var(--oc-text-tertiary)]">›</span>}
+        </button>
+    );
+}
+
+function SettingsSection({ title, children, sub }: { title: string; children: ReactNode; sub?: string }) {
+    return (
+        <section className="mt-4">
+            <h2 className="px-5 pb-2 text-[11px] font-semibold uppercase tracking-[0.04em] text-[var(--oc-text-secondary)]">{title}</h2>
+            <div className="overflow-hidden border-y border-[var(--oc-divider)] bg-white">{children}</div>
+            {sub && <p className="px-5 pt-2 text-[11px] tracking-[-0.01em] text-[var(--oc-text-tertiary)]">{sub}</p>}
+        </section>
+    );
+}
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -53,7 +97,6 @@ export default function SettingsPage() {
 
         setDeleting(true);
 
-        // 1. friendships 테이블에서 해당 유저 관련 데이터 전체 삭제
         const { error: friendshipError } = await supabase
             .from('friendships')
             .delete()
@@ -66,7 +109,6 @@ export default function SettingsPage() {
             return;
         }
 
-        // 2. 유저가 owner인 그룹 ID 목록 조회
         const { data: ownedGroups, error: ownedGroupsError } = await supabase
             .from('groups')
             .select('id')
@@ -80,7 +122,6 @@ export default function SettingsPage() {
             return;
         }
 
-        // 3. owner 그룹의 모든 멤버 row 삭제 (그룹 자체 삭제)
         if (ownedGroups && ownedGroups.length > 0) {
             const ownedGroupIds = ownedGroups.map((g) => g.id);
 
@@ -97,7 +138,6 @@ export default function SettingsPage() {
             }
         }
 
-        // 4. 남은 그룹 멤버십 row 삭제 (비-owner 참여 그룹)
         const { error: deleteUserGroupsError } = await supabase
             .from('groups')
             .delete()
@@ -110,38 +150,37 @@ export default function SettingsPage() {
             return;
         }
 
-        // 5. 세션 종료 후 로그인 페이지로 이동
         await supabase.auth.signOut();
         queryClient.clear();
         router.push('/login');
     };
 
     return (
-        <main className="relative min-h-[520px] rounded-2xl bg-white p-5 shadow">
-            <div className="mb-6 rounded-xl border bg-gray-50 p-4">
-                <p className="text-lg font-bold">{profileQuery.data?.nickname || '이름 없음'}</p>
-                <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+        <main className="mx-auto max-w-md text-[var(--oc-text)]">
+            <div className="px-1 pb-3 pt-1">
+                <h1 className="text-2xl font-extrabold tracking-[-0.04em]">설정</h1>
+                <p className="mt-1 text-xs font-medium tracking-[-0.01em] text-[var(--oc-text-secondary)]">계정과 OURCAL 사용 정보를 관리합니다.</p>
+            </div>
+
+            <div className="rounded-[18px] bg-[var(--oc-tint)] p-4">
+                <p className="text-lg font-bold tracking-[-0.02em]">{profileQuery.data?.nickname || '이름 없음'}</p>
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-sm text-[var(--oc-text-secondary)]">
                     <span>초대코드</span>
-                    <span className="font-mono font-semibold text-gray-900">{inviteCode || '-'}</span>
-                    <button className="rounded bg-white px-2 py-1 shadow-sm ring-1 ring-black/10" onClick={copyInviteCode} disabled={!inviteCode} aria-label="초대코드 복사">
+                    <span className="font-mono font-semibold text-[var(--oc-text)]">{inviteCode || '-'}</span>
+                    <button className="ml-auto rounded-lg bg-white px-2 py-1 shadow-sm ring-1 ring-black/10" onClick={copyInviteCode} disabled={!inviteCode} aria-label="초대코드 복사">
                         📋
                     </button>
                 </div>
             </div>
 
-            <h1 className="mb-4 text-2xl font-bold">설정</h1>
-            <p className="text-gray-700">설정 페이지입니다.</p>
+            <SettingsSection title="Account">
+                <SettingsRow icon="👤" label="프로필" sub="닉네임과 초대코드를 확인합니다." />
+                <SettingsRow icon="🚪" label="로그아웃" sub="현재 기기에서 세션을 종료합니다." onClick={handleLogout} last />
+            </SettingsSection>
 
-            <button
-                className="absolute left-5 bottom-5 rounded px-4 py-2 text-sm text-gray-400 hover:text-red-500"
-                onClick={() => setDeleteConfirmOpen(true)}
-            >
-                회원 탈퇴
-            </button>
-
-            <button className="absolute right-5 bottom-5 rounded bg-red-500 px-4 py-2 text-white" onClick={handleLogout}>
-                로그아웃
-            </button>
+            <SettingsSection title="Danger Zone" sub="회원 탈퇴 시 일정, 친구, 그룹 정보가 초기화됩니다.">
+                <SettingsRow icon="!" label="회원 탈퇴" sub="소유한 그룹은 함께 삭제됩니다." danger onClick={() => setDeleteConfirmOpen(true)} last />
+            </SettingsSection>
 
             {deleteConfirmOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
@@ -150,18 +189,10 @@ export default function SettingsPage() {
                         <p className="mb-1 text-gray-800">탈퇴하게 되면 일정 및 친구, 그룹이 모두 초기화 됩니다.</p>
                         <p className="mb-6 text-xs text-gray-500">owner로 등록된 그룹은 사라지게 됩니다.</p>
                         <div className="flex justify-end gap-2">
-                            <button
-                                className="rounded bg-gray-200 px-4 py-2 text-sm"
-                                onClick={() => setDeleteConfirmOpen(false)}
-                                disabled={deleting}
-                            >
+                            <button className="rounded bg-gray-200 px-4 py-2 text-sm" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>
                                 취소
                             </button>
-                            <button
-                                className="rounded bg-red-500 px-4 py-2 text-sm text-white disabled:bg-gray-400"
-                                onClick={handleDeleteAccount}
-                                disabled={deleting}
-                            >
+                            <button className="rounded bg-red-500 px-4 py-2 text-sm text-white disabled:bg-gray-400" onClick={handleDeleteAccount} disabled={deleting}>
                                 {deleting ? '처리 중...' : '탈퇴하기'}
                             </button>
                         </div>

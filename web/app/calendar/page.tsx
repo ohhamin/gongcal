@@ -7,10 +7,11 @@ import { flushSync } from 'react-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
-import { DateSelectArg, EventClickArg } from '@fullcalendar/core';
+import { DateSelectArg, DatesSetArg, EventClickArg } from '@fullcalendar/core';
 
 import CalendarLoading from '@/components/CalendarLoading';
 import GroupSelector from '@/components/GroupSelector';
+import NotificationButton from '@/components/NotificationButton';
 import TimeSelect from '@/components/TimeSelect';
 import { normalizeProfile, Profile } from '@/lib/groups';
 import { createNotificationWithPush } from '@/lib/pushNotifications';
@@ -138,8 +139,8 @@ function formatPopupDate(dateStr: string): string {
     return `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일`;
 }
 
-function formatCalendarTitle(arg: { date: { year: number; month: number } }): string {
-    return `${arg.date.year} ${String(arg.date.month + 1).padStart(2, '0')}`;
+function formatMonthNavLabel(date: Date): string {
+    return `${date.getFullYear()}. ${date.getMonth() + 1}`;
 }
 
 function addDays(date: Date, days: number): Date {
@@ -304,6 +305,7 @@ export default function CalendarPage() {
     const [isFriendSearching, setIsFriendSearching] = useState(false);
     const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
     const [holidayByDate, setHolidayByDate] = useState<Record<string, HolidayInfo>>({});
+    const [calendarMonthDate, setCalendarMonthDate] = useState(() => new Date());
     const calendarContainerRef = useRef<HTMLDivElement | null>(null);
     const calendarRef = useRef<FullCalendar | null>(null);
     const dragStartDateRef = useRef<string | null>(null);
@@ -1398,6 +1400,32 @@ export default function CalendarPage() {
         });
     };
 
+    const goToPreviousMonth = () => {
+        calendarRef.current?.getApi().prev();
+    };
+
+    const goToNextMonth = () => {
+        calendarRef.current?.getApi().next();
+    };
+
+    const handleCalendarDatesSet = (arg: DatesSetArg) => {
+        const currentDate = arg.view.calendar.getDate();
+        setCalendarMonthDate((prev) => {
+            if (prev.getFullYear() === currentDate.getFullYear() && prev.getMonth() === currentDate.getMonth()) return prev;
+            return currentDate;
+        });
+        setVisibleRange((prev) => {
+            if (
+                prev &&
+                prev.start.getTime() === arg.start.getTime() &&
+                prev.end.getTime() === arg.end.getTime()
+            ) {
+                return prev;
+            }
+            return { start: arg.start, end: arg.end };
+        });
+    };
+
     const toggleMemberFilter = (profileId: string) => {
         setSelectedMemberIds((prev) => {
             const next = new Set(prev);
@@ -1465,12 +1493,49 @@ export default function CalendarPage() {
             className="mx-auto flex max-w-md flex-col rounded-[28px] bg-[var(--oc-surface)] text-[var(--oc-text)]"
             style={{ height: 'calc(100vh - 8.5rem)' }}
         >
-            <div className="mb-3 flex shrink-0 items-start justify-between gap-3 px-1 pb-1">
-                <div>
-                    <p className="text-[11px] font-semibold tracking-[-0.01em] text-[var(--oc-text-secondary)]">함께 쓰는 우리만의 캘린더</p>
-                    <h1 className="text-2xl font-extrabold tracking-[-0.04em]">우리캘린더</h1>
+            <div className="mb-3 flex shrink-0 flex-col gap-2 px-1 pb-1">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1">
+                        <button
+                            type="button"
+                            className="grid h-8 w-8 place-items-center rounded-full text-lg text-[var(--oc-text-secondary)] transition hover:bg-[var(--oc-surface-2)]"
+                            aria-label="이전 월"
+                            onClick={goToPreviousMonth}
+                        >
+                            ‹
+                        </button>
+                        <span className="min-w-[5.6rem] text-center text-lg font-bold tracking-[-0.02em] text-[var(--oc-text)]">
+                            {formatMonthNavLabel(calendarMonthDate)}
+                        </span>
+                        <button
+                            type="button"
+                            className="grid h-8 w-8 place-items-center rounded-full text-lg text-[var(--oc-text-secondary)] transition hover:bg-[var(--oc-surface-2)]"
+                            aria-label="다음 월"
+                            onClick={goToNextMonth}
+                        >
+                            ›
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isGroupFilterEnabled}
+                            className="relative flex rounded-full border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-0.5 text-xs font-semibold shadow-sm"
+                            aria-label="일정 표시 범위 전환"
+                            onClick={handleMasterFilterToggle}
+                        >
+                            <span className={`rounded-full px-3 py-1.5 transition ${!isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
+                                👤 나
+                            </span>
+                            <span className={`rounded-full px-3 py-1.5 transition ${isGroupFilterEnabled ? 'bg-[var(--oc-primary)] text-white shadow' : 'text-[var(--oc-text-secondary)]'}`}>
+                                👥 그룹
+                            </span>
+                        </button>
+                        <NotificationButton className="relative grid h-8 w-8 place-items-center rounded-full bg-[var(--oc-surface-2)] text-base ring-1 ring-[var(--oc-divider)]" />
+                    </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <GroupSelector
                         onChange={() => {
                             setIsCalendarLoading(true);
@@ -1483,65 +1548,46 @@ export default function CalendarPage() {
                             setIsMemberFilterOpen(false);
                         }}
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="relative">
                         <button
-                            type="button"
-                            role="switch"
-                            aria-checked={isGroupFilterEnabled}
-                            className="flex rounded-full border border-[var(--oc-divider-strong)] bg-[var(--oc-surface-2)] p-0.5 text-sm shadow-sm"
-                            aria-label="일정 표시 범위 전환"
-                            onClick={handleMasterFilterToggle}
+                            className="h-9 rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold text-[var(--oc-text)] shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
+                            disabled={!isGroupFilterEnabled}
+                            onClick={() => setIsMemberFilterOpen((prev) => !prev)}
                         >
-                            <span className={`rounded-full px-2 py-1 transition ${!isGroupFilterEnabled ? 'bg-white text-[var(--oc-primary)] shadow' : 'text-[var(--oc-text-secondary)]'}`} aria-hidden="true">
-                                👤
-                            </span>
-                            <span className={`rounded-full px-2 py-1 transition ${isGroupFilterEnabled ? 'bg-white text-[var(--oc-primary)] shadow' : 'text-[var(--oc-text-secondary)]'}`} aria-hidden="true">
-                                👥
-                            </span>
+                            멤버 {selectedMemberIds.size}/{filterPeople.length}
                         </button>
-                        <div className="relative">
-                            <button
-                                className="rounded-xl border border-[var(--oc-divider-strong)] bg-white px-2.5 py-1.5 text-xs font-semibold text-[var(--oc-text)] shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
-                                disabled={!isGroupFilterEnabled}
-                                onClick={() => setIsMemberFilterOpen((prev) => !prev)}
-                            >
-                                멤버 {selectedMemberIds.size}/{filterPeople.length}
-                            </button>
-                            {isMemberFilterOpen && (
-                                <div className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-[var(--oc-divider)] bg-white p-2 shadow-[var(--oc-elevation)]">
-                                    {filterPeople.length === 0 ? (
-                                        <p className="px-2 py-1 text-xs text-gray-500">멤버가 없습니다.</p>
-                                    ) : (
-                                        filterPeople.map((person) => {
-                                            const checked = selectedMemberIds.has(person.id);
+                        {isMemberFilterOpen && (
+                            <div className="absolute right-0 z-30 mt-2 w-52 rounded-2xl border border-[var(--oc-divider)] bg-white p-2 shadow-[var(--oc-elevation)]">
+                                {filterPeople.length === 0 ? (
+                                    <p className="px-2 py-1 text-xs text-gray-500">멤버가 없습니다.</p>
+                                ) : (
+                                    filterPeople.map((person) => {
+                                        const checked = selectedMemberIds.has(person.id);
 
-                                            return (
-                                                <label key={person.id} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm hover:bg-[var(--oc-surface-2)]">
-                                                    <span className="truncate">{person.id === myUserId ? '나' : person.nickname || '이름 없음'}</span>
-                                                    <button
-                                                        type="button"
-                                                        role="switch"
-                                                        aria-checked={checked}
-                                                        disabled={!isGroupFilterEnabled}
-                                                        className={`h-5 w-9 rounded-full p-0.5 transition ${
-                                                            checked ? 'bg-[var(--oc-primary)]' : 'bg-[var(--oc-divider-strong)]'
-                                                        } disabled:opacity-40`}
-                                                        onClick={(event) => {
-                                                            event.preventDefault();
-                                                            toggleMemberFilter(person.id);
-                                                        }}
-                                                    >
-                                                        <span
-                                                            className={`block h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-4' : 'translate-x-0'}`}
-                                                        />
-                                                    </button>
-                                                </label>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                        return (
+                                            <label key={person.id} className="flex items-center justify-between gap-3 rounded-xl px-2 py-2 text-sm hover:bg-[var(--oc-surface-2)]">
+                                                <span className="truncate">{person.id === myUserId ? '나' : person.nickname || '이름 없음'}</span>
+                                                <button
+                                                    type="button"
+                                                    role="switch"
+                                                    aria-checked={checked}
+                                                    disabled={!isGroupFilterEnabled}
+                                                    className={`h-5 w-9 rounded-full p-0.5 transition ${
+                                                        checked ? 'bg-[var(--oc-primary)]' : 'bg-[var(--oc-divider-strong)]'
+                                                    } disabled:opacity-40`}
+                                                    onClick={(event) => {
+                                                        event.preventDefault();
+                                                        toggleMemberFilter(person.id);
+                                                    }}
+                                                >
+                                                    <span className={`block h-4 w-4 rounded-full bg-white transition ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                </button>
+                                            </label>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1567,8 +1613,7 @@ export default function CalendarPage() {
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
-                            headerToolbar={{ start: 'prev', center: 'title', end: 'next' }}
-                            titleFormat={formatCalendarTitle}
+                            headerToolbar={false}
                             height="100%"
                             expandRows={true}
                             fixedWeekCount={true}
@@ -1614,18 +1659,7 @@ export default function CalendarPage() {
                                 setPopupDate(formatLocalDateString(arg.date));
                                 return 'none';
                             }}
-                            datesSet={(arg) => {
-                                setVisibleRange((prev) => {
-                                    if (
-                                        prev &&
-                                        prev.start.getTime() === arg.start.getTime() &&
-                                        prev.end.getTime() === arg.end.getTime()
-                                    ) {
-                                        return prev;
-                                    }
-                                    return { start: arg.start, end: arg.end };
-                                });
-                            }}
+                            datesSet={handleCalendarDatesSet}
                             dayHeaderFormat={{ weekday: 'short' }}
                             displayEventTime={false}
                             eventDisplay="block"
