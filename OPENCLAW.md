@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.4.15 - 2026-05-31
+
+### 업데이트 내용
+
+- Flutter 앱에 FCM 토큰 발급/갱신을 WebView로 전달하는 `FcmBridge` 기본 구조를 추가했습니다.
+- 웹 앱에 WebView가 전달한 FCM 토큰을 로그인된 프로필 기준 `push_tokens` 테이블에 upsert하는 등록 컴포넌트를 추가했습니다.
+- Android 13+ 알림 권한 선언과 Firebase/FCM Flutter 의존성을 추가했습니다.
+- Supabase용 `web/supabase/create_push_tokens.sql`을 추가해 토큰 저장 테이블, 인덱스, RLS 정책을 생성할 수 있게 했습니다.
+- Firebase 설정 파일과 서비스 계정 키가 git에 들어가지 않도록 `.gitignore`를 보강했습니다.
+- README/package 기준 버전을 `v.0.4.14`에서 `v.0.4.15`로 업데이트했습니다.
+
+### 작업 메모
+
+- Firebase 앱 등록 전 기존 빌드가 깨지지 않도록 FCM 초기화는 `--dart-define=OURCAL_ENABLE_FCM=true`일 때만 동작합니다.
+- 현재 레포에는 Android 프로젝트만 있고 iOS 프로젝트 폴더는 아직 없습니다. iOS 배포가 필요하면 iOS 플랫폼을 생성한 뒤 Bundle ID를 Firebase에 등록해야 합니다.
+
 ## v.0.4.14 - 2026-05-28
 
 ### 업데이트 내용
