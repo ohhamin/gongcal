@@ -1,5 +1,16 @@
 # OPENCLAW
 
+## v.0.4.20 - 2026-05-31
+
+### 업데이트 내용
+
+- Flutter WebView shell을 `SafeArea(bottom: false)` 방식에서 `Scaffold(extendBody: true)`와 `MediaQuery.paddingOf(context).bottom` 기반 edge-to-edge 보정 방식으로 변경했습니다.
+- README/package 기준 버전을 `v.0.4.19`에서 `v.0.4.20`으로 업데이트했습니다.
+
+### 작업 메모
+
+- 웹 하단 네비 자체의 safe-area padding은 제거된 상태를 유지하고, 실제 기기 시스템 제스처 영역 보정은 Flutter shell에서 담당합니다.
+
 ## v.0.4.19 - 2026-05-31
 
 ### 업데이트 내용
