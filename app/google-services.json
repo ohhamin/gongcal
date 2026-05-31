@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "817627837669",
+    "project_id": "ourcal-b8033",
+    "storage_bucket": "ourcal-b8033.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817627837669:android:8e4b793b3743d3e531d00c",
+        "android_client_info": {
+          "package_name": "com.example.ourcal_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9d-muMPiStOHUd0dA3BjuMt-It1RAktw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
