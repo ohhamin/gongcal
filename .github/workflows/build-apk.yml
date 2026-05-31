@@ -32,6 +32,19 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Restore Firebase Android config
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          fi
+
+          if [ ! -f android/app/google-services.json ]; then
+            echo "Missing android/app/google-services.json. Commit it or add GOOGLE_SERVICES_JSON_BASE64 secret."
+            exit 1
+          fi
+
       - name: Restore Android release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -61,8 +74,8 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Build release APK
-        run: flutter build apk --release
+      - name: Build release APK with FCM
+        run: flutter build apk --release --dart-define=OURCAL_ENABLE_FCM=true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

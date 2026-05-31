@@ -7,7 +7,7 @@ import { useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useMyProfile } from '@/lib/useCurrentProfile';
 
-type NotificationType = 'event_invite' | 'friend_request' | string;
+type NotificationType = 'event_invite' | 'friend_request' | 'group_request' | string;
 
 type NotificationItem = {
     id: number;
@@ -22,6 +22,7 @@ type NotificationItem = {
 const TYPE_LABEL: Record<string, string> = {
     event_invite: '일정 초대',
     friend_request: '친구 요청',
+    group_request: '그룹 초대',
 };
 
 export default function NotificationsPage() {

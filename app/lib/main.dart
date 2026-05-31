@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'fcm_bridge.dart';
+
 const String defaultWebUrl = String.fromEnvironment(
   'OURCAL_WEB_URL',
   defaultValue: 'https://gongcal.vercel.app',
@@ -38,6 +40,7 @@ class OurCalWebShell extends StatefulWidget {
 
 class _OurCalWebShellState extends State<OurCalWebShell> {
   late final WebViewController _controller;
+  late final FcmBridge _fcmBridge;
   var _progress = 0;
   String? _errorMessage;
 
@@ -52,6 +55,7 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
         NavigationDelegate(
           onProgress: (progress) => setState(() => _progress = progress),
           onPageStarted: (_) => setState(() => _errorMessage = null),
+          onPageFinished: (_) => _fcmBridge.injectTokenIntoWebView(),
           onNavigationRequest: _handleNavigationRequest,
           onWebResourceError: (error) {
             setState(() {
@@ -59,8 +63,11 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
             });
           },
         ),
-      )
-      ..loadRequest(Uri.parse(defaultWebUrl));
+      );
+
+    _fcmBridge = FcmBridge(_controller, defaultWebUrl);
+    _fcmBridge.initialize();
+    _controller.loadRequest(Uri.parse(defaultWebUrl));
   }
 
   Future<NavigationDecision> _handleNavigationRequest(

@@ -1,5 +1,38 @@
 # OPENCLAW
 
+## v.0.4.16 - 2026-05-31
+
+### 업데이트 내용
+
+- notifications 생성과 FCM 발송을 함께 처리하는 서버 API `/api/notifications`를 추가했습니다.
+- 친구 요청(`friend_request`)과 일정 초대(`event_invite`) 알림 생성 흐름을 FCM 푸시 발송 흐름에 연결했습니다.
+- 그룹 초대 시 초대 대상 프로필에 `group_request` notifications row를 생성하고 FCM 푸시를 발송하도록 추가했습니다.
+- FCM payload의 임시 진입점은 모두 `/notifications`로 통일했습니다.
+- GitHub Actions APK 빌드가 FCM 활성 빌드(`OURCAL_ENABLE_FCM=true`)를 수행하도록 변경하고 Firebase Android 설정 복원 단계를 추가했습니다.
+- Android Firebase Gradle 플러그인 설정과 `google-services.json` 위치를 정리했습니다.
+- README/package 기준 버전을 `v.0.4.15`에서 `v.0.4.16`으로 업데이트했습니다.
+
+### 작업 메모
+
+- Vercel에는 `SUPABASE_SERVICE_ROLE_KEY`, `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` 환경변수를 등록해야 실제 FCM 발송이 동작합니다.
+- 운영 Supabase에는 `web/supabase/create_notifications.sql`을 다시 실행해 `group_request` type 제약조건을 반영해야 합니다.
+
+## v.0.4.15 - 2026-05-31
+
+### 업데이트 내용
+
+- Flutter 앱에 FCM 토큰 발급/갱신을 WebView로 전달하는 `FcmBridge` 기본 구조를 추가했습니다.
+- 웹 앱에 WebView가 전달한 FCM 토큰을 로그인된 프로필 기준 `push_tokens` 테이블에 upsert하는 등록 컴포넌트를 추가했습니다.
+- Android 13+ 알림 권한 선언과 Firebase/FCM Flutter 의존성을 추가했습니다.
+- Supabase용 `web/supabase/create_push_tokens.sql`을 추가해 토큰 저장 테이블, 인덱스, RLS 정책을 생성할 수 있게 했습니다.
+- Firebase 설정 파일과 서비스 계정 키가 git에 들어가지 않도록 `.gitignore`를 보강했습니다.
+- README/package 기준 버전을 `v.0.4.14`에서 `v.0.4.15`로 업데이트했습니다.
+
+### 작업 메모
+
+- Firebase 앱 등록 전 기존 빌드가 깨지지 않도록 FCM 초기화는 `--dart-define=OURCAL_ENABLE_FCM=true`일 때만 동작합니다.
+- 현재 레포에는 Android 프로젝트만 있고 iOS 프로젝트 폴더는 아직 없습니다. iOS 배포가 필요하면 iOS 플랫폼을 생성한 뒤 Bundle ID를 Firebase에 등록해야 합니다.
+
 ## v.0.4.14 - 2026-05-28
 
 ### 업데이트 내용

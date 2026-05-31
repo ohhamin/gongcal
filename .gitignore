@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# Firebase / FCM local configuration
+firebase-adminsdk*.json
+service-account*.json
+app/android/app/google-services.json
+app/ios/Runner/GoogleService-Info.plist
+
 # debug
 npm-debug.log*
 yarn-debug.log*

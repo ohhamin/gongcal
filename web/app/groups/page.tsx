@@ -15,6 +15,7 @@ import {
     normalizeProfile,
     validateGroupName,
 } from '@/lib/groups';
+import { createNotificationWithPush } from '@/lib/pushNotifications';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase';
 import { useCurrentUser } from '@/lib/useCurrentProfile';
@@ -466,6 +467,14 @@ export default function GroupsPage() {
             alert('이미 그룹 멤버거나 초대중입니다.');
             return;
         }
+
+        await createNotificationWithPush({
+            profileId: friend.id,
+            type: 'group_request',
+            title: '그룹 초대',
+            message: `${selectedGroup.group_name} 그룹 초대가 도착했어요.`,
+            relatedId: selectedGroup.id,
+        });
 
         await invalidateMyGroupCaches(friend.id);
         setIsInviteOpen(false);

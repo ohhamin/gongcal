@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import BottomNavigation from '@/components/BottomNavigation';
 import NotificationButton from '@/components/NotificationButton';
+import PushTokenRegistrar from '@/components/PushTokenRegistrar';
 import QueryProvider from '@/components/QueryProvider';
 import './globals.css';
 
@@ -37,6 +38,7 @@ export default function RootLayout({
                     <main className="min-h-screen bg-[var(--oc-bg)] px-3 pt-4 pb-24 sm:px-5">
                         <div className="mx-auto w-full max-w-5xl">{children}</div>
                     </main>
+                    <PushTokenRegistrar />
                     <NotificationButton />
                     <BottomNavigation />
                 </QueryProvider>
