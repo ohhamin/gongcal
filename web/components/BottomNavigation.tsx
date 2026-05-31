@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import Icon from '@/components/Icon';
+
 const NAV_ITEMS = [
-    { href: '/calendar', label: '▦', title: '캘린더' },
-    { href: '/groups', label: '◯', title: '친구' },
-    { href: '/settings', label: '⚙', title: '설정' },
-];
+    { href: '/calendar', icon: 'calendar', activeIcon: 'calendarFill', title: '캘린더' },
+    { href: '/groups', icon: 'users', activeIcon: 'usersFill', title: '친구' },
+    { href: '/settings', icon: 'settings', activeIcon: 'settingsFill', title: '설정' },
+] as const;
 
 const HIDDEN_PREFIXES = ['/login', '/auth', '/setup-profile'];
 
@@ -28,13 +30,13 @@ export default function BottomNavigation() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center gap-1 px-2 py-2.5 text-center transition ${
+                            className={`flex flex-col items-center gap-1 px-2 py-[12.5px] text-center transition ${
                                 isActive ? 'text-[var(--oc-primary)]' : 'text-[var(--oc-text-tertiary)]'
                             }`}
                             title={item.title}
                             aria-label={item.title}
                         >
-                            <span className="text-2xl leading-none" aria-hidden="true">{item.label}</span>
+                            <Icon name={isActive ? item.activeIcon : item.icon} size={24} color="currentColor" />
                             <span className="text-[10px] font-semibold leading-none tracking-[-0.01em]">{item.title}</span>
                         </Link>
                     );

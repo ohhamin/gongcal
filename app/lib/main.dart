@@ -122,9 +122,11 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
       child: Scaffold(
         extendBody: true,
         body: Padding(
-          // WebView는 edge-to-edge로 깔되, 웹 하단 네비가 시스템 제스처 영역과 겹치지 않게
-          // Flutter 쪽에서 실제 기기 bottom inset만큼만 보정합니다.
-          padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+          // WebView는 edge-to-edge로 깔되, 시스템 영역과 겹치지 않게 Flutter shell에서 보정합니다.
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + 10,
+            bottom: MediaQuery.paddingOf(context).bottom,
+          ),
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
