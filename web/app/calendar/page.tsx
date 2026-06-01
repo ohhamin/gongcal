@@ -312,6 +312,9 @@ export default function CalendarPage() {
     const dragStartDateRef = useRef<string | null>(null);
     const isRangeDraggingRef = useRef(false);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+    const hasSwipeIntentRef = useRef(false);
+    const shouldSuppressNextClickRef = useRef(false);
 
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
     const [comments, setComments] = useState<CommentRow[]>([]);
@@ -400,17 +403,39 @@ export default function CalendarPage() {
     const handleCalendarPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
 
+        if (event.pointerType !== 'mouse') {
+            swipeStartRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+            hasSwipeIntentRef.current = false;
+        }
+
         const dateStr = getDateFromPointer(event.clientX, event.clientY);
         if (!dateStr) return;
 
         dragStartDateRef.current = dateStr;
         longPressTimerRef.current = setTimeout(() => {
+            if (hasSwipeIntentRef.current) return;
             isRangeDraggingRef.current = true;
             setDragRange({ start: dateStr, end: dateStr });
         }, 250);
     };
 
     const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        const swipeStart = swipeStartRef.current;
+        if (swipeStart && swipeStart.pointerId === event.pointerId && !isRangeDraggingRef.current) {
+            const deltaX = event.clientX - swipeStart.x;
+            const deltaY = event.clientY - swipeStart.y;
+
+            // Horizontal swipe should navigate months, not accidentally start range selection.
+            if (Math.abs(deltaX) > 16 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25) {
+                hasSwipeIntentRef.current = true;
+                if (longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                }
+                event.preventDefault();
+            }
+        }
+
         if (!isRangeDraggingRef.current || !dragStartDateRef.current) return;
         event.preventDefault();
 
@@ -425,6 +450,29 @@ export default function CalendarPage() {
             clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
         }
+
+        const swipeStart = swipeStartRef.current;
+        swipeStartRef.current = null;
+
+        if (swipeStart && swipeStart.pointerId === event.pointerId && hasSwipeIntentRef.current && !isRangeDraggingRef.current) {
+            const deltaX = event.clientX - swipeStart.x;
+            const deltaY = event.clientY - swipeStart.y;
+            const isHorizontalSwipe = Math.abs(deltaX) >= 72 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5;
+
+            hasSwipeIntentRef.current = false;
+            if (isHorizontalSwipe) {
+                event.preventDefault();
+                shouldSuppressNextClickRef.current = true;
+                window.setTimeout(() => {
+                    shouldSuppressNextClickRef.current = false;
+                }, 350);
+                if (deltaX < 0) goToNextMonth();
+                else goToPreviousMonth();
+                clearRangeDrag();
+                return;
+            }
+        }
+        hasSwipeIntentRef.current = false;
 
         if (!isRangeDraggingRef.current || !dragStartDateRef.current) {
             clearRangeDrag();
@@ -1212,11 +1260,13 @@ export default function CalendarPage() {
     };
 
     const handleDateClick = (info: DateClickArg) => {
+        if (shouldSuppressNextClickRef.current) return;
         setPopupDate(info.dateStr);
     };
 
     const handleEventClick = (info: EventClickArg) => {
         info.jsEvent.preventDefault();
+        if (shouldSuppressNextClickRef.current) return;
 
         // 여러 날짜에 걸친 이벤트는 실제로 누른 날짜 칸의 목록을 열어야 합니다.
         const targetElement = info.jsEvent.target as HTMLElement | null;
@@ -1601,10 +1651,18 @@ export default function CalendarPage() {
                 onPointerDown={handleCalendarPointerDown}
                 onPointerMove={handleCalendarPointerMove}
                 onPointerUp={handleCalendarPointerUp}
-                onPointerCancel={clearRangeDrag}
+                style={{ touchAction: 'pan-y' }}
+                onPointerCancel={() => {
+                    swipeStartRef.current = null;
+                    hasSwipeIntentRef.current = false;
+                    clearRangeDrag();
+                }}
                 onPointerLeave={(event) => {
-                    if (!isRangeDraggingRef.current) clearRangeDrag();
-                    else handleCalendarPointerMove(event);
+                    if (!isRangeDraggingRef.current) {
+                        swipeStartRef.current = null;
+                        hasSwipeIntentRef.current = false;
+                        clearRangeDrag();
+                    } else handleCalendarPointerMove(event);
                 }}
             >
                 {currentUserQuery.isLoading || profileQuery.isLoading ? (
