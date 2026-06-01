@@ -313,7 +313,9 @@ export default function CalendarPage() {
     const isRangeDraggingRef = useRef(false);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+    const touchSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const hasSwipeIntentRef = useRef(false);
+    const hasTouchSwipeIntentRef = useRef(false);
     const shouldSuppressNextClickRef = useRef(false);
 
     const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
@@ -445,6 +447,21 @@ export default function CalendarPage() {
         setDragRange(normalizeDateRange(dragStartDateRef.current, dateStr));
     };
 
+    const suppressSyntheticClick = () => {
+        shouldSuppressNextClickRef.current = true;
+        window.setTimeout(() => {
+            shouldSuppressNextClickRef.current = false;
+        }, 350);
+    };
+
+    const navigateBySwipeDelta = (deltaX: number) => {
+        suppressSyntheticClick();
+        if (deltaX < 0) goToNextMonth();
+        else goToPreviousMonth();
+        setPopupDate(null);
+        clearRangeDrag();
+    };
+
     const handleCalendarPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
         if (longPressTimerRef.current) {
             clearTimeout(longPressTimerRef.current);
@@ -457,18 +474,12 @@ export default function CalendarPage() {
         if (swipeStart && swipeStart.pointerId === event.pointerId && hasSwipeIntentRef.current && !isRangeDraggingRef.current) {
             const deltaX = event.clientX - swipeStart.x;
             const deltaY = event.clientY - swipeStart.y;
-            const isHorizontalSwipe = Math.abs(deltaX) >= 72 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5;
+            const isHorizontalSwipe = Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
 
             hasSwipeIntentRef.current = false;
             if (isHorizontalSwipe) {
                 event.preventDefault();
-                shouldSuppressNextClickRef.current = true;
-                window.setTimeout(() => {
-                    shouldSuppressNextClickRef.current = false;
-                }, 350);
-                if (deltaX < 0) goToNextMonth();
-                else goToPreviousMonth();
-                clearRangeDrag();
+                navigateBySwipeDelta(deltaX);
                 return;
             }
         }
@@ -484,6 +495,52 @@ export default function CalendarPage() {
         const selectedRange = normalizeDateRange(dragStartDateRef.current, endDateStr);
         clearRangeDrag();
         openCreateForm(selectedRange.start, selectedRange.end, true);
+    };
+
+    const handleCalendarTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        const touch = event.touches[0];
+        if (!touch) return;
+        touchSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+        hasTouchSwipeIntentRef.current = false;
+    };
+
+    const handleCalendarTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        const touchStart = touchSwipeStartRef.current;
+        const touch = event.touches[0];
+        if (!touchStart || !touch || isRangeDraggingRef.current) return;
+
+        const deltaX = touch.clientX - touchStart.x;
+        const deltaY = touch.clientY - touchStart.y;
+        if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
+            hasTouchSwipeIntentRef.current = true;
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+            event.preventDefault();
+        }
+    };
+
+    const handleCalendarTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+        const touchStart = touchSwipeStartRef.current;
+        const touch = event.changedTouches[0];
+        touchSwipeStartRef.current = null;
+
+        if (!touchStart || !touch || !hasTouchSwipeIntentRef.current || isRangeDraggingRef.current) {
+            hasTouchSwipeIntentRef.current = false;
+            return;
+        }
+
+        const deltaX = touch.clientX - touchStart.x;
+        const deltaY = touch.clientY - touchStart.y;
+        const isHorizontalSwipe = Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2;
+        hasTouchSwipeIntentRef.current = false;
+
+        if (!isHorizontalSwipe) return;
+        event.preventDefault();
+        swipeStartRef.current = null;
+        hasSwipeIntentRef.current = false;
+        navigateBySwipeDelta(deltaX);
     };
 
 
@@ -1651,10 +1708,19 @@ export default function CalendarPage() {
                 onPointerDown={handleCalendarPointerDown}
                 onPointerMove={handleCalendarPointerMove}
                 onPointerUp={handleCalendarPointerUp}
+                onTouchStartCapture={handleCalendarTouchStart}
+                onTouchMoveCapture={handleCalendarTouchMove}
+                onTouchEndCapture={handleCalendarTouchEnd}
+                onTouchCancelCapture={() => {
+                    touchSwipeStartRef.current = null;
+                    hasTouchSwipeIntentRef.current = false;
+                }}
                 style={{ touchAction: 'pan-y' }}
                 onPointerCancel={() => {
                     swipeStartRef.current = null;
+                    touchSwipeStartRef.current = null;
                     hasSwipeIntentRef.current = false;
+                    hasTouchSwipeIntentRef.current = false;
                     clearRangeDrag();
                 }}
                 onPointerLeave={(event) => {
