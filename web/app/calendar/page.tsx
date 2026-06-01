@@ -1772,9 +1772,9 @@ export default function CalendarPage() {
                             events={calendarEvents}
                             dateClick={handleDateClick}
                             eventClick={handleEventClick}
-                            selectable={true}
-                            selectMirror={true}
-                            unselectAuto={true}
+                            selectable={false}
+                            selectMirror={false}
+                            unselectAuto={false}
                             longPressDelay={250}
                             selectLongPressDelay={250}
                             eventLongPressDelay={250}
