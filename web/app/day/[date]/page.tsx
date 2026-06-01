@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
@@ -280,7 +281,7 @@ export default function DayPage({ params }: Props) {
 
         if (error) {
             console.error(error);
-            alert('댓글을 불러오지 못했습니다.');
+            await appAlert('댓글을 불러오지 못했습니다.');
             return;
         }
 
@@ -304,26 +305,26 @@ export default function DayPage({ params }: Props) {
         const trimmedDetail = detail.trim();
 
         if (trimmedTitle.length < 1) {
-            alert('일정 제목을 입력해주세요.');
+            await appAlert('일정 제목을 입력해주세요.');
             return;
         }
 
         if (trimmedTitle.length > EVENT_TITLE_MAX_LENGTH) {
-            alert(`일정 제목은 ${EVENT_TITLE_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`일정 제목은 ${EVENT_TITLE_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
         if (trimmedDetail.length > EVENT_DETAIL_MAX_LENGTH) {
-            alert(`세부내용은 ${EVENT_DETAIL_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`세부내용은 ${EVENT_DETAIL_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
         if (start >= end) {
-            alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+            await appAlert('종료 시간은 시작 시간보다 늦어야 합니다.');
             return;
         }
         if (hasOverlap(start, end)) {
-            alert('이미 해당 시간에 일정이 있습니다.');
+            await appAlert('이미 해당 시간에 일정이 있습니다.');
             return;
         }
 
@@ -386,7 +387,7 @@ export default function DayPage({ params }: Props) {
     const handleDeleteEvent = async () => {
         if (!selectedEventId || !myUserId) return;
 
-        const ok = confirm('일정을 삭제할까요?');
+        const ok = await appConfirm('일정을 삭제할까요?');
 
         if (!ok) return;
 
@@ -395,7 +396,7 @@ export default function DayPage({ params }: Props) {
 
         if (commentDeleteError) {
             console.error(commentDeleteError);
-            alert('댓글 삭제 실패');
+            await appAlert('댓글 삭제 실패');
             return;
         }
 
@@ -403,7 +404,7 @@ export default function DayPage({ params }: Props) {
 
         if (error) {
             console.error(error);
-            alert('삭제 실패');
+            await appAlert('삭제 실패');
             return;
         }
 
@@ -426,12 +427,12 @@ export default function DayPage({ params }: Props) {
         const trimmedComment = commentInput.trim();
 
         if (!trimmedComment) {
-            alert('댓글 내용을 입력해주세요.');
+            await appAlert('댓글 내용을 입력해주세요.');
             return;
         }
 
         if (trimmedComment.length > COMMENT_MAX_LENGTH) {
-            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -449,7 +450,7 @@ export default function DayPage({ params }: Props) {
 
         if (error) {
             console.error(error);
-            alert('댓글 등록 실패');
+            await appAlert('댓글 등록 실패');
             return;
         }
 
@@ -475,12 +476,12 @@ export default function DayPage({ params }: Props) {
         const trimmedComment = editingCommentInput.trim();
 
         if (!trimmedComment) {
-            alert('댓글 내용을 입력해주세요.');
+            await appAlert('댓글 내용을 입력해주세요.');
             return;
         }
 
         if (trimmedComment.length > COMMENT_MAX_LENGTH) {
-            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -496,7 +497,7 @@ export default function DayPage({ params }: Props) {
 
         if (error) {
             console.error(error);
-            alert('댓글 수정 실패');
+            await appAlert('댓글 수정 실패');
             return;
         }
 
@@ -507,7 +508,7 @@ export default function DayPage({ params }: Props) {
     const handleDeleteComment = async (comment: CommentRow) => {
         if (!detailEvent || comment.profile_id !== myUserId) return;
 
-        const ok = confirm('댓글을 삭제할까요?');
+        const ok = await appConfirm('댓글을 삭제할까요?');
 
         if (!ok) return;
 
@@ -520,7 +521,7 @@ export default function DayPage({ params }: Props) {
 
         if (error) {
             console.error(error);
-            alert('댓글 삭제 실패');
+            await appAlert('댓글 삭제 실패');
             return;
         }
 
@@ -568,7 +569,7 @@ export default function DayPage({ params }: Props) {
         });
 
         if (overlap) {
-            alert('시간이 겹칩니다.');
+            await appAlert('시간이 겹칩니다.');
 
             info.revert();
 
@@ -626,7 +627,7 @@ export default function DayPage({ params }: Props) {
         });
 
         if (overlap) {
-            alert('시간이 겹칩니다.');
+            await appAlert('시간이 겹칩니다.');
 
             info.revert();
 

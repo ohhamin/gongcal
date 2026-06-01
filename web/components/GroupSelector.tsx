@@ -1,5 +1,7 @@
 'use client';
 
+import { appAlert } from '@/components/AppDialogProvider';
+import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { PERSONAL_CALENDAR_VALUE, updateMainGroup } from '@/lib/groups';
@@ -15,18 +17,34 @@ export default function GroupSelector({ onChange }: Props) {
     const queryClient = useQueryClient();
     const profileQuery = useMyProfile();
     const acceptedGroupsQuery = useMyAcceptedGroups();
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
 
     const profile = profileQuery.data;
     const groups = acceptedGroupsQuery.data || [];
     const selectedValue = profile?.main_group_id ? String(profile.main_group_id) : PERSONAL_CALENDAR_VALUE;
     const loading = profileQuery.isLoading || acceptedGroupsQuery.isLoading;
+    const selectedLabel = selectedValue === PERSONAL_CALENDAR_VALUE
+        ? '나만보기'
+        : groups.find((group) => String(group.id) === selectedValue)?.group_name || '그룹 선택';
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [isOpen]);
 
     const handleChange = async (value: string) => {
         if (!profile) return;
+        setIsOpen(false);
 
         const nextMainGroupId = value === PERSONAL_CALENDAR_VALUE ? null : Number(value);
 
-        // 낙관적 업데이트로 페이지 이동/드롭다운 전환 시 같은 프로필 값을 즉시 재사용합니다.
         queryClient.setQueryData(queryKeys.myProfile(profile.id), {
             ...profile,
             main_group_id: nextMainGroupId,
@@ -38,24 +56,51 @@ export default function GroupSelector({ onChange }: Props) {
             await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
         } catch (error) {
             console.error(error);
-            alert('그룹 변경 실패');
+            await appAlert('그룹 변경 실패');
             await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
         }
     };
 
+    const options = [
+        { value: PERSONAL_CALENDAR_VALUE, label: '나만보기' },
+        ...groups.map((group) => ({ value: String(group.id), label: group.group_name })),
+    ];
+
     return (
-        <select
-            className="h-9 w-auto max-w-[11rem] rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold text-[var(--oc-text)] shadow-sm outline-none transition focus:border-[var(--oc-primary)] disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
-            value={selectedValue}
-            onChange={(e) => handleChange(e.target.value)}
-            disabled={loading || !profile}
-        >
-            <option value={PERSONAL_CALENDAR_VALUE}>나만보기</option>
-            {groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                    {group.group_name}
-                </option>
-            ))}
-        </select>
+        <div ref={rootRef} className="relative">
+            <button
+                type="button"
+                className="flex h-9 max-w-[11rem] items-center gap-1 rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold tracking-[-0.01em] text-[var(--oc-text)] shadow-sm transition disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
+                disabled={loading || !profile}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                onClick={() => setIsOpen((prev) => !prev)}
+            >
+                <span className="truncate">{selectedLabel}</span>
+                <span className="text-[10px] text-[var(--oc-text-secondary)]">▾</span>
+            </button>
+
+            {isOpen && (
+                <div className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-[var(--oc-divider)] bg-white p-1.5 shadow-[var(--oc-elevation)]" role="listbox">
+                    {options.map((option) => {
+                        const selected = option.value === selectedValue;
+
+                        return (
+                            <button
+                                key={option.value}
+                                type="button"
+                                role="option"
+                                aria-selected={selected}
+                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold tracking-[-0.01em] transition ${selected ? 'bg-[var(--oc-tint)] text-[var(--oc-primary)]' : 'text-[var(--oc-text)] hover:bg-[var(--oc-surface-2)]'}`}
+                                onClick={() => handleChange(option.value)}
+                            >
+                                <span className="truncate">{option.label}</span>
+                                {selected && <span className="text-xs">✓</span>}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
     );
 }

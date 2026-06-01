@@ -78,32 +78,43 @@ export default function NotificationsPage() {
     }, [notifications, profileId, queryClient]);
 
     return (
-        <main className="min-h-screen bg-gray-50">
+        <main className="min-h-screen bg-[var(--oc-bg)] px-[5vw] pt-4 text-[var(--oc-text)]">
             <div className="mb-5 flex items-center gap-3">
-                <button className="rounded-full bg-white px-4 py-2 text-xl shadow-sm ring-1 ring-black/10" onClick={() => router.back()} aria-label="이전 페이지로 이동">
-                    &lt;
+                <button className="grid h-10 w-10 place-items-center rounded-full bg-white text-xl font-bold shadow-sm ring-1 ring-[var(--oc-divider)]" onClick={() => router.back()} aria-label="이전 페이지로 이동">
+                    ‹
                 </button>
-                <h1 className="text-2xl font-bold">알림</h1>
+                <div>
+                    <h1 className="text-2xl font-extrabold tracking-[-0.04em]">알림</h1>
+                    <p className="mt-1 text-xs tracking-[-0.01em] text-[var(--oc-text-secondary)]">초대와 요청을 한눈에 확인해요.</p>
+                </div>
             </div>
 
-            <div className="space-y-3">
-                {notificationsQuery.isLoading && <p className="rounded-xl border bg-white p-4 text-sm text-gray-500">알림을 불러오는 중입니다.</p>}
+            <div className="space-y-3 pb-6">
+                {notificationsQuery.isLoading && <p className="rounded-2xl border border-[var(--oc-divider)] bg-white p-5 text-sm text-[var(--oc-text-secondary)] shadow-sm">알림을 불러오는 중입니다.</p>}
 
-                {notificationsQuery.isError && <p className="rounded-xl border bg-white p-4 text-sm text-red-500">알림을 불러오지 못했습니다.</p>}
+                {notificationsQuery.isError && <p className="rounded-2xl border border-red-100 bg-white p-5 text-sm font-semibold text-red-500 shadow-sm">알림을 불러오지 못했습니다.</p>}
 
                 {!notificationsQuery.isLoading && !notificationsQuery.isError && notifications.length === 0 && (
-                    <p className="rounded-xl border bg-white p-4 text-sm text-gray-500">알림이 없습니다.</p>
+                    <div className="rounded-2xl border border-[var(--oc-divider)] bg-white p-8 text-center shadow-sm">
+                        <p className="text-sm font-bold text-[var(--oc-text)]">알림이 없습니다.</p>
+                        <p className="mt-1 text-xs text-[var(--oc-text-secondary)]">새로운 초대가 오면 여기에 표시됩니다.</p>
+                    </div>
                 )}
 
                 {notifications.map((notification) => (
-                    <div key={notification.id} className="relative grid grid-cols-[2fr_8fr] gap-3 rounded-xl border bg-white p-4 shadow-sm">
-                        {!notification.is_read && <span className="absolute top-2 left-2 h-2.5 w-2.5 rounded-full bg-red-500" aria-hidden="true" />}
-                        <div className="flex items-center justify-center rounded-lg bg-gray-100 px-2 py-3 text-center text-xs font-semibold text-gray-600">
-                            {TYPE_LABEL[notification.type] || notification.type}
+                    <div key={notification.id} className="relative flex gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white p-4 shadow-[0_1px_2px_rgba(11,15,31,0.04)]">
+                        {!notification.is_read && <span className="absolute left-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" aria-hidden="true" />}
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[13px] bg-[var(--oc-tint)] text-sm font-extrabold text-[var(--oc-primary)]" aria-hidden="true">
+                            {(TYPE_LABEL[notification.type] || notification.type).slice(0, 1)}
                         </div>
-                        <div className="min-w-0">
-                            <p className="font-semibold text-gray-900">{notification.title}</p>
-                            {notification.message && <p className="mt-1 text-sm text-gray-500">{notification.message}</p>}
+                        <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex items-center gap-2">
+                                <span className="rounded-full bg-[var(--oc-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--oc-text-secondary)]">
+                                    {TYPE_LABEL[notification.type] || notification.type}
+                                </span>
+                            </div>
+                            <p className="truncate text-[15px] font-extrabold tracking-[-0.02em] text-[var(--oc-text)]">{notification.title}</p>
+                            {notification.message && <p className="mt-1 text-sm leading-5 text-[var(--oc-text-secondary)]">{notification.message}</p>}
                         </div>
                     </div>
                 ))}

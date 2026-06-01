@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -78,7 +79,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹 목록 조회 실패');
+            await appAlert('그룹 목록 조회 실패');
             return;
         }
 
@@ -105,7 +106,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹원 조회 실패');
+            await appAlert('그룹원 조회 실패');
             return;
         }
 
@@ -143,7 +144,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('친구 목록 조회 실패');
+            await appAlert('친구 목록 조회 실패');
             return;
         }
 
@@ -195,7 +196,7 @@ export default function GroupsPage() {
         const nameError = validateGroupName(targetGroupName);
 
         if (nameError) {
-            alert(nameError);
+            await appAlert(nameError);
             return false;
         }
 
@@ -203,15 +204,15 @@ export default function GroupsPage() {
             const duplicated = await isGroupNameDuplicated(targetGroupName, exceptGroupId);
 
             if (duplicated) {
-                alert('이미 사용 중인 그룹 이름입니다.');
+                await appAlert('이미 사용 중인 그룹 이름입니다.');
                 return false;
             }
 
-            alert('사용 가능한 그룹 이름입니다.');
+            await appAlert('사용 가능한 그룹 이름입니다.');
             return true;
         } catch (error) {
             console.error(error);
-            alert('중복 확인 실패');
+            await appAlert('중복 확인 실패');
             return false;
         }
     };
@@ -222,17 +223,17 @@ export default function GroupsPage() {
         const nameError = validateGroupName(groupName);
 
         if (nameError) {
-            alert(nameError);
+            await appAlert(nameError);
             return;
         }
 
         if (!isNameChecked) {
-            alert('그룹 이름 중복 체크를 해주세요.');
+            await appAlert('그룹 이름 중복 체크를 해주세요.');
             return;
         }
 
         if (groups.length >= GROUP_LIMIT) {
-            alert(`그룹은 최대 ${GROUP_LIMIT}개까지 가질 수 있습니다.`);
+            await appAlert(`그룹은 최대 ${GROUP_LIMIT}개까지 가질 수 있습니다.`);
             return;
         }
 
@@ -249,7 +250,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹 생성 실패');
+            await appAlert('그룹 생성 실패');
             return;
         }
 
@@ -266,12 +267,12 @@ export default function GroupsPage() {
         const nameError = validateGroupName(editGroupName);
 
         if (nameError) {
-            alert(nameError);
+            await appAlert(nameError);
             return;
         }
 
         if (editGroupName.trim() !== selectedGroup.group_name && !isEditNameChecked) {
-            alert('그룹 이름 중복 체크를 해주세요.');
+            await appAlert('그룹 이름 중복 체크를 해주세요.');
             return;
         }
 
@@ -279,7 +280,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹 이름 수정 실패');
+            await appAlert('그룹 이름 수정 실패');
             return;
         }
 
@@ -287,13 +288,13 @@ export default function GroupsPage() {
         await Promise.all(members.map((member) => invalidateMyGroupCaches(member.profile_id)));
         setSelectedGroup(updatedGroup);
         await refreshSelectedGroup();
-        alert('그룹 이름을 수정했습니다.');
+        await appAlert('그룹 이름을 수정했습니다.');
     };
 
     const handleDeleteGroup = async () => {
         if (!selectedGroup || !isSelectedGroupOwner) return;
 
-        const ok = confirm('정말 삭제하시나요?');
+        const ok = await appConfirm('정말 삭제하시나요?');
 
         if (!ok) return;
 
@@ -304,7 +305,7 @@ export default function GroupsPage() {
 
         if (profileError) {
             console.error(profileError);
-            alert('대표 그룹 초기화 실패');
+            await appAlert('대표 그룹 초기화 실패');
             return;
         }
 
@@ -312,7 +313,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹 삭제 실패');
+            await appAlert('그룹 삭제 실패');
             return;
         }
 
@@ -327,7 +328,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('초대 수락 실패');
+            await appAlert('초대 수락 실패');
             return;
         }
 
@@ -338,7 +339,7 @@ export default function GroupsPage() {
     const handleLeaveOrReject = async (group: GroupRow, message: string) => {
         if (!myProfileId) return;
 
-        const ok = confirm(message);
+        const ok = await appConfirm(message);
 
         if (!ok) return;
 
@@ -350,7 +351,7 @@ export default function GroupsPage() {
 
         if (profileError) {
             console.error(profileError);
-            alert('대표 그룹 초기화 실패');
+            await appAlert('대표 그룹 초기화 실패');
             return;
         }
 
@@ -358,7 +359,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('처리 실패');
+            await appAlert('처리 실패');
             return;
         }
 
@@ -374,7 +375,7 @@ export default function GroupsPage() {
     const handleDelegateOwner = async (member: GroupMember) => {
         if (!selectedGroup || !myProfileId || !isSelectedGroupOwner || member.profile_id === myProfileId) return;
 
-        const ok = confirm(`${member.profile?.nickname || '그룹원'}에게 그룹을 위임할까요?`);
+        const ok = await appConfirm(`${member.profile?.nickname || '그룹원'}에게 그룹을 위임할까요?`);
 
         if (!ok) return;
 
@@ -386,7 +387,7 @@ export default function GroupsPage() {
 
         if (oldOwnerError) {
             console.error(oldOwnerError);
-            alert('그룹 위임 실패');
+            await appAlert('그룹 위임 실패');
             return;
         }
 
@@ -398,7 +399,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('그룹 위임 실패');
+            await appAlert('그룹 위임 실패');
             return;
         }
 
@@ -410,7 +411,7 @@ export default function GroupsPage() {
     const handleKickMember = async (member: GroupMember) => {
         if (!selectedGroup || !isSelectedGroupOwner || member.profile_id === myProfileId) return;
 
-        const ok = confirm(`${member.profile?.nickname || '그룹원'}님을 추방할까요?`);
+        const ok = await appConfirm(`${member.profile?.nickname || '그룹원'}님을 추방할까요?`);
 
         if (!ok) return;
 
@@ -422,7 +423,7 @@ export default function GroupsPage() {
 
         if (profileError) {
             console.error(profileError);
-            alert('대표 그룹 초기화 실패');
+            await appAlert('대표 그룹 초기화 실패');
             return;
         }
 
@@ -430,7 +431,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('추방 실패');
+            await appAlert('추방 실패');
             return;
         }
 
@@ -445,12 +446,12 @@ export default function GroupsPage() {
             const memberCount = await getGroupMemberCount(selectedGroup.id);
 
             if (memberCount >= GROUP_MEMBER_LIMIT) {
-                alert(`그룹원은 초대중인 멤버를 포함해 최대 ${GROUP_MEMBER_LIMIT}명까지 가능합니다.`);
+                await appAlert(`그룹원은 초대중인 멤버를 포함해 최대 ${GROUP_MEMBER_LIMIT}명까지 가능합니다.`);
                 return;
             }
         } catch (error) {
             console.error(error);
-            alert('그룹원 수 확인 실패');
+            await appAlert('그룹원 수 확인 실패');
             return;
         }
 
@@ -464,7 +465,7 @@ export default function GroupsPage() {
 
         if (error) {
             console.error(error);
-            alert('이미 그룹 멤버거나 초대중입니다.');
+            await appAlert('이미 그룹 멤버거나 초대중입니다.');
             return;
         }
 
@@ -488,6 +489,11 @@ export default function GroupsPage() {
         setIsEditNameChecked(true);
     };
 
+    const groupMemberCountById = useMemo(() => {
+        const counts = new Map<number, number>();
+        groups.forEach((group) => counts.set(group.id, (counts.get(group.id) || 0) + 1));
+        return counts;
+    }, [groups]);
     const memberProfileIds = useMemo(() => new Set(members.map((member) => member.profile_id)), [members]);
     const filteredFriends = friends.filter((friend) => (friend.nickname || '').includes(friendSearch.trim()));
 
@@ -541,16 +547,21 @@ export default function GroupsPage() {
                         {groups.map((group) => {
                             const isOwner = group.is_owner;
                             const statusLabel = group.is_accepted ? (isOwner ? '소유자' : '참여중') : '초대 대기';
+                            const memberCount = groupMemberCountById.get(group.id) || 1;
 
                             return (
-                                <div key={`${group.id}-${group.profile_id}`} className="flex items-center gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white p-4 shadow-sm">
+                                <div key={`${group.id}-${group.profile_id}`} className="flex items-center gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white p-4 shadow-[0_1px_2px_rgba(11,15,31,0.04)]">
                                     <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => openGroupDetail(group)}>
-                                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--oc-tint)] text-[var(--oc-primary)]" aria-hidden="true">
-                                            👥
+                                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[13px] bg-[var(--oc-tint)] text-base font-extrabold text-[var(--oc-primary)]" aria-hidden="true">
+                                            {group.group_name.trim().slice(0, 1) || '그'}
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[15px] font-bold tracking-[-0.02em]">{group.group_name}</span>
-                                            <span className="mt-1 block text-xs text-[var(--oc-text-secondary)]">{statusLabel}</span>
+                                            <span className="block truncate text-[15.5px] font-extrabold tracking-[-0.02em]">{group.group_name}</span>
+                                            <span className="mt-1 flex items-center gap-1.5 text-xs">
+                                                {isOwner && <span aria-hidden="true">👑</span>}
+                                                <span className={isOwner ? 'font-bold text-[var(--oc-primary)]' : 'font-bold text-[var(--oc-text-secondary)]'}>{statusLabel}</span>
+                                                <span className="text-[var(--oc-text-tertiary)]">· 그룹원 {memberCount}명</span>
+                                            </span>
                                         </span>
                                     </button>
 
@@ -579,79 +590,82 @@ export default function GroupsPage() {
                     </div>
 
             {selectedGroup && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl">
-                        <div className="mb-4 flex items-start justify-between gap-3">
-                            <h2 className="text-xl font-bold">그룹 상세</h2>
-                            <button className="rounded bg-gray-200 px-3 py-1 text-sm" onClick={() => setSelectedGroup(null)}>
-                                닫기
-                            </button>
-                        </div>
-
-                        <div className="mb-5 rounded border p-4">
-                            <p className="mb-2 text-sm font-semibold">그룹 이름</p>
-                            {isSelectedGroupOwner ? (
-                                <div className="flex gap-2">
-                                    <input
-                                        className="min-w-0 flex-1 rounded border p-2"
-                                        value={editGroupName}
-                                        maxLength={GROUP_NAME_MAX_LENGTH}
-                                        onChange={(e) => {
-                                            setEditGroupName(e.target.value);
-                                            setIsEditNameChecked(e.target.value.trim() === selectedGroup.group_name);
-                                        }}
-                                    />
-                                    <button
-                                        className="rounded bg-gray-200 px-3 py-2 text-sm"
-                                        onClick={async () => setIsEditNameChecked(await handleCheckGroupName(editGroupName, selectedGroup.id))}
-                                    >
-                                        중복 체크
-                                    </button>
-                                    <button className="rounded bg-black px-3 py-2 text-sm text-white" onClick={handleUpdateGroupName}>
-                                        저장
-                                    </button>
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setSelectedGroup(null)}>
+                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[28px]" onClick={(e) => e.stopPropagation()}>
+                        <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
+                        <div className="border-b border-[var(--oc-divider)] px-5 pb-4 pt-3">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--oc-primary)]">Group detail</p>
+                                    <h2 className="truncate text-xl font-extrabold tracking-[-0.03em]">{selectedGroup.group_name}</h2>
+                                    <p className="mt-1 text-xs text-[var(--oc-text-secondary)]">그룹원 {members.length}명</p>
                                 </div>
-                            ) : (
-                                <p className="font-semibold">{selectedGroup.group_name}</p>
-                            )}
-                            {isSelectedGroupOwner && (
-                                <button className="mt-3 rounded bg-red-500 px-3 py-2 text-sm text-white" onClick={handleDeleteGroup}>
-                                    그룹삭제
+                                <button className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--oc-surface-2)] text-[var(--oc-text-secondary)]" onClick={() => setSelectedGroup(null)} aria-label="닫기">
+                                    ×
                                 </button>
-                            )}
+                            </div>
                         </div>
 
-                        <div className="mb-3 flex items-center justify-between">
-                            <h3 className="font-bold">그룹 멤버</h3>
-                            {isSelectedGroupOwner && (
-                                <button className="rounded bg-black px-3 py-2 text-sm text-white" onClick={() => setIsInviteOpen(true)}>
-                                    그룹원 추가
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            {members.map((member) => (
-                                <div key={`${member.id}-${member.profile_id}`} className="flex items-center justify-between gap-3 rounded border p-3">
-                                    <div>
-                                        <p className="font-semibold">{member.profile?.nickname || '이름 없음'}</p>
-                                        <p className="text-sm text-gray-500">
-                                            {member.is_accepted ? '수락 완료' : '초대 대기'} {member.is_owner ? '· 소유자' : ''}
-                                        </p>
-                                    </div>
-
-                                    {isSelectedGroupOwner && member.profile_id !== myProfileId && (
+                        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                            <div className="mb-5 rounded-2xl border border-[var(--oc-divider)] bg-white p-4">
+                                <p className="mb-3 text-sm font-extrabold tracking-[-0.02em]">그룹 이름</p>
+                                {isSelectedGroupOwner ? (
+                                    <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <button className="rounded bg-gray-200 px-3 py-2 text-sm" onClick={() => handleDelegateOwner(member)}>
-                                                그룹위임
-                                            </button>
-                                            <button className="rounded bg-red-500 px-3 py-2 text-sm text-white" onClick={() => handleKickMember(member)}>
-                                                추방
-                                            </button>
+                                            <input
+                                                className="min-w-0 flex-1 rounded-xl border border-[var(--oc-divider-strong)] p-3 text-sm outline-none focus:border-[var(--oc-primary)]"
+                                                value={editGroupName}
+                                                maxLength={GROUP_NAME_MAX_LENGTH}
+                                                onChange={(e) => {
+                                                    setEditGroupName(e.target.value);
+                                                    setIsEditNameChecked(e.target.value.trim() === selectedGroup.group_name);
+                                                }}
+                                            />
+                                            <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-2 text-xs font-bold text-[var(--oc-text-secondary)]" onClick={async () => setIsEditNameChecked(await handleCheckGroupName(editGroupName, selectedGroup.id))}>중복 체크</button>
+                                            <button className="rounded-xl bg-[var(--oc-text)] px-3 py-2 text-xs font-bold text-white" onClick={handleUpdateGroupName}>저장</button>
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+                                        <p className="text-right text-xs text-[var(--oc-text-tertiary)]">{editGroupName.trim().length} / {GROUP_NAME_MAX_LENGTH}</p>
+                                    </div>
+                                ) : (
+                                    <p className="font-semibold text-[var(--oc-text)]">{selectedGroup.group_name}</p>
+                                )}
+                            </div>
+
+                            <div className="mb-3 flex items-center justify-between">
+                                <h3 className="font-extrabold tracking-[-0.02em]">그룹 멤버</h3>
+                                {isSelectedGroupOwner && (
+                                    <button className="rounded-xl bg-[var(--oc-primary)] px-3 py-2 text-sm font-bold text-white" onClick={() => setIsInviteOpen(true)}>그룹원 추가</button>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                {members.map((member) => (
+                                    <div key={`${member.id}-${member.profile_id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white p-3 shadow-[0_1px_2px_rgba(11,15,31,0.04)]">
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--oc-tint)] text-sm font-extrabold text-[var(--oc-primary)]" aria-hidden="true">
+                                                {(member.profile?.nickname || '이').trim().slice(0, 1)}
+                                            </span>
+                                            <div className="min-w-0">
+                                                <p className="truncate font-bold text-[var(--oc-text)]">{member.profile?.nickname || '이름 없음'}</p>
+                                                <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">
+                                                    {member.is_accepted ? '수락 완료' : '초대 대기'} {member.is_owner ? '· 👑 소유자' : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {isSelectedGroupOwner && member.profile_id !== myProfileId && (
+                                            <div className="flex shrink-0 gap-2">
+                                                <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-2 text-xs font-bold text-[var(--oc-text-secondary)]" onClick={() => handleDelegateOwner(member)}>그룹위임</button>
+                                                <button className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-500" onClick={() => handleKickMember(member)}>추방</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {isSelectedGroupOwner && (
+                                <button className="mt-5 w-full rounded-xl bg-red-50 px-4 py-3 text-sm font-extrabold text-red-500" onClick={handleDeleteGroup}>그룹삭제</button>
+                            )}
                         </div>
                     </div>
                 </div>

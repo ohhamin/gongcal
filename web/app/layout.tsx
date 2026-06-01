@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import AppDialogProvider from '@/components/AppDialogProvider';
 import BottomNavigation from '@/components/BottomNavigation';
 import ButtonDebounceGuard from '@/components/ButtonDebounceGuard';
 import PushTokenRegistrar from '@/components/PushTokenRegistrar';
@@ -41,12 +42,14 @@ export default function RootLayout({
         <html lang="ko">
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <QueryProvider>
-                    <main className="min-h-[100dvh] bg-[var(--oc-bg)] pt-[var(--oc-content-top-padding)] pb-[var(--oc-nav-height)]">
-                        <div className="w-full">{children}</div>
-                    </main>
-                    <PushTokenRegistrar />
-                    <ButtonDebounceGuard />
-                    <BottomNavigation />
+                    <AppDialogProvider>
+                        <main className="min-h-[100dvh] bg-[var(--oc-bg)] pt-[var(--oc-content-top-padding)] pb-[var(--oc-nav-height)]">
+                            <div className="w-full">{children}</div>
+                        </main>
+                        <PushTokenRegistrar />
+                        <ButtonDebounceGuard />
+                        <BottomNavigation />
+                    </AppDialogProvider>
                 </QueryProvider>
             </body>
         </html>

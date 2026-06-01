@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { type ReactNode, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -66,15 +67,15 @@ export default function SettingsPage() {
 
         try {
             await navigator.clipboard.writeText(inviteCode);
-            alert('초대코드를 복사했습니다.');
+            await appAlert('초대코드를 복사했습니다.');
         } catch (error) {
             console.error(error);
-            alert('초대코드 복사 실패');
+            await appAlert('초대코드 복사 실패');
         }
     };
 
     const handleLogout = async () => {
-        const ok = confirm('로그아웃할까요?');
+        const ok = await appConfirm('로그아웃할까요?');
 
         if (!ok) return;
 
@@ -82,7 +83,7 @@ export default function SettingsPage() {
 
         if (error) {
             console.error(error);
-            alert('로그아웃 실패');
+            await appAlert('로그아웃 실패');
             return;
         }
 
@@ -104,7 +105,7 @@ export default function SettingsPage() {
 
         if (friendshipError) {
             console.error(friendshipError);
-            alert('탈퇴 처리 중 오류가 발생했습니다.');
+            await appAlert('탈퇴 처리 중 오류가 발생했습니다.');
             setDeleting(false);
             return;
         }
@@ -117,7 +118,7 @@ export default function SettingsPage() {
 
         if (ownedGroupsError) {
             console.error(ownedGroupsError);
-            alert('탈퇴 처리 중 오류가 발생했습니다.');
+            await appAlert('탈퇴 처리 중 오류가 발생했습니다.');
             setDeleting(false);
             return;
         }
@@ -132,7 +133,7 @@ export default function SettingsPage() {
 
             if (deleteOwnedError) {
                 console.error(deleteOwnedError);
-                alert('탈퇴 처리 중 오류가 발생했습니다.');
+                await appAlert('탈퇴 처리 중 오류가 발생했습니다.');
                 setDeleting(false);
                 return;
             }
@@ -145,7 +146,7 @@ export default function SettingsPage() {
 
         if (deleteUserGroupsError) {
             console.error(deleteUserGroupsError);
-            alert('탈퇴 처리 중 오류가 발생했습니다.');
+            await appAlert('탈퇴 처리 중 오류가 발생했습니다.');
             setDeleting(false);
             return;
         }

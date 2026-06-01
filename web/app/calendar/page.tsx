@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
@@ -60,6 +61,7 @@ type CalendarEvent = {
     display_relation?: 'my_owner' | 'my_invite_pending' | 'my_invite_accepted' | 'other_owner' | 'other_invite_accepted';
     invite_profile_id?: string;
     invite_is_agree?: boolean;
+    is_holiday?: boolean;
 };
 
 type MyInvitedEventRpcRow = CalendarEvent & {
@@ -139,8 +141,9 @@ function parseHolidayXml(xmlText: string): Record<string, HolidayInfo> {
 }
 
 function formatPopupDate(dateStr: string): string {
-    const [year, month, day] = dateStr.split('-');
-    return `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일`;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const weekday = ['일', '월', '화', '수', '목', '금', '토'][new Date(year, month - 1, day).getDay()];
+    return `${year}년 ${month}월 ${day}일 (${weekday})`;
 }
 
 function formatMonthNavLabel(date: Date): string {
@@ -166,6 +169,7 @@ function isSameDate(start: string, end: string): boolean {
 }
 
 function getDisplayPriority(event: CalendarEvent): number {
+    if (event.is_holiday) return 0;
     if (event.is_allday) return 1;
     // 미수락 초대는 사용자가 확인/수락해야 하므로 같은 날짜의 친구 일정 노출보다 앞에 둡니다.
     if (event.display_relation === 'my_invite_pending') return 2;
@@ -196,10 +200,12 @@ function isMyInviteEvent(event: CalendarEvent): boolean {
 }
 
 function canSeeEventDetail(event: CalendarEvent): boolean {
+    if (event.is_holiday) return false;
     return isMyOwnedEvent(event) || isMyInviteEvent(event);
 }
 
 function getOwnerName(event: CalendarEvent, ownerNameById: Map<string, string>): string {
+    if (event.is_holiday) return '공휴일';
     return ownerNameById.get(event.user_id) || '이름 없음';
 }
 
@@ -208,6 +214,7 @@ function getEventDisplayTitle(event: CalendarEvent, ownerNameById: Map<string, s
 }
 
 function getEventBaseColor(event: CalendarEvent): string {
+    if (event.is_holiday) return 'rgba(220, 38, 38, 0.6)';
     if (isMyOwnedEvent(event) || isAcceptedMyInvite(event)) return MY_EVENT_COLOR;
     if (isPendingMyInvite(event)) return PENDING_INVITE_COLOR;
     return GROUP_EVENT_COLOR;
@@ -219,6 +226,7 @@ function getStartMinutes(event: CalendarEvent): number {
 }
 
 function getOwnershipSortRank(event: CalendarEvent): number {
+    if (event.is_holiday) return -1;
     return isMyOwnedEvent(event) ? 0 : 1;
 }
 
@@ -281,6 +289,7 @@ export default function CalendarPage() {
     const [masterFilterMode, setMasterFilterMode] = useState<typeof MASTER_FILTER_MY_ONLY | typeof MASTER_FILTER_GROUP>(MASTER_FILTER_GROUP);
     const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
     const [isMemberFilterOpen, setIsMemberFilterOpen] = useState(false);
+    const memberFilterRef = useRef<HTMLDivElement | null>(null);
     const previousGroupIdRef = useRef<number | null | undefined>(undefined);
     const [myUserId, setMyUserId] = useState<string | null>(null);
     const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -350,6 +359,17 @@ export default function CalendarPage() {
             router.push('/login');
         }
     }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
+
+    useEffect(() => {
+        if (!isMemberFilterOpen) return;
+
+        const handlePointerDown = (event: PointerEvent) => {
+            if (!memberFilterRef.current?.contains(event.target as Node)) setIsMemberFilterOpen(false);
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
+    }, [isMemberFilterOpen]);
 
     useEffect(() => {
         let isCanceled = false;
@@ -869,14 +889,24 @@ export default function CalendarPage() {
         fetchEvents,
     ]);
 
+    const createHolidayEvent = (dateStr: string, holiday: HolidayInfo): CalendarEvent => ({
+        id: `holiday:${dateStr}`,
+        title: holiday.dateName,
+        detail: null,
+        start_at: `${dateStr}T00:00:00`,
+        end_at: `${dateStr}T23:59:59`,
+        user_id: '__holiday__',
+        is_hidden: false,
+        is_allday: true,
+        is_holiday: true,
+    });
+
     const getEventsForDate = (dateStr: string): CalendarEvent[] => {
-        return events
-            .filter((event) => {
-                const dayStart = new Date(`${dateStr}T00:00:00`);
-                const dayEnd = new Date(`${dateStr}T23:59:59`);
-                return new Date(event.start_at) <= dayEnd && new Date(event.end_at) >= dayStart;
-            })
-            .sort(compareCalendarEvents);
+        const dayStart = new Date(`${dateStr}T00:00:00`);
+        const dayEnd = new Date(`${dateStr}T23:59:59`);
+        const dayEvents = events.filter((event) => new Date(event.start_at) <= dayEnd && new Date(event.end_at) >= dayStart);
+        const holiday = holidayByDate[dateStr];
+        return (holiday ? [createHolidayEvent(dateStr, holiday), ...dayEvents] : dayEvents).sort(compareCalendarEvents);
     };
 
     const resetForm = () => {
@@ -1033,14 +1063,14 @@ export default function CalendarPage() {
             .eq('status', 'accepted')
             .or(`requester_id.eq.${myUserId},addressee_id.eq.${myUserId}`);
         setIsFriendSearching(false);
-        if (error) { console.error(error); alert('친구 검색 실패'); return; }
+        if (error) { console.error(error); await appAlert('친구 검색 실패'); return; }
         type FriendshipSearchRow = { requester_id: string; addressee_id: string; requester: Person | Person[] | null; addressee: Person | Person[] | null; };
         const friends = ((data || []) as FriendshipSearchRow[]).map((row) => normalizeProfile(row.requester_id === myUserId ? row.addressee : row.requester)).filter(Boolean) as Person[];
         setFriendSearchResults(friends.filter((friend) => !keyword || (friend.nickname || '').includes(keyword)).sort((a, b) => (a.nickname || '').localeCompare(b.nickname || '')));
     };
 
-    const addInviteAttendee = (profile: Person) => {
-        if (attendees.some((attendee) => attendee.profile_id === profile.id)) { alert('이미 추가된 사용자에요'); return; }
+    const addInviteAttendee = async (profile: Person) => {
+        if (attendees.some((attendee) => attendee.profile_id === profile.id)) { await appAlert('이미 추가된 사용자에요'); return; }
         setAttendees((prev) => [...prev, { profile_id: profile.id, nickname: profile.nickname, is_agree: false, isOwner: false }]);
         setIsInviteSearchOpen(false); setFriendSearchKeyword(''); setFriendSearchResults([]);
     };
@@ -1198,22 +1228,22 @@ export default function CalendarPage() {
         const trimmedDetail = detail.trim();
 
         if (trimmedTitle.length < 1) {
-            alert('일정 제목을 입력해주세요.');
+            await appAlert('일정 제목을 입력해주세요.');
             return;
         }
 
         if (trimmedTitle.length > EVENT_TITLE_MAX_LENGTH) {
-            alert(`일정 제목은 ${EVENT_TITLE_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`일정 제목은 ${EVENT_TITLE_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
         if (trimmedDetail.length > EVENT_DETAIL_MAX_LENGTH) {
-            alert(`세부내용은 ${EVENT_DETAIL_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`세부내용은 ${EVENT_DETAIL_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
         if (start >= end) {
-            alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+            await appAlert('종료 시간은 시작 시간보다 늦어야 합니다.');
             return;
         }
 
@@ -1277,7 +1307,7 @@ export default function CalendarPage() {
         } catch (error) {
             console.error(error);
             const message = error instanceof Error ? error.message : '알 수 없는 오류';
-            alert(`일정 저장 실패. 변경사항을 롤백했습니다.\n${message}`);
+            await appAlert(`일정 저장 실패. 변경사항을 롤백했습니다.\n${message}`);
             return;
         }
 
@@ -1313,7 +1343,7 @@ export default function CalendarPage() {
     const handleDeleteEventById = async (eventId: string) => {
         if (!myUserId) return;
 
-        const ok = confirm('일정을 삭제할까요?');
+        const ok = await appConfirm('일정을 삭제할까요?');
         if (!ok) return;
 
         try {
@@ -1330,7 +1360,7 @@ export default function CalendarPage() {
             }
         } catch (error) {
             console.error(error);
-            alert('삭제 실패');
+            await appAlert('삭제 실패');
             return;
         }
 
@@ -1366,7 +1396,7 @@ export default function CalendarPage() {
 
         if (error) {
             console.error(error);
-            alert('댓글을 불러오지 못했습니다.');
+            await appAlert('댓글을 불러오지 못했습니다.');
             return;
         }
 
@@ -1426,7 +1456,7 @@ export default function CalendarPage() {
 
     const handleAcceptInvite = async () => {
         if (!detailEvent || !myUserId) return;
-        const ok = confirm('초대를 받으시겠습니까?'); if (!ok) return;
+        const ok = await appConfirm('초대를 받으시겠습니까?'); if (!ok) return;
 
         const { error: rpcError } = await supabase.rpc('respond_event_invite', {
             p_event_id: Number(detailEvent.id),
@@ -1440,7 +1470,7 @@ export default function CalendarPage() {
                 .update({ is_agree: true })
                 .eq('event_id', Number(detailEvent.id))
                 .eq('profile_id', myUserId);
-            if (error) { console.error(error); alert('초대 수락 실패'); return; }
+            if (error) { console.error(error); await appAlert('초대 수락 실패'); return; }
         }
 
         await refreshInviteAfterResponse();
@@ -1448,7 +1478,7 @@ export default function CalendarPage() {
 
     const handleCancelInvite = async () => {
         if (!detailEvent || !myUserId) return;
-        const ok = confirm(detailEvent.invite_is_agree ? '참석을 취소하시겠습니까?' : '초대를 받지 않으시겠습니까?'); if (!ok) return;
+        const ok = await appConfirm(detailEvent.invite_is_agree ? '참석을 취소하시겠습니까?' : '초대를 받지 않으시겠습니까?'); if (!ok) return;
 
         const { error: rpcError } = await supabase.rpc('respond_event_invite', {
             p_event_id: Number(detailEvent.id),
@@ -1462,7 +1492,7 @@ export default function CalendarPage() {
                 .delete()
                 .eq('event_id', Number(detailEvent.id))
                 .eq('profile_id', myUserId);
-            if (error) { console.error(error); alert('초대 취소 실패'); return; }
+            if (error) { console.error(error); await appAlert('초대 취소 실패'); return; }
         }
 
         await refreshInviteAfterResponse();
@@ -1473,11 +1503,11 @@ export default function CalendarPage() {
 
         const trimmedComment = commentInput.trim();
         if (!trimmedComment) {
-            alert('댓글 내용을 입력해주세요.');
+            await appAlert('댓글 내용을 입력해주세요.');
             return;
         }
         if (trimmedComment.length > COMMENT_MAX_LENGTH) {
-            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -1494,7 +1524,7 @@ export default function CalendarPage() {
 
         if (error) {
             console.error(error);
-            alert('댓글 등록 실패');
+            await appAlert('댓글 등록 실패');
             return;
         }
 
@@ -1518,11 +1548,11 @@ export default function CalendarPage() {
 
         const trimmedComment = editingCommentInput.trim();
         if (!trimmedComment) {
-            alert('댓글 내용을 입력해주세요.');
+            await appAlert('댓글 내용을 입력해주세요.');
             return;
         }
         if (trimmedComment.length > COMMENT_MAX_LENGTH) {
-            alert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
+            await appAlert(`댓글은 ${COMMENT_MAX_LENGTH}자 이하만 가능합니다.`);
             return;
         }
 
@@ -1538,7 +1568,7 @@ export default function CalendarPage() {
 
         if (error) {
             console.error(error);
-            alert('댓글 수정 실패');
+            await appAlert('댓글 수정 실패');
             return;
         }
 
@@ -1549,7 +1579,7 @@ export default function CalendarPage() {
     const handleDeleteComment = async (comment: CommentRow) => {
         if (!detailEvent || comment.profile_id !== myUserId) return;
 
-        const ok = confirm('댓글을 삭제할까요?');
+        const ok = await appConfirm('댓글을 삭제할까요?');
         if (!ok) return;
 
         const { error } = await supabase
@@ -1561,7 +1591,7 @@ export default function CalendarPage() {
 
         if (error) {
             console.error(error);
-            alert('댓글 삭제 실패');
+            await appAlert('댓글 삭제 실패');
             return;
         }
 
@@ -1639,7 +1669,10 @@ export default function CalendarPage() {
         return isSameDate(startDate, endDate) ? getValidEndSlots(startTime) : START_TIME_SLOTS.concat('24:00');
     };
 
-    const calendarEvents = sortCalendarEvents(filteredEvents).flatMap((event) => {
+    const holidayEvents = Object.entries(holidayByDate).map(([dateStr, holiday]) => createHolidayEvent(dateStr, holiday));
+    const visibleCalendarEvents = [...holidayEvents, ...filteredEvents];
+
+    const calendarEvents = sortCalendarEvents(visibleCalendarEvents).flatMap((event) => {
         const baseColor = getEventBaseColor(event);
         const color = event.is_hidden ? `${baseColor}${HIDDEN_EVENT_COLOR_ALPHA}` : baseColor;
         const orderStartAt = getStartMinutes(event);
@@ -1660,6 +1693,7 @@ export default function CalendarPage() {
                 isHidden: event.is_hidden,
                 userId: event.user_id,
                 ownerName: getOwnerName(event, ownerNameById),
+                isHoliday: Boolean(event.is_holiday),
                 isOwner: isMyOwnedEvent(event),
                 isMyInvite: isMyInviteEvent(event),
                 orderPriority: getDisplayPriority(event),
@@ -1753,7 +1787,7 @@ export default function CalendarPage() {
                             setIsMemberFilterOpen(false);
                         }}
                     />
-                    <div className="relative pl-3">
+                    <div ref={memberFilterRef} className="relative pl-3">
                         <button
                             className="h-9 rounded-xl border border-[var(--oc-divider-strong)] bg-white px-3 text-xs font-semibold text-[var(--oc-text)] shadow-sm disabled:bg-[var(--oc-surface-2)] disabled:text-[var(--oc-text-tertiary)]"
                             disabled={!isGroupFilterEnabled}
@@ -1863,17 +1897,10 @@ export default function CalendarPage() {
                                 return classNames;
                             }}
                             dayCellContent={(arg) => {
-                                const dateStr = formatLocalDateString(arg.date);
-                                const holiday = holidayByDate[dateStr];
-                                const isRedDay = Boolean(holiday) || arg.date.getDay() === 0 || arg.date.getDay() === 6;
+                                const isRedDay = arg.date.getDay() === 0 || arg.date.getDay() === 6;
 
                                 return (
                                     <div className="ourcal-day-cell-content">
-                                        {holiday && (
-                                            <span className="ourcal-holiday-name" title={holiday.dateName}>
-                                                {holiday.dateName}
-                                            </span>
-                                        )}
                                         <span className={isRedDay ? 'ourcal-red-day-number' : undefined}>{arg.date.getDate()}</span>
                                     </div>
                                 );
@@ -1975,6 +2002,7 @@ export default function CalendarPage() {
                                 <ul>
                                     {popupEvents.map((event) => {
                                         const isOwner = isMyOwnedEvent(event);
+                                        const isHoliday = Boolean(event.is_holiday);
                                         const isHiddenFromMe = event.is_hidden && !canSeeEventDetail(event);
                                         const color = getEventBaseColor(event);
                                         const ownerName = getOwnerName(event, ownerNameById);
@@ -1986,10 +2014,10 @@ export default function CalendarPage() {
                                                 <div className="flex items-center gap-3 border-b border-[var(--oc-divider)] bg-white px-5 py-4">
                                                     <button
                                                         className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
-                                                            isHiddenFromMe ? 'cursor-default' : ''
+                                                            isHiddenFromMe || isHoliday ? 'cursor-default' : ''
                                                         }`}
                                                         onClick={() => {
-                                                            if (isHiddenFromMe) return;
+                                                            if (isHiddenFromMe || isHoliday) return;
                                                             handleListEventClick(event);
                                                         }}
                                                     >
@@ -2000,16 +2028,18 @@ export default function CalendarPage() {
                                                         <div className="min-w-0 flex-1">
                                                             <p className="truncate text-sm font-semibold">{displayTitle}</p>
                                                             <p className="text-xs text-gray-500">
-                                                                {formatEventTimeLabel(event)}
-                                                                {!isOwner && ownerName && !isHiddenFromMe ? ` · ${ownerName}` : ''}
+                                                                {isHoliday ? '공휴일 · 하루 종일' : `${formatEventTimeLabel(event)}${!isOwner && ownerName && !isHiddenFromMe ? ` · ${ownerName}` : ''}`}
                                                             </p>
                                                         </div>
                                                     </button>
-                                                    {canShowPopupCommentCount(event) && (
+                                                    {!isHoliday && canShowPopupCommentCount(event) && commentCount > 0 && (
                                                         <span className="shrink-0 text-xs font-semibold text-gray-500" aria-label={`댓글 ${commentCount}개`}>
                                                             📝{commentCount}
                                                         </span>
                                                     )}
+                                                    <span className="shrink-0 text-xs font-semibold text-[var(--oc-text-secondary)]">
+                                                        {formatEventTimeLabel(event)}
+                                                    </span>
                                                     {isOwner && (
                                                         <button
                                                             className="shrink-0 rounded bg-red-500 px-3 py-1 text-xs font-semibold text-white"
@@ -2042,164 +2072,134 @@ export default function CalendarPage() {
             )}
 
             {detailEvent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(11,15,31,0.42)] p-4" onClick={() => setDetailEvent(null)}>
-                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-5 shadow-[var(--oc-elevation)]" onClick={(e) => e.stopPropagation()}>
-                        <div className="mb-4 flex items-start justify-between gap-3">
-                            <h2 className="text-xl font-bold">{detailEvent.title}</h2>
-
-                            <div className="flex gap-2">
-                                {detailEvent.user_id === myUserId && (
-                                    <button
-                                        className="rounded bg-gray-900 px-3 py-1 text-sm text-white"
-                                        onClick={handleEditFromDetail}
-                                    >
-                                        수정
-                                    </button>
-                                )}
-                                {detailEvent.invite_profile_id === myUserId && !detailEvent.invite_is_agree && (
-                                    <>
-                                        <button className="rounded bg-blue-600 px-3 py-1 text-sm text-white" onClick={handleAcceptInvite}>참석하기</button>
-                                        <button className="rounded bg-red-500 px-3 py-1 text-sm text-white" onClick={handleCancelInvite}>참석거절</button>
-                                    </>
-                                )}
-                                {detailEvent.invite_profile_id === myUserId && detailEvent.invite_is_agree && (
-                                    <button className="rounded bg-red-500 px-3 py-1 text-sm text-white" onClick={handleCancelInvite}>참석취소</button>
-                                )}
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setDetailEvent(null)}>
+                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[28px]" onClick={(e) => e.stopPropagation()}>
+                        <div className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
+                        <div className="border-b border-[var(--oc-divider)] px-5 pb-4 pt-3">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                    <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--oc-primary)]">Schedule detail</p>
+                                    <h2 className="truncate text-xl font-extrabold tracking-[-0.03em] text-[var(--oc-text)]">{detailEvent.title}</h2>
+                                </div>
                                 <button
-                                    className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-sm font-semibold text-[var(--oc-text-secondary)]"
+                                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--oc-surface-2)] text-[var(--oc-text-secondary)]"
+                                    aria-label="닫기"
                                     onClick={() => {
                                         setDetailEvent(null);
                                         handleCancelEditComment();
                                     }}
                                 >
-                                    닫기
+                                    ×
                                 </button>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2">
+                                {detailEvent.user_id === myUserId && (
+                                    <button className="rounded-xl bg-[var(--oc-text)] px-3 py-2 text-xs font-semibold text-white" onClick={handleEditFromDetail}>수정</button>
+                                )}
+                                {detailEvent.invite_profile_id === myUserId && !detailEvent.invite_is_agree && (
+                                    <>
+                                        <button className="rounded-xl bg-[var(--oc-primary)] px-3 py-2 text-xs font-semibold text-white" onClick={handleAcceptInvite}>참석하기</button>
+                                        <button className="rounded-xl bg-red-500 px-3 py-2 text-xs font-semibold text-white" onClick={handleCancelInvite}>참석거절</button>
+                                    </>
+                                )}
+                                {detailEvent.invite_profile_id === myUserId && detailEvent.invite_is_agree && (
+                                    <button className="rounded-xl bg-red-500 px-3 py-2 text-xs font-semibold text-white" onClick={handleCancelInvite}>참석취소</button>
+                                )}
                             </div>
                         </div>
 
-                        <p className="mb-4 text-sm text-gray-500">
-                            {detailEvent.is_allday
-                                ? `하루 종일 · ${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`
-                                : `${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`}
-                        </p>
+                        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                            <div className="mb-4 rounded-2xl border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-4">
+                                <p className="mb-1 text-xs font-bold text-[var(--oc-text-tertiary)]">시간</p>
+                                <p className="text-sm font-semibold text-[var(--oc-text)]">
+                                    {detailEvent.is_allday
+                                        ? `하루 종일 · ${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`
+                                        : `${formatDateTimeText(detailEvent.start_at)} - ${formatDateTimeText(detailEvent.end_at)}`}
+                                </p>
+                            </div>
 
-                        <div className="mb-5 whitespace-pre-wrap rounded border bg-gray-50 p-3 text-sm text-gray-700">
-                            {detailEvent.detail || '세부내용이 없습니다.'}
-                        </div>
+                            <div className="mb-4 rounded-2xl border border-[var(--oc-divider)] bg-white p-4">
+                                <p className="mb-2 text-xs font-bold text-[var(--oc-text-tertiary)]">세부내용</p>
+                                <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--oc-text-secondary)]">{detailEvent.detail || '세부내용이 없습니다.'}</p>
+                            </div>
 
-                        <div className="mb-5 rounded border p-3">
-                            <p className="mb-2 text-sm font-semibold">참석자 명단</p>
-                            <div className="h-[15vh] space-y-2 overflow-y-auto pr-1">
-                                {attendees.map((attendee) => {
-                                    const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
+                            <div className="mb-4 rounded-2xl border border-[var(--oc-divider)] bg-white p-4">
+                                <p className="mb-3 text-sm font-extrabold tracking-[-0.02em] text-[var(--oc-text)]">참석자 명단</p>
+                                <div className="max-h-[16vh] space-y-2 overflow-y-auto pr-1">
+                                    {attendees.map((attendee) => {
+                                        const statusText = attendee.isOwner ? '소유자' : attendee.is_agree ? '참석예정' : '초대중';
+
+                                        return (
+                                            <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-[var(--oc-surface-2)] px-3 py-2 text-xs">
+                                                <p className="truncate font-bold text-[var(--oc-text)]">{attendee.nickname || '이름 없음'}</p>
+                                                <p className="shrink-0 font-semibold text-[var(--oc-text-secondary)]">{statusText}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="mb-5 rounded-2xl border border-[var(--oc-divider)] bg-white p-3">
+                                <div className="flex gap-2">
+                                    <input
+                                        className="min-w-0 flex-1 rounded-xl border border-[var(--oc-divider-strong)] px-3 py-2 text-sm outline-none focus:border-[var(--oc-primary)]"
+                                        placeholder="댓글을 입력하세요"
+                                        value={commentInput}
+                                        maxLength={COMMENT_MAX_LENGTH}
+                                        onChange={(e) => setCommentInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleCreateComment();
+                                        }}
+                                    />
+                                    <button className="rounded-xl bg-[var(--oc-text)] px-4 py-2 text-sm font-semibold text-white" onClick={handleCreateComment}>등록</button>
+                                </div>
+                                <div className="mt-1 text-right text-xs text-gray-500">{commentInput.trim().length} / {COMMENT_MAX_LENGTH}</div>
+                            </div>
+
+                            <div className="max-h-[22vh] space-y-3 overflow-y-auto pr-1">
+                                {comments.length === 0 && <p className="rounded-2xl bg-[var(--oc-surface-2)] p-4 text-center text-sm text-[var(--oc-text-secondary)]">아직 댓글이 없습니다.</p>}
+
+                                {comments.map((comment) => {
+                                    const isMyComment = comment.profile_id === myUserId;
+                                    const isEditing = editingCommentId === comment.id;
 
                                     return (
-                                        <div key={attendee.profile_id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded border p-2 text-xs">
-                                            <p className="truncate font-semibold">{attendee.nickname || '이름 없음'}</p>
-                                            <p className="shrink-0 text-gray-500">{statusText}</p>
+                                        <div key={comment.id} className="rounded-2xl border border-[var(--oc-divider)] bg-white p-3">
+                                            <div className="mb-2 flex items-center justify-between gap-2">
+                                                <div>
+                                                    <p className="text-sm font-bold text-[var(--oc-text)]">{comment.profile?.nickname || '이름 없음'}</p>
+                                                    <p className="text-xs text-[var(--oc-text-tertiary)]">{formatDateTimeText(comment.created_at)}</p>
+                                                </div>
+
+                                                {isMyComment && !isEditing && (
+                                                    <div className="flex gap-2 text-xs font-semibold">
+                                                        <button className="text-[var(--oc-text-secondary)]" onClick={() => handleStartEditComment(comment)}>수정</button>
+                                                        <button className="text-red-500" onClick={() => handleDeleteComment(comment)}>삭제</button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {isEditing ? (
+                                                <div className="mt-2">
+                                                    <textarea
+                                                        className="min-h-20 w-full resize-y rounded-xl border border-[var(--oc-divider-strong)] p-2 text-sm outline-none focus:border-[var(--oc-primary)]"
+                                                        value={editingCommentInput}
+                                                        maxLength={COMMENT_MAX_LENGTH}
+                                                        onChange={(e) => setEditingCommentInput(e.target.value)}
+                                                    />
+                                                    <div className="mt-1 text-right text-xs text-gray-500">{editingCommentInput.trim().length} / {COMMENT_MAX_LENGTH}</div>
+                                                    <div className="mt-2 flex justify-end gap-2">
+                                                        <button className="rounded-xl bg-[var(--oc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--oc-text-secondary)]" onClick={handleCancelEditComment}>취소</button>
+                                                        <button className="rounded-xl bg-[var(--oc-text)] px-3 py-1.5 text-xs font-semibold text-white" onClick={() => handleUpdateComment(comment)}>저장</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--oc-text-secondary)]">{comment.contents}</p>
+                                            )}
                                         </div>
                                     );
                                 })}
                             </div>
-                        </div>
-
-                        <div className="mb-5 flex gap-2">
-                            <input
-                                className="flex-1 rounded border p-2 text-sm"
-                                placeholder="댓글을 입력하세요"
-                                value={commentInput}
-                                maxLength={COMMENT_MAX_LENGTH}
-                                onChange={(e) => setCommentInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        handleCreateComment();
-                                    }
-                                }}
-                            />
-                            <button
-                                className="rounded bg-black px-4 py-2 text-sm text-white"
-                                onClick={handleCreateComment}
-                            >
-                                등록
-                            </button>
-                        </div>
-                        <div className="-mt-4 mb-5 text-right text-xs text-gray-500">
-                            {commentInput.trim().length} / {COMMENT_MAX_LENGTH}
-                        </div>
-
-                        <div className="h-[20vh] space-y-3 overflow-y-auto pr-1">
-                            {comments.length === 0 && (
-                                <p className="text-sm text-gray-500">아직 댓글이 없습니다.</p>
-                            )}
-
-                            {comments.map((comment) => {
-                                const isMyComment = comment.profile_id === myUserId;
-                                const isEditing = editingCommentId === comment.id;
-
-                                return (
-                                    <div key={comment.id} className="rounded border p-3">
-                                        <div className="mb-1 flex items-center justify-between gap-2">
-                                            <div>
-                                                <p className="text-sm font-semibold">
-                                                    {comment.profile?.nickname || '이름 없음'}
-                                                </p>
-                                                <p className="text-xs text-gray-400">
-                                                    {formatDateTimeText(comment.created_at)}
-                                                </p>
-                                            </div>
-
-                                            {isMyComment && !isEditing && (
-                                                <div className="flex gap-2 text-xs">
-                                                    <button
-                                                        className="text-gray-600"
-                                                        onClick={() => handleStartEditComment(comment)}
-                                                    >
-                                                        수정
-                                                    </button>
-                                                    <button
-                                                        className="text-red-500"
-                                                        onClick={() => handleDeleteComment(comment)}
-                                                    >
-                                                        삭제
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {isEditing ? (
-                                            <div className="mt-2">
-                                                <textarea
-                                                    className="min-h-20 w-full resize-y rounded border p-2 text-sm"
-                                                    value={editingCommentInput}
-                                                    maxLength={COMMENT_MAX_LENGTH}
-                                                    onChange={(e) => setEditingCommentInput(e.target.value)}
-                                                />
-                                                <div className="mt-1 text-right text-xs text-gray-500">
-                                                    {editingCommentInput.trim().length} / {COMMENT_MAX_LENGTH}
-                                                </div>
-                                                <div className="mt-2 flex justify-end gap-2">
-                                                    <button
-                                                        className="rounded bg-gray-200 px-3 py-1 text-xs"
-                                                        onClick={handleCancelEditComment}
-                                                    >
-                                                        취소
-                                                    </button>
-                                                    <button
-                                                        className="rounded-xl bg-[var(--oc-text)] px-3 py-1.5 text-xs font-semibold text-white"
-                                                        onClick={() => handleUpdateComment(comment)}
-                                                    >
-                                                        저장
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="whitespace-pre-wrap text-sm text-gray-700">
-                                                {comment.contents}
-                                            </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
                         </div>
                     </div>
                 </div>
