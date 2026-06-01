@@ -406,20 +406,15 @@ export default function CalendarPage() {
         setDragRange(null);
     };
 
-    const handleCalendarPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (event.pointerType === 'mouse' && event.button !== 0) return;
-        if (pendingRange) return;
+    const startRangeLongPressTimer = (clientX: number, clientY: number) => {
+        if (pendingRange || longPressTimerRef.current || isRangeDraggingRef.current) return;
 
-        if (event.pointerType !== 'mouse') {
-            swipeStartRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
-            hasSwipeIntentRef.current = false;
-        }
-
-        const dateStr = getDateFromPointer(event.clientX, event.clientY);
+        const dateStr = getDateFromPointer(clientX, clientY);
         if (!dateStr) return;
 
         dragStartDateRef.current = dateStr;
         longPressTimerRef.current = setTimeout(() => {
+            longPressTimerRef.current = null;
             if (hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
             try {
                 navigator.vibrate?.(15);
@@ -429,6 +424,30 @@ export default function CalendarPage() {
             isRangeDraggingRef.current = true;
             setDragRange({ start: dateStr, end: dateStr });
         }, RANGE_LONG_PRESS_DELAY_MS);
+    };
+
+    const finishRangeDrag = (clientX: number, clientY: number) => {
+        if (!isRangeDraggingRef.current || !dragStartDateRef.current) return false;
+
+        const endDateStr = getDateFromPointer(clientX, clientY) || dragStartDateRef.current;
+        const selectedRange = normalizeDateRange(dragStartDateRef.current, endDateStr);
+        clearRangeDrag();
+        setPopupDate(null);
+        setPendingRange(selectedRange);
+        return true;
+    };
+
+    const handleCalendarPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        if (pendingRange) return;
+
+        if (event.pointerType !== 'mouse') {
+            swipeStartRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+            hasSwipeIntentRef.current = false;
+            return;
+        }
+
+        startRangeLongPressTimer(event.clientX, event.clientY);
     };
 
     const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -501,24 +520,28 @@ export default function CalendarPage() {
         }
 
         event.preventDefault();
-        const endDateStr = getDateFromPointer(event.clientX, event.clientY) || dragStartDateRef.current;
-        const selectedRange = normalizeDateRange(dragStartDateRef.current, endDateStr);
-        clearRangeDrag();
-        setPopupDate(null);
-        setPendingRange(selectedRange);
+        finishRangeDrag(event.clientX, event.clientY);
     };
 
     const handleCalendarTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
         const touch = event.touches[0];
-        if (!touch) return;
+        if (!touch || pendingRange) return;
         touchSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
         hasTouchSwipeIntentRef.current = false;
+        startRangeLongPressTimer(touch.clientX, touch.clientY);
     };
 
     const handleCalendarTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
         const touchStart = touchSwipeStartRef.current;
         const touch = event.touches[0];
-        if (!touchStart || !touch || isRangeDraggingRef.current) return;
+        if (!touchStart || !touch) return;
+
+        if (isRangeDraggingRef.current && dragStartDateRef.current) {
+            const dateStr = getDateFromPointer(touch.clientX, touch.clientY);
+            if (dateStr) setDragRange(normalizeDateRange(dragStartDateRef.current, dateStr));
+            event.preventDefault();
+            return;
+        }
 
         const deltaX = touch.clientX - touchStart.x;
         const deltaY = touch.clientY - touchStart.y;
@@ -537,7 +560,21 @@ export default function CalendarPage() {
         const touch = event.changedTouches[0];
         touchSwipeStartRef.current = null;
 
-        if (!touchStart || !touch || !hasTouchSwipeIntentRef.current || isRangeDraggingRef.current) {
+        if (!touch) {
+            hasTouchSwipeIntentRef.current = false;
+            return;
+        }
+
+        if (isRangeDraggingRef.current) {
+            event.preventDefault();
+            swipeStartRef.current = null;
+            hasSwipeIntentRef.current = false;
+            hasTouchSwipeIntentRef.current = false;
+            finishRangeDrag(touch.clientX, touch.clientY);
+            return;
+        }
+
+        if (!touchStart || !hasTouchSwipeIntentRef.current) {
             hasTouchSwipeIntentRef.current = false;
             return;
         }
