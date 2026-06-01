@@ -125,11 +125,9 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
       child: Scaffold(
         extendBody: true,
         body: Padding(
-          // WebView는 edge-to-edge로 깔되, 시스템 영역과 겹치지 않게 Flutter shell에서 보정합니다.
+          // WebView는 전체 화면을 덮게 두고, 웹 내부에서 상단 여백을 잡습니다.
+          // 그래야 웹 fixed overlay(dim)가 상단 여백 영역까지 함께 덮습니다.
           padding: EdgeInsets.only(
-            top:
-                MediaQuery.paddingOf(context).top +
-                MediaQuery.sizeOf(context).height * 0.05,
             bottom: MediaQuery.paddingOf(context).bottom,
           ),
           child: Stack(

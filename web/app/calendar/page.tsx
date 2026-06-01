@@ -1694,7 +1694,7 @@ export default function CalendarPage() {
 
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
-                    <div className="flex h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex max-h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
                         <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
@@ -1706,11 +1706,17 @@ export default function CalendarPage() {
                             </button>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-y-auto">
+                        <div className="min-h-0 max-h-[calc(58vh-7.5rem)] overflow-y-auto">
                             {popupEvents.length === 0 ? (
                                 <div className="px-5 py-9 text-center tracking-[-0.01em]">
                                     <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">일정이 없습니다.</p>
                                     <p className="mt-1 text-[11px] text-[var(--oc-text-tertiary)]">이 날을 우리만의 시간으로 채워볼까요?</p>
+                                    <button
+                                        className="mx-auto mt-5 flex h-11 min-w-36 items-center justify-center rounded-xl bg-[var(--oc-primary)] px-5 text-sm font-bold text-white"
+                                        onClick={() => openCreateForm(popupDate)}
+                                    >
+                                        일정 추가
+                                    </button>
                                 </div>
                             ) : (
                                 <ul>
@@ -1767,14 +1773,16 @@ export default function CalendarPage() {
                             )}
                         </div>
 
-                        <div className="shrink-0 bg-white px-4 pb-2 pt-3">
-                            <button
-                                className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
-                                onClick={() => openCreateForm(popupDate)}
-                            >
-                                일정 추가
-                            </button>
-                        </div>
+                        {popupEvents.length > 0 && (
+                            <div className="shrink-0 bg-white px-4 pb-2 pt-3">
+                                <button
+                                    className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
+                                    onClick={() => openCreateForm(popupDate)}
+                                >
+                                    일정 추가
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -2009,12 +2017,13 @@ export default function CalendarPage() {
                                         );
                                     })}
                                 </div>
-                                <label className="mt-3 flex items-center gap-2 border-t border-[var(--oc-divider)] pt-3 text-sm font-semibold text-[var(--oc-text-secondary)]">
-                                    <input className="accent-[var(--oc-primary)]" type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
-                                    하루 종일
-                                </label>
                             </div>
                         </div>
+
+                        <label className="mb-3 flex items-center gap-2 px-1 text-sm font-semibold text-[var(--oc-text-secondary)]">
+                            <input className="accent-[var(--oc-primary)]" type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
+                            하루 종일
+                        </label>
 
                         <div className="mb-3 grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-end">
                             <div className="grid grid-cols-2 gap-2">
