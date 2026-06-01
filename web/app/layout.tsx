@@ -1,6 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import BottomNavigation from '@/components/BottomNavigation';
+import ButtonDebounceGuard from '@/components/ButtonDebounceGuard';
 import PushTokenRegistrar from '@/components/PushTokenRegistrar';
 import QueryProvider from '@/components/QueryProvider';
 import './globals.css';
@@ -25,6 +26,12 @@ export const metadata: Metadata = {
     },
 };
 
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+};
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -34,10 +41,11 @@ export default function RootLayout({
         <html lang="ko">
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <QueryProvider>
-                    <main className="min-h-[100dvh] bg-[var(--oc-bg)] pt-[5vh] pb-[var(--oc-nav-height)]">
+                    <main className="min-h-[100dvh] bg-[var(--oc-bg)] pt-[calc(env(safe-area-inset-top)+5vh)] pb-[var(--oc-nav-height)]">
                         <div className="w-full">{children}</div>
                     </main>
                     <PushTokenRegistrar />
+                    <ButtonDebounceGuard />
                     <BottomNavigation />
                 </QueryProvider>
             </body>

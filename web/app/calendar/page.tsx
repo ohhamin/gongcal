@@ -1711,6 +1711,12 @@ export default function CalendarPage() {
                                 <div className="px-5 py-9 text-center tracking-[-0.01em]">
                                     <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">일정이 없습니다.</p>
                                     <p className="mt-1 text-[11px] text-[var(--oc-text-tertiary)]">이 날을 우리만의 시간으로 채워볼까요?</p>
+                                    <button
+                                        className="mx-auto mt-5 flex h-11 min-w-36 items-center justify-center rounded-xl bg-[var(--oc-primary)] px-5 text-sm font-bold text-white"
+                                        onClick={() => openCreateForm(popupDate)}
+                                    >
+                                        일정 추가
+                                    </button>
                                 </div>
                             ) : (
                                 <ul>
@@ -1767,14 +1773,16 @@ export default function CalendarPage() {
                             )}
                         </div>
 
-                        <div className="shrink-0 bg-white px-4 pb-2 pt-3">
-                            <button
-                                className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
-                                onClick={() => openCreateForm(popupDate)}
-                            >
-                                일정 추가
-                            </button>
-                        </div>
+                        {popupEvents.length > 0 && (
+                            <div className="shrink-0 bg-white px-4 pb-2 pt-3">
+                                <button
+                                    className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
+                                    onClick={() => openCreateForm(popupDate)}
+                                >
+                                    일정 추가
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
