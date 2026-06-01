@@ -98,7 +98,7 @@ type CommentQueryRow = Omit<CommentRow, 'profile'> & {
 
 const MY_EVENT_COLOR = '#3B82F6';
 const GROUP_EVENT_COLOR = '#10B981';
-const PENDING_INVITE_COLOR = '#F97316';
+const PENDING_INVITE_COLOR = GROUP_EVENT_COLOR;
 // 8자리 hex의 99는 약 60% opacity입니다. 숨김 일정은 내용 대신 존재 여부만 보여줍니다.
 const HIDDEN_EVENT_COLOR_ALPHA = '99';
 const EVENT_TITLE_MAX_LENGTH = 50;
@@ -1678,15 +1678,19 @@ export default function CalendarPage() {
         const orderStartAt = getStartMinutes(event);
         const orderOwnerRank = getOwnershipSortRank(event);
 
-        return getDateStringsInRange(event.start_at, event.end_at).map((dateStr) => ({
+        return getDateStringsInRange(event.start_at, event.end_at).map((dateStr) => {
+            const isPendingInviteEvent = isPendingMyInvite(event);
+
+            return {
             id: `${event.id}:${dateStr}`,
             title: getEventDisplayTitle(event, ownerNameById),
             start: dateStr,
             allDay: true,
             orderPriority: getDisplayPriority(event),
             orderStartAt,
-            backgroundColor: color,
+            backgroundColor: isPendingInviteEvent ? 'rgba(16, 185, 129, 0.12)' : color,
             borderColor: color,
+            classNames: isPendingInviteEvent ? ['ourcal-pending-invite-event'] : [],
             extendedProps: {
                 originalEventId: String(event.id),
                 displayDate: dateStr,
@@ -1696,12 +1700,14 @@ export default function CalendarPage() {
                 isHoliday: Boolean(event.is_holiday),
                 isOwner: isMyOwnedEvent(event),
                 isMyInvite: isMyInviteEvent(event),
+                isPendingInvite: isPendingMyInvite(event),
                 orderPriority: getDisplayPriority(event),
                 orderStartAt,
                 orderOwnerRank,
                 orderTitle: event.title,
             },
-        }));
+        };
+        });
     });
 
     const popupEvents = popupDate ? getEventsForDate(popupDate).filter(isEventVisibleByMemberFilter) : [];
@@ -1919,13 +1925,17 @@ export default function CalendarPage() {
                             eventContent={(arg) => {
                                 const isOwner = Boolean(arg.event.extendedProps.isOwner);
                                 const isHidden = Boolean(arg.event.extendedProps.isHidden);
+                                const isPendingInvite = Boolean(arg.event.extendedProps.isPendingInvite);
                                 const ownerName = String(arg.event.extendedProps.ownerName || '');
                                 const shouldShowOwnerName = !isOwner && !isHidden && ownerName.length > 0;
 
                                 return (
-                                    <div className="truncate text-[10px] font-semibold leading-none">
-                                        <span>{arg.event.title}</span>
-                                        {shouldShowOwnerName && <span className="ml-1 opacity-80">{ownerName}</span>}
+                                    <div className="flex min-w-0 items-center text-[10px] font-semibold leading-none">
+                                        <span className="min-w-0 flex-1 truncate">
+                                            {arg.event.title}
+                                            {shouldShowOwnerName && <span className="ml-1 opacity-80">{ownerName}</span>}
+                                        </span>
+                                        {isPendingInvite && <span className="ourcal-pending-invite-dot" aria-hidden="true" />}
                                     </div>
                                 );
                             }}
@@ -2003,6 +2013,7 @@ export default function CalendarPage() {
                                     {popupEvents.map((event) => {
                                         const isOwner = isMyOwnedEvent(event);
                                         const isHoliday = Boolean(event.is_holiday);
+                                        const isPendingInvite = isPendingMyInvite(event);
                                         const isHiddenFromMe = event.is_hidden && !canSeeEventDetail(event);
                                         const color = getEventBaseColor(event);
                                         const ownerName = getOwnerName(event, ownerNameById);
@@ -2026,7 +2037,10 @@ export default function CalendarPage() {
                                                             style={{ backgroundColor: color }}
                                                         />
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="truncate text-sm font-semibold">{displayTitle}</p>
+                                                            <p className="flex min-w-0 items-center text-sm font-semibold">
+                                                                <span className="min-w-0 truncate">{displayTitle}</span>
+                                                                {isPendingInvite && <span className="ourcal-pending-invite-dot" aria-hidden="true" />}
+                                                            </p>
                                                             <p className="text-xs text-gray-500">
                                                                 {isHoliday ? '공휴일 · 하루 종일' : `${formatEventTimeLabel(event)}${!isOwner && ownerName && !isHiddenFromMe ? ` · ${ownerName}` : ''}`}
                                                             </p>
