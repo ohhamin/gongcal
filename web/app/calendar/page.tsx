@@ -69,7 +69,7 @@ type MyInvitedEventRpcRow = CalendarEvent & {
 
 type Person = Profile;
 
-const RANGE_LONG_PRESS_DELAY_MS = 1000;
+const RANGE_LONG_PRESS_DELAY_MS = 800;
 
 type HolidayInfo = {
     dateName: string;
