@@ -1,5 +1,30 @@
 # OPENCLAW
 
+## v.0.4.29 - 2026-06-01
+
+### 업데이트 내용
+
+- GitHub Actions의 release version 출력 스텝을 multiline shell로 변경해 command substitution quote 오류를 수정했습니다.
+- README/package 기준 버전을 `v.0.4.28`에서 `v.0.4.29`로 업데이트했습니다.
+
+### 작업 메모
+
+- release artifact 예시는 현재 버전 기준 `ourcal-release-v.0.4.29`입니다.
+
+## v.0.4.28 - 2026-06-01
+
+### 업데이트 내용
+
+- `web/public/logo_white_512.png` 기준으로 웹/PWA 아이콘과 Android launcher icon 리소스를 갱신했습니다.
+- 앱에서 동일한 원본 로고를 추적할 수 있도록 `app/assets/logo_white_256.png`, `app/assets/logo_white_512.png`를 추가했습니다.
+- GitHub Actions release APK artifact 이름을 README/package 기준 현재 버전이 포함된 `ourcal-release-v.x.y.z` 형식으로 변경했습니다.
+- Flutter release 빌드의 `--build-name`도 현재 package 버전을 사용하도록 연결했습니다.
+- README/package 기준 버전을 `v.0.4.27`에서 `v.0.4.28`로 업데이트했습니다.
+
+### 작업 메모
+
+- release artifact 예시는 현재 버전 기준 `ourcal-release-v.0.4.28`입니다.
+
 ## v.0.4.27 - 2026-06-01
 
 ### 업데이트 내용

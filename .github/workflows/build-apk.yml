@@ -65,6 +65,12 @@ jobs:
           storeFile=upload-keystore.jks
           EOF_KEY_PROPERTIES
 
+      - name: Resolve release version
+        id: release_version
+        run: |
+          RELEASE_VERSION="$(node -p "require('../package.json').version")"
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -75,10 +81,10 @@ jobs:
         run: flutter test
 
       - name: Build release APK with FCM
-        run: flutter build apk --release --dart-define=OURCAL_ENABLE_FCM=true
+        run: flutter build apk --release --dart-define=OURCAL_ENABLE_FCM=true --build-name=${{ steps.release_version.outputs.version }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ourcal-release-apk
+          name: ourcal-release-v.${{ steps.release_version.outputs.version }}
           path: app/build/app/outputs/flutter-apk/app-release.apk
