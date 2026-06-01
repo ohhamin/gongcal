@@ -305,6 +305,7 @@ export default function CalendarPage() {
     const [friendSearchResults, setFriendSearchResults] = useState<Person[]>([]);
     const [isFriendSearching, setIsFriendSearching] = useState(false);
     const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
+    const [pendingRange, setPendingRange] = useState<{ start: string; end: string } | null>(null);
     const [holidayByDate, setHolidayByDate] = useState<Record<string, HolidayInfo>>({});
     const [calendarMonthDate, setCalendarMonthDate] = useState(() => new Date());
     const calendarContainerRef = useRef<HTMLDivElement | null>(null);
@@ -373,6 +374,7 @@ export default function CalendarPage() {
 
     const closeForm = () => {
         setIsFormOpen(false);
+        setPendingRange(null);
         setIsInviteSearchOpen(false);
         setFriendSearchKeyword('');
         setFriendSearchResults([]);
@@ -404,6 +406,7 @@ export default function CalendarPage() {
 
     const handleCalendarPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        if (pendingRange) return;
 
         if (event.pointerType !== 'mouse') {
             swipeStartRef.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
@@ -494,7 +497,8 @@ export default function CalendarPage() {
         const endDateStr = getDateFromPointer(event.clientX, event.clientY) || dragStartDateRef.current;
         const selectedRange = normalizeDateRange(dragStartDateRef.current, endDateStr);
         clearRangeDrag();
-        openCreateForm(selectedRange.start, selectedRange.end, true);
+        setPopupDate(null);
+        setPendingRange(selectedRange);
     };
 
     const handleCalendarTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -824,6 +828,7 @@ export default function CalendarPage() {
     };
 
     const openCreateForm = (dateStr = getTodayString(), targetEndDate = dateStr, allDay = false) => {
+        setPendingRange(null);
         resetForm();
         setStartDate(dateStr);
         setEndDate(targetEndDate);
@@ -840,6 +845,7 @@ export default function CalendarPage() {
     const openCreateFormFromSelect = (info: DateSelectArg) => {
         info.view.calendar.unselect();
         setDragRange(null);
+        setPendingRange(null);
         const selectedStart = formatLocalDateString(info.start);
         const selectedEnd = formatLocalDateString(addDays(info.end, -1));
         openCreateForm(selectedStart, selectedEnd, true);
@@ -1317,13 +1323,13 @@ export default function CalendarPage() {
     };
 
     const handleDateClick = (info: DateClickArg) => {
-        if (shouldSuppressNextClickRef.current) return;
+        if (shouldSuppressNextClickRef.current || pendingRange) return;
         setPopupDate(info.dateStr);
     };
 
     const handleEventClick = (info: EventClickArg) => {
         info.jsEvent.preventDefault();
-        if (shouldSuppressNextClickRef.current) return;
+        if (shouldSuppressNextClickRef.current || pendingRange) return;
 
         // 여러 날짜에 걸친 이벤트는 실제로 누른 날짜 칸의 목록을 열어야 합니다.
         const targetElement = info.jsEvent.target as HTMLElement | null;
@@ -1596,6 +1602,25 @@ export default function CalendarPage() {
 
     const popupEvents = popupDate ? getEventsForDate(popupDate).filter(isEventVisibleByMemberFilter) : [];
 
+    const isDateInPendingRange = (dateStr: string) => {
+        return Boolean(pendingRange && dateStr >= pendingRange.start && dateStr <= pendingRange.end);
+    };
+
+    const formatPendingRangeLabel = (range: { start: string; end: string }) => {
+        const [startYear, startMonth, startDay] = range.start.split('-').map(Number);
+        const [endYear, endMonth, endDay] = range.end.split('-').map(Number);
+
+        if (range.start === range.end) return `${startMonth}월 ${startDay}일`;
+        if (startYear === endYear && startMonth === endMonth) return `${startMonth}월 ${startDay}일 – ${endDay}일`;
+        return `${startMonth}/${startDay} – ${endMonth}/${endDay}`;
+    };
+
+    const getPendingRangeDayCount = (range: { start: string; end: string }) => {
+        const start = new Date(`${range.start}T00:00:00`);
+        const end = new Date(`${range.end}T00:00:00`);
+        return Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+    };
+
     return (
         <div
             className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
@@ -1715,7 +1740,7 @@ export default function CalendarPage() {
                     touchSwipeStartRef.current = null;
                     hasTouchSwipeIntentRef.current = false;
                 }}
-                style={{ touchAction: 'pan-y' }}
+                style={{ touchAction: 'none', userSelect: 'none' }}
                 onPointerCancel={() => {
                     swipeStartRef.current = null;
                     touchSwipeStartRef.current = null;
@@ -1761,7 +1786,9 @@ export default function CalendarPage() {
 
                                 if (arg.date.getDay() === 0 || arg.date.getDay() === 6) classNames.push('ourcal-weekend');
                                 if (holidayByDate[dateStr]) classNames.push('ourcal-holiday');
-                                if (dragRange && dateStr >= dragRange.start && dateStr <= dragRange.end) classNames.push('ourcal-range-selected');
+                                if ((dragRange && dateStr >= dragRange.start && dateStr <= dragRange.end) || isDateInPendingRange(dateStr)) {
+                                    classNames.push('ourcal-range-selected');
+                                }
 
                                 return classNames;
                             }}
@@ -1816,6 +1843,37 @@ export default function CalendarPage() {
                 )}
             </div>
 
+            {pendingRange && (
+                <div className="fixed right-3 left-3 z-30 flex items-center gap-3 rounded-2xl border border-[var(--oc-divider)] bg-white py-2.5 pr-2.5 pl-4 shadow-[var(--oc-elevation)]"
+                    style={{ bottom: 'calc(var(--oc-nav-height) + 1rem)' }}>
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[#FFF3B0] text-[#7A5B00]">
+                        <Icon name="calendar" size={18} color="currentColor" />
+                    </div>
+                    <div className="min-w-0 flex-1 tracking-[-0.02em]">
+                        <p className="truncate text-[13px] font-bold text-[var(--oc-text)]">{formatPendingRangeLabel(pendingRange)}</p>
+                        <p className="mt-0.5 text-[11px] font-medium text-[var(--oc-text-secondary)]">
+                            {getPendingRangeDayCount(pendingRange)}일 선택됨 · 일정을 추가할까요?
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full bg-[var(--oc-surface-2)] text-[var(--oc-text-secondary)]"
+                        aria-label="범위 선택 취소"
+                        onClick={() => setPendingRange(null)}
+                    >
+                        <span className="text-lg leading-none">×</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="flex h-[38px] shrink-0 items-center gap-1.5 rounded-xl bg-[var(--oc-primary)] px-4 text-[13px] font-semibold tracking-[-0.01em] text-white shadow-[0_4px_16px_rgba(30,58,138,0.33)]"
+                        onClick={() => openCreateForm(pendingRange.start, pendingRange.end, true)}
+                    >
+                        <Icon name="plus" size={16} color="currentColor" />
+                        <span>일정 추가</span>
+                    </button>
+                </div>
+            )}
+
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 pb-[var(--oc-nav-height)] sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
                     <div className="flex max-h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
@@ -1836,10 +1894,11 @@ export default function CalendarPage() {
                                     <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">일정이 없습니다.</p>
                                     <p className="mt-1 text-[11px] text-[var(--oc-text-tertiary)]">이 날을 우리만의 시간으로 채워볼까요?</p>
                                     <button
-                                        className="mx-auto mt-5 flex h-11 min-w-36 items-center justify-center rounded-xl bg-[var(--oc-primary)] px-5 text-sm font-bold text-white"
+                                        className="mx-auto mt-5 flex h-[50px] min-w-40 items-center justify-center gap-1.5 rounded-xl bg-[var(--oc-primary)] px-5 text-[14.5px] font-semibold tracking-[-0.01em] text-white shadow-[0_4px_18px_rgba(30,58,138,0.2)]"
                                         onClick={() => openCreateForm(popupDate)}
                                     >
-                                        일정 추가
+                                        <Icon name="plus" size={18} color="currentColor" />
+                                        <span>일정 추가</span>
                                     </button>
                                 </div>
                             ) : (
@@ -1900,10 +1959,11 @@ export default function CalendarPage() {
                         {popupEvents.length > 0 && (
                             <div className="shrink-0 bg-white px-4 pb-2 pt-3">
                                 <button
-                                    className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
+                                    className="flex h-[50px] w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--oc-primary)] px-4 text-[14.5px] font-semibold tracking-[-0.01em] text-white shadow-[0_4px_18px_rgba(30,58,138,0.2)]"
                                     onClick={() => openCreateForm(popupDate)}
                                 >
-                                    일정 추가
+                                    <Icon name="plus" size={18} color="currentColor" />
+                                    <span>일정 추가</span>
                                 </button>
                             </div>
                         )}
