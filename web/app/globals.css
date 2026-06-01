@@ -290,6 +290,27 @@ body {
     overflow: hidden !important;
 }
 
+.fc .fc-daygrid-event.ourcal-pending-invite-event {
+    border: 1px dashed var(--oc-pending-invite, #10b981) !important;
+    background: rgba(16, 185, 129, 0.12) !important;
+    box-shadow: none !important;
+}
+
+.fc .fc-daygrid-event.ourcal-pending-invite-event,
+.fc .fc-daygrid-event.ourcal-pending-invite-event * {
+    color: var(--oc-pending-invite, #10b981) !important;
+}
+
+.ourcal-pending-invite-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    margin-left: 3px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #ef4444;
+}
+
 .fc .fc-daygrid-more-link {
     display: block !important;
     height: 12px !important;
