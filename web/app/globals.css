@@ -292,7 +292,7 @@ body {
 
 .fc .fc-daygrid-event.ourcal-pending-invite-event {
     border: 1px dashed var(--oc-pending-invite, #10b981) !important;
-    background: rgba(16, 185, 129, 0.12) !important;
+    background: transparent !important;
     box-shadow: none !important;
 }
 
