@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FRIEND_LIMIT, getFriendshipCountByProfileId } from '@/lib/friendships';
 import { createNotificationWithPush } from '@/lib/pushNotifications';
@@ -53,7 +54,7 @@ export default function FriendsPanel() {
             window.setTimeout(() => setCopied(false), 1600);
         } catch (error) {
             console.error(error);
-            alert('초대코드 복사 실패');
+            await appAlert('초대코드 복사 실패');
         }
     };
 
@@ -113,7 +114,7 @@ export default function FriendsPanel() {
         }
 
         if (trimmedInviteCode.length !== INVITE_CODE_LENGTH) {
-            alert('초대코드 8자리를 입력해주세요.');
+            await appAlert('초대코드 8자리를 입력해주세요.');
             return;
         }
 
@@ -127,7 +128,7 @@ export default function FriendsPanel() {
 
         if (error) {
             console.error(error);
-            alert('사용자 검색 실패');
+            await appAlert('사용자 검색 실패');
             return;
         }
 
@@ -150,18 +151,18 @@ export default function FriendsPanel() {
         if (!user) return;
 
         if (friends.length >= FRIEND_LIMIT) {
-            alert(`친구는 최대 ${FRIEND_LIMIT}명까지 추가할 수 있습니다.`);
+            await appAlert(`친구는 최대 ${FRIEND_LIMIT}명까지 추가할 수 있습니다.`);
             return;
         }
 
         const alreadyFriend = friends.some((item) => item.friend.id === profile.id);
 
         if (alreadyFriend) {
-            alert('이미 친구인 사용자에요.');
+            await appAlert('이미 친구인 사용자에요.');
             return;
         }
 
-        const ok = confirm('친구 요청을 보낼까요?');
+        const ok = await appConfirm('친구 요청을 보낼까요?');
 
         if (!ok) return;
 
@@ -173,13 +174,13 @@ export default function FriendsPanel() {
             addresseeFriendCount = await getFriendshipCountByProfileId(profile.id);
         } catch (error) {
             console.error(error);
-            alert('친구 수 확인 실패');
+            await appAlert('친구 수 확인 실패');
             setLoading(false);
             return;
         }
 
         if (addresseeFriendCount >= FRIEND_LIMIT) {
-            alert(`친구가 ${FRIEND_LIMIT}명 이상 존재하는 유저에요`);
+            await appAlert(`친구가 ${FRIEND_LIMIT}명 이상 존재하는 유저에요`);
             setLoading(false);
             return;
         }
@@ -194,7 +195,7 @@ export default function FriendsPanel() {
 
         if (error) {
             console.error(error);
-            alert('이미 친구인 사용자에요.');
+            await appAlert('이미 친구인 사용자에요.');
             return;
         }
 
@@ -213,7 +214,7 @@ export default function FriendsPanel() {
 
         if (error) {
             console.error(error);
-            alert('친구 요청 수락 실패');
+            await appAlert('친구 요청 수락 실패');
             return;
         }
 
@@ -221,7 +222,7 @@ export default function FriendsPanel() {
     };
 
     const handleDeleteFriend = async (friendshipId: number) => {
-        const ok = confirm('친구를 삭제할까요?');
+        const ok = await appConfirm('친구를 삭제할까요?');
 
         if (!ok) return;
 
@@ -229,7 +230,7 @@ export default function FriendsPanel() {
 
         if (error) {
             console.error(error);
-            alert('친구 삭제 실패');
+            await appAlert('친구 삭제 실패');
             return;
         }
 

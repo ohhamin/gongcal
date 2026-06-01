@@ -1,5 +1,6 @@
 'use client';
 
+import { appAlert } from '@/components/AppDialogProvider';
 import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
@@ -19,12 +20,12 @@ export default function SetupProfilePage() {
         if (!user) return;
 
         if (nickname.length < 1) {
-            alert('닉네임을 입력해주세요.');
+            await appAlert('닉네임을 입력해주세요.');
             return;
         }
 
         if (nickname.length > 5) {
-            alert('닉네임은 5자 이하만 가능합니다.');
+            await appAlert('닉네임은 5자 이하만 가능합니다.');
             return;
         }
 
@@ -36,7 +37,7 @@ export default function SetupProfilePage() {
             .eq('id', user.id);
 
         if (error) {
-            alert('이미 사용중인 닉네임입니다.');
+            await appAlert('이미 사용중인 닉네임입니다.');
             return;
         }
 
