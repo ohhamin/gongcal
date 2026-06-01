@@ -69,6 +69,8 @@ type MyInvitedEventRpcRow = CalendarEvent & {
 
 type Person = Profile;
 
+const RANGE_LONG_PRESS_DELAY_MS = 1000;
+
 type HolidayInfo = {
     dateName: string;
 };
@@ -419,9 +421,14 @@ export default function CalendarPage() {
         dragStartDateRef.current = dateStr;
         longPressTimerRef.current = setTimeout(() => {
             if (hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
+            try {
+                navigator.vibrate?.(15);
+            } catch {
+                // Vibration is best-effort and unavailable on some browsers/WebViews.
+            }
             isRangeDraggingRef.current = true;
             setDragRange({ start: dateStr, end: dateStr });
-        }, 1000);
+        }, RANGE_LONG_PRESS_DELAY_MS);
     };
 
     const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1775,9 +1782,9 @@ export default function CalendarPage() {
                             selectable={true}
                             selectMirror={true}
                             unselectAuto={true}
-                            longPressDelay={1000}
-                            selectLongPressDelay={1000}
-                            eventLongPressDelay={1000}
+                            longPressDelay={RANGE_LONG_PRESS_DELAY_MS}
+                            selectLongPressDelay={RANGE_LONG_PRESS_DELAY_MS}
+                            eventLongPressDelay={RANGE_LONG_PRESS_DELAY_MS}
                             select={openCreateFormFromSelect}
                             dayMaxEvents={3}
                             dayCellClassNames={(arg) => {
