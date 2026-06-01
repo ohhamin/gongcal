@@ -69,7 +69,7 @@ type MyInvitedEventRpcRow = CalendarEvent & {
 
 type Person = Profile;
 
-const RANGE_SELECT_DELAY_MS = 700;
+const RANGE_SELECT_DELAY_MS = 650;
 const RANGE_HAPTIC_DELAY_MS = 1000;
 
 type HolidayInfo = {
@@ -317,6 +317,7 @@ export default function CalendarPage() {
     const isRangeDraggingRef = useRef(false);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hapticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestRangePointRef = useRef<{ x: number; y: number } | null>(null);
     const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
     const touchSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const hasSwipeIntentRef = useRef(false);
@@ -407,6 +408,7 @@ export default function CalendarPage() {
             hapticTimerRef.current = null;
         }
         dragStartDateRef.current = null;
+        latestRangePointRef.current = null;
         isRangeDraggingRef.current = false;
         calendarRef.current?.getApi().unselect();
         setDragRange(null);
@@ -419,11 +421,14 @@ export default function CalendarPage() {
         if (!dateStr) return;
 
         dragStartDateRef.current = dateStr;
+        latestRangePointRef.current = { x: clientX, y: clientY };
         longPressTimerRef.current = setTimeout(() => {
             longPressTimerRef.current = null;
             if (hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
+            const latestPoint = latestRangePointRef.current;
+            const latestDateStr = latestPoint ? getDateFromPointer(latestPoint.x, latestPoint.y) : null;
             isRangeDraggingRef.current = true;
-            setDragRange({ start: dateStr, end: dateStr });
+            setDragRange(normalizeDateRange(dateStr, latestDateStr || dateStr));
         }, RANGE_SELECT_DELAY_MS);
 
         hapticTimerRef.current = setTimeout(() => {
@@ -462,6 +467,7 @@ export default function CalendarPage() {
     };
 
     const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        latestRangePointRef.current = { x: event.clientX, y: event.clientY };
         const swipeStart = swipeStartRef.current;
         if (swipeStart && swipeStart.pointerId === event.pointerId && !isRangeDraggingRef.current) {
             const deltaX = event.clientX - swipeStart.x;
@@ -550,6 +556,7 @@ export default function CalendarPage() {
         const touchStart = touchSwipeStartRef.current;
         const touch = event.touches[0];
         if (!touchStart || !touch) return;
+        latestRangePointRef.current = { x: touch.clientX, y: touch.clientY };
 
         if (isRangeDraggingRef.current && dragStartDateRef.current) {
             const dateStr = getDateFromPointer(touch.clientX, touch.clientY);
