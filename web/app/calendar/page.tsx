@@ -1708,7 +1708,10 @@ export default function CalendarPage() {
 
                         <div className="min-h-0 flex-1 overflow-y-auto">
                             {popupEvents.length === 0 ? (
-                                <p className="py-8 text-center text-sm text-gray-500">일정이 없습니다.</p>
+                                <div className="px-5 py-9 text-center tracking-[-0.01em]">
+                                    <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">일정이 없습니다.</p>
+                                    <p className="mt-1 text-[11px] text-[var(--oc-text-tertiary)]">이 날을 우리만의 시간으로 채워볼까요?</p>
+                                </div>
                             ) : (
                                 <ul>
                                     {popupEvents.map((event) => {
@@ -1941,7 +1944,7 @@ export default function CalendarPage() {
             )}
 
             <button
-                className="fixed right-5 bottom-20 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--oc-primary)] text-3xl font-bold text-white shadow-xl shadow-blue-900/25 transition hover:bg-[var(--oc-primary-strong)]"
+                className="fixed right-5 bottom-[calc(var(--oc-nav-height)+2vh)] z-30 flex h-[3.15rem] w-[3.15rem] items-center justify-center rounded-full bg-[var(--oc-primary)] text-[1.7rem] font-bold text-white shadow-xl shadow-blue-900/25 transition hover:bg-[var(--oc-primary-strong)]"
                 aria-label="일정 추가"
                 onClick={() => openCreateForm()}
             >
@@ -2006,6 +2009,10 @@ export default function CalendarPage() {
                                         );
                                     })}
                                 </div>
+                                <label className="mt-3 flex items-center gap-2 border-t border-[var(--oc-divider)] pt-3 text-sm font-semibold text-[var(--oc-text-secondary)]">
+                                    <input className="accent-[var(--oc-primary)]" type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
+                                    하루 종일
+                                </label>
                             </div>
                         </div>
 
@@ -2051,32 +2058,46 @@ export default function CalendarPage() {
                         </div>
 
                         <div className="mb-5 rounded-2xl border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-3 text-sm">
-                            <label className="mb-3 flex items-center gap-2 font-semibold text-[var(--oc-text-secondary)]">
-                                <input className="accent-[var(--oc-primary)]" type="checkbox" checked={isAllDay} onChange={(e) => handleAllDayChange(e.target.checked)} />
-                                하루 종일
-                            </label>
-
-                            <div className="flex items-center justify-between gap-2">
-                                <label className="flex items-center gap-2 font-semibold text-[var(--oc-text-secondary)]">
-                                    <input className="accent-[var(--oc-primary)]" type="checkbox" checked={!isHidden} onChange={(e) => setIsHidden(!e.target.checked)} />
-                                    상세 일정 함께 보기
-                                </label>
-                                <div className="relative inline-flex">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="relative min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <p className="font-semibold text-[var(--oc-text)]">공개 설정</p>
+                                        <button
+                                            type="button"
+                                            className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--oc-divider-strong)] text-[10px] font-bold text-[var(--oc-text-secondary)]"
+                                            aria-label="공개 설정 안내"
+                                            onClick={showVisibilityTooltip}
+                                        >
+                                            ?
+                                        </button>
+                                    </div>
                                     {isVisibilityTooltipOpen && (
-                                        <div className="absolute bottom-full left-1/2 mb-2 w-60 -translate-x-1/2 rounded-xl bg-[var(--oc-text)] px-3 py-2 text-center text-xs leading-relaxed text-white shadow-[var(--oc-elevation)]">
-                                            구성원에게는 시간만 노출되고 &apos;🔒&apos;로 표시됩니다.
+                                        <div className="absolute bottom-full left-0 z-10 mb-2 w-64 rounded-xl bg-[var(--oc-text)] px-3 py-2 text-xs leading-relaxed text-white shadow-[var(--oc-elevation)]">
+                                            일정은 다른 멤버의 캘린더에도 함께 표시됩니다. 공개는 제목과 세부 내용을 함께 볼 수 있고, 비공개는 일정 있음으로만 보여요.
                                         </div>
                                     )}
+                                </div>
+                                <div className="relative grid shrink-0 grid-cols-2 rounded-full border border-[var(--oc-divider)] bg-white p-0.5 text-xs font-bold">
+                                    <span className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full transition ${!isHidden ? 'left-0.5 bg-[var(--oc-primary)] shadow-sm' : 'left-[50%] bg-[var(--oc-surface-2)]'}`} />
                                     <button
                                         type="button"
-                                        className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--oc-divider-strong)] text-[10px] font-bold text-[var(--oc-text-secondary)]"
-                                        aria-label="상세 일정 함께 보기 안내"
-                                        onClick={showVisibilityTooltip}
+                                        className={`relative z-10 rounded-full px-3 py-1.5 transition ${!isHidden ? 'text-white' : 'text-[var(--oc-text-secondary)]'}`}
+                                        onClick={() => setIsHidden(false)}
                                     >
-                                        ?
+                                        공개
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`relative z-10 rounded-full px-3 py-1.5 transition ${isHidden ? 'text-[var(--oc-text)]' : 'text-[var(--oc-text-secondary)]'}`}
+                                        onClick={() => setIsHidden(true)}
+                                    >
+                                        비공개
                                     </button>
                                 </div>
                             </div>
+                            <p className="mt-2 text-[11.5px] leading-5 tracking-[-0.01em] text-[var(--oc-text-secondary)]">
+                                {!isHidden ? '멤버 모두 제목과 세부 일정을 볼 수 있어요.' : '멤버는 ‘일정 있음’으로만 볼 수 있고, 상세는 나만 볼 수 있어요.'}
+                            </p>
                         </div>
 
                         </div>
