@@ -1492,7 +1492,7 @@ export default function CalendarPage() {
     return (
         <div
             className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
-            style={{ height: 'calc(100dvh - var(--oc-nav-height) + 1px)' }}
+            style={{ height: 'calc(100dvh - var(--oc-content-top-padding) - var(--oc-nav-height) + 1px)' }}
         >
             <div className="mb-2 flex shrink-0 flex-col gap-2 px-3 pb-1">
                 <div className="flex items-center justify-between gap-2">
@@ -1693,7 +1693,7 @@ export default function CalendarPage() {
             </div>
 
             {popupDate && (
-                <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
+                <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 pb-[var(--oc-nav-height)] sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
                     <div className="flex max-h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
                         <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
