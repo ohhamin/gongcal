@@ -1492,7 +1492,7 @@ export default function CalendarPage() {
     return (
         <div
             className="mx-auto flex max-w-md flex-col bg-[var(--oc-surface)] text-[var(--oc-text)]"
-            style={{ height: 'calc(100dvh - 5.35rem)' }}
+            style={{ height: 'calc(100dvh - var(--oc-nav-height) + 1px)' }}
         >
             <div className="mb-2 flex shrink-0 flex-col gap-2 px-3 pb-1">
                 <div className="flex items-center justify-between gap-2">
@@ -1694,7 +1694,7 @@ export default function CalendarPage() {
 
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
-                    <div className="flex h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
                         <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
@@ -1706,11 +1706,11 @@ export default function CalendarPage() {
                             </button>
                         </div>
 
-                        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                        <div className="min-h-0 flex-1 overflow-y-auto">
                             {popupEvents.length === 0 ? (
                                 <p className="py-8 text-center text-sm text-gray-500">일정이 없습니다.</p>
                             ) : (
-                                <ul className="space-y-2">
+                                <ul>
                                     {popupEvents.map((event) => {
                                         const isOwner = isMyOwnedEvent(event);
                                         const isHiddenFromMe = event.is_hidden && !canSeeEventDetail(event);
@@ -1721,10 +1721,10 @@ export default function CalendarPage() {
 
                                         return (
                                             <li key={event.id}>
-                                                <div className="flex items-center gap-2 rounded-2xl border border-[var(--oc-divider)] bg-white p-3 shadow-sm">
+                                                <div className="flex items-center gap-3 border-b border-[var(--oc-divider)] bg-white px-5 py-4">
                                                     <button
                                                         className={`flex min-w-0 flex-1 items-center gap-3 text-left ${
-                                                            isHiddenFromMe ? 'cursor-default' : 'hover:bg-gray-50'
+                                                            isHiddenFromMe ? 'cursor-default' : ''
                                                         }`}
                                                         onClick={() => {
                                                             if (isHiddenFromMe) return;
@@ -1732,7 +1732,7 @@ export default function CalendarPage() {
                                                         }}
                                                     >
                                                         <span
-                                                            className="h-3 w-3 shrink-0 rounded-full"
+                                                            className="h-2 w-2 shrink-0 rounded-full"
                                                             style={{ backgroundColor: color }}
                                                         />
                                                         <div className="min-w-0 flex-1">
@@ -1764,9 +1764,9 @@ export default function CalendarPage() {
                             )}
                         </div>
 
-                        <div className="shrink-0 border-t border-[var(--oc-divider)] bg-white p-4">
+                        <div className="shrink-0 bg-white px-4 pb-2 pt-3">
                             <button
-                                className="w-full rounded-2xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20"
+                                className="w-full rounded-xl bg-[var(--oc-primary)] px-4 py-3 text-sm font-bold text-white"
                                 onClick={() => openCreateForm(popupDate)}
                             >
                                 일정 추가

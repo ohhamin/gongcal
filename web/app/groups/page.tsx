@@ -492,16 +492,16 @@ export default function GroupsPage() {
     const filteredFriends = friends.filter((friend) => (friend.nickname || '').includes(friendSearch.trim()));
 
     return (
-        <main className="mx-auto max-w-md text-[var(--oc-text)]">
-            <div className="mb-4 flex rounded-full border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-1 text-sm font-semibold">
+        <main className="mx-auto max-w-md px-[5vw] pt-3 text-[var(--oc-text)]">
+            <div className="mb-4 flex rounded-[14px] border border-[var(--oc-divider)] bg-[var(--oc-surface-2)] p-1 text-sm font-semibold">
                 <button
-                    className={`flex-1 rounded-full px-4 py-2 transition ${activeTab === 'friends' ? 'bg-white text-[var(--oc-text)] shadow' : 'text-[var(--oc-text-secondary)]'}`}
+                    className={`flex-1 rounded-[10px] px-4 py-2 transition ${activeTab === 'friends' ? 'bg-white text-[var(--oc-text)] shadow-sm' : 'text-[var(--oc-text-secondary)]'}`}
                     onClick={() => setActiveTab('friends')}
                 >
                     친구
                 </button>
                 <button
-                    className={`flex-1 rounded-full px-4 py-2 transition ${activeTab === 'groups' ? 'bg-white text-[var(--oc-text)] shadow' : 'text-[var(--oc-text-secondary)]'}`}
+                    className={`flex-1 rounded-[10px] px-4 py-2 transition ${activeTab === 'groups' ? 'bg-white text-[var(--oc-text)] shadow-sm' : 'text-[var(--oc-text-secondary)]'}`}
                     onClick={() => setActiveTab('groups')}
                 >
                     그룹
@@ -509,10 +509,12 @@ export default function GroupsPage() {
             </div>
 
             {activeTab === 'friends' ? (
-                <FriendsPanel />
+                <div className="-mx-[5vw]">
+                    <FriendsPanel />
+                </div>
             ) : (
                 <>
-                    <div className="mb-4 flex items-start justify-between gap-4 px-1">
+                    <div className="mb-4 flex items-start justify-between gap-4 px-1 pt-2">
                         <div className="min-w-0 flex-1">
                             <h1 className="text-2xl font-extrabold tracking-[-0.04em]">그룹 관리</h1>
                             <p className="mt-1 max-w-60 text-xs leading-5 tracking-[-0.01em] text-[var(--oc-text-secondary)]">

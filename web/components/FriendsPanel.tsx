@@ -251,7 +251,7 @@ export default function FriendsPanel() {
     }, [fetchFriends]);
 
     return (
-        <section className="mx-auto max-w-md text-[var(--oc-text)]">
+        <section className="mx-auto max-w-md px-[5vw] pt-3 text-[var(--oc-text)]">
             <div className="px-1 pb-3 pt-1">
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em]">친구</h1>
                 <p className="mt-1 text-xs font-medium tracking-[-0.01em] text-[var(--oc-text-secondary)]">
@@ -296,7 +296,7 @@ export default function FriendsPanel() {
                 </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-[var(--oc-divider)] bg-white">
+            <div className="overflow-hidden border-y border-[var(--oc-divider)] bg-white">
                 {acceptedFriends.length === 0 ? (
                     <p className="p-5 text-center text-sm text-[var(--oc-text-secondary)]">아직 추가된 친구가 없습니다.</p>
                 ) : (
@@ -314,7 +314,7 @@ export default function FriendsPanel() {
                                 <p className="mt-0.5 text-[11px] tracking-[-0.01em] text-[var(--oc-text-secondary)]">캘린더 친구 · 편집 가능</p>
                             </div>
                             <button
-                                className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500"
+                                className="bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-500"
                                 onClick={() => handleDeleteFriend(item.friendshipId)}
                             >
                                 삭제
@@ -327,7 +327,7 @@ export default function FriendsPanel() {
             {pendingFriends.length > 0 && (
                 <div className="mt-5">
                     <p className="mb-2 px-1 text-[11px] font-bold tracking-[0.04em] text-[var(--oc-text-secondary)]">초대 대기 중 {pendingFriends.length}</p>
-                    <div className="overflow-hidden rounded-2xl border border-[var(--oc-divider)] bg-white">
+                    <div className="overflow-hidden border-y border-[var(--oc-divider)] bg-white">
                         {pendingFriends.map((item, index) => (
                             <div
                                 key={item.friendshipId}
@@ -344,14 +344,14 @@ export default function FriendsPanel() {
                                 </div>
                                 {item.isReceivedRequest && (
                                     <button
-                                        className="rounded-lg bg-[var(--oc-primary)] px-3 py-1.5 text-xs font-bold text-white"
+                                        className="bg-[var(--oc-primary)] px-3 py-1.5 text-xs font-bold text-white"
                                         onClick={() => handleAcceptFriend(item.friendshipId)}
                                     >
                                         수락
                                     </button>
                                 )}
                                 <button
-                                    className="rounded-lg bg-[var(--oc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--oc-text-secondary)]"
+                                    className="bg-[var(--oc-surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--oc-text-secondary)]"
                                     onClick={() => handleDeleteFriend(item.friendshipId)}
                                 >
                                     취소
@@ -392,11 +392,11 @@ export default function FriendsPanel() {
                         </div>
 
                         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                            {searchResults.length === 0 && <p className="rounded-2xl border border-[var(--oc-divider)] p-4 text-center text-sm text-[var(--oc-text-secondary)]">검색 결과가 없습니다.</p>}
+                            {searchResults.length === 0 && <p className="border border-[var(--oc-divider)] p-4 text-center text-sm text-[var(--oc-text-secondary)]">검색 결과가 없습니다.</p>}
                             {searchResults.map((profile) => (
                                 <button
                                     key={profile.id}
-                                    className="flex w-full items-center justify-between rounded-2xl border border-[var(--oc-divider)] p-3 text-left hover:bg-[var(--oc-surface-2)]"
+                                    className="flex w-full items-center justify-between border border-[var(--oc-divider)] p-3 text-left hover:bg-[var(--oc-surface-2)]"
                                     onClick={() => handleRequestFriend(profile)}
                                     disabled={loading}
                                 >

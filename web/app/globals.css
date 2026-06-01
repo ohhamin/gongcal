@@ -17,6 +17,7 @@
     --oc-sunday: #e34545;
     --oc-saturday: #3656c2;
     --oc-elevation: 0 8px 32px rgba(11, 15, 31, 0.18);
+    --oc-nav-height: calc(4rem + 7.5vh);
     color-scheme: light;
 }
 
