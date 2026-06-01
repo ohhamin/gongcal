@@ -418,10 +418,10 @@ export default function CalendarPage() {
 
         dragStartDateRef.current = dateStr;
         longPressTimerRef.current = setTimeout(() => {
-            if (hasSwipeIntentRef.current) return;
+            if (hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
             isRangeDraggingRef.current = true;
             setDragRange({ start: dateStr, end: dateStr });
-        }, 250);
+        }, 1000);
     };
 
     const handleCalendarPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -845,10 +845,10 @@ export default function CalendarPage() {
     const openCreateFormFromSelect = (info: DateSelectArg) => {
         info.view.calendar.unselect();
         setDragRange(null);
-        setPendingRange(null);
         const selectedStart = formatLocalDateString(info.start);
         const selectedEnd = formatLocalDateString(addDays(info.end, -1));
-        openCreateForm(selectedStart, selectedEnd, true);
+        setPopupDate(null);
+        setPendingRange(normalizeDateRange(selectedStart, selectedEnd));
     };
 
     const openEditForm = (event: CalendarEvent) => {
@@ -1772,12 +1772,12 @@ export default function CalendarPage() {
                             events={calendarEvents}
                             dateClick={handleDateClick}
                             eventClick={handleEventClick}
-                            selectable={false}
-                            selectMirror={false}
-                            unselectAuto={false}
-                            longPressDelay={250}
-                            selectLongPressDelay={250}
-                            eventLongPressDelay={250}
+                            selectable={true}
+                            selectMirror={true}
+                            unselectAuto={true}
+                            longPressDelay={1000}
+                            selectLongPressDelay={1000}
+                            eventLongPressDelay={1000}
                             select={openCreateFormFromSelect}
                             dayMaxEvents={3}
                             dayCellClassNames={(arg) => {
