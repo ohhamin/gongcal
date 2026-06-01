@@ -1688,7 +1688,7 @@ export default function CalendarPage() {
             allDay: true,
             orderPriority: getDisplayPriority(event),
             orderStartAt,
-            backgroundColor: isPendingInviteEvent ? 'rgba(16, 185, 129, 0.12)' : color,
+            backgroundColor: isPendingInviteEvent ? 'transparent' : color,
             borderColor: color,
             classNames: isPendingInviteEvent ? ['ourcal-pending-invite-event'] : [],
             extendedProps: {
@@ -1710,7 +1710,7 @@ export default function CalendarPage() {
         });
     });
 
-    const popupEvents = popupDate ? getEventsForDate(popupDate).filter(isEventVisibleByMemberFilter) : [];
+    const popupEvents = popupDate ? getEventsForDate(popupDate).filter((event) => event.is_holiday || isEventVisibleByMemberFilter(event)) : [];
 
     const isDateInPendingRange = (dateStr: string) => {
         return Boolean(pendingRange && dateStr >= pendingRange.start && dateStr <= pendingRange.end);
@@ -1903,7 +1903,8 @@ export default function CalendarPage() {
                                 return classNames;
                             }}
                             dayCellContent={(arg) => {
-                                const isRedDay = arg.date.getDay() === 0 || arg.date.getDay() === 6;
+                                const dateStr = formatLocalDateString(arg.date);
+                                const isRedDay = Boolean(holidayByDate[dateStr]) || arg.date.getDay() === 0 || arg.date.getDay() === 6;
 
                                 return (
                                     <div className="ourcal-day-cell-content">
