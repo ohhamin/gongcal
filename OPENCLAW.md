@@ -1,5 +1,16 @@
 # OPENCLAW
 
+## v.0.4.29 - 2026-06-01
+
+### 업데이트 내용
+
+- GitHub Actions의 release version 출력 스텝을 multiline shell로 변경해 command substitution quote 오류를 수정했습니다.
+- README/package 기준 버전을 `v.0.4.28`에서 `v.0.4.29`로 업데이트했습니다.
+
+### 작업 메모
+
+- release artifact 예시는 현재 버전 기준 `ourcal-release-v.0.4.29`입니다.
+
 ## v.0.4.28 - 2026-06-01
 
 ### 업데이트 내용
