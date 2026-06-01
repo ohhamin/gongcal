@@ -214,8 +214,9 @@ body {
     text-align: center !important;
 }
 
-.fc .fc-day-today {
-    background: var(--oc-tint) !important;
+.fc .fc-day-today,
+.fc .fc-day-today .fc-daygrid-day-frame {
+    background: transparent !important;
 }
 
 .fc .fc-day-today .fc-daygrid-day-number span:last-child {
@@ -224,9 +225,11 @@ body {
     height: 1.25rem;
     align-items: center;
     justify-content: center;
+    border: 2px solid var(--oc-primary);
     border-radius: 999px;
-    background: var(--oc-primary);
-    color: white !important;
+    background: transparent;
+    color: var(--oc-primary) !important;
+    font-weight: 800;
 }
 
 .ourcal-day-cell-content {
@@ -296,7 +299,7 @@ body {
 }
 
 .fc .fc-highlight {
-    background: rgba(30, 58, 138, 0.12) !important;
+    background: transparent !important;
 }
 
 .fc .fc-daygrid-day.ourcal-range-selected,
