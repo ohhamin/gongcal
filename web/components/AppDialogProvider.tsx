@@ -16,14 +16,24 @@ type DialogApi = {
 };
 
 const DialogContext = createContext<DialogApi | null>(null);
+const pendingRequests: DialogRequest[] = [];
 let externalApi: DialogApi | null = null;
 
 export function appAlert(message: string) {
-    return externalApi?.alert(message) ?? Promise.resolve(window.alert(message));
+    if (externalApi) return externalApi.alert(message);
+
+    // Provider mount 전 호출도 브라우저 기본 alert로 떨어지지 않게 큐에 보관합니다.
+    return new Promise<void>((resolve) => {
+        pendingRequests.push({ kind: 'alert', message, resolve: () => resolve() });
+    });
 }
 
 export function appConfirm(message: string) {
-    return externalApi?.confirm(message) ?? Promise.resolve(window.confirm(message));
+    if (externalApi) return externalApi.confirm(message);
+
+    return new Promise<boolean>((resolve) => {
+        pendingRequests.push({ kind: 'confirm', message, resolve });
+    });
 }
 
 export function useAppDialog() {
@@ -33,19 +43,21 @@ export function useAppDialog() {
 }
 
 export default function AppDialogProvider({ children }: { children: ReactNode }) {
-    const [request, setRequest] = useState<DialogRequest | null>(null);
+    const [queue, setQueue] = useState<DialogRequest[]>(() => pendingRequests.splice(0));
+    const request = queue[0] || null;
 
     const api = useMemo<DialogApi>(() => ({
         alert: (message) => new Promise<void>((resolve) => {
-            setRequest({ kind: 'alert', message, resolve: () => resolve() });
+            setQueue((prev) => [...prev, { kind: 'alert', message, resolve: () => resolve() }]);
         }),
         confirm: (message) => new Promise<boolean>((resolve) => {
-            setRequest({ kind: 'confirm', message, resolve });
+            setQueue((prev) => [...prev, { kind: 'confirm', message, resolve }]);
         }),
     }), []);
 
     useEffect(() => {
         externalApi = api;
+
         return () => {
             if (externalApi === api) externalApi = null;
         };
@@ -53,7 +65,7 @@ export default function AppDialogProvider({ children }: { children: ReactNode })
 
     const close = (value: boolean) => {
         request?.resolve(value);
-        setRequest(null);
+        setQueue((prev) => prev.slice(1));
     };
 
     return (
