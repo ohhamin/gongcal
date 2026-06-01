@@ -69,7 +69,8 @@ type MyInvitedEventRpcRow = CalendarEvent & {
 
 type Person = Profile;
 
-const RANGE_LONG_PRESS_DELAY_MS = 800;
+const RANGE_SELECT_DELAY_MS = 800;
+const RANGE_HAPTIC_DELAY_MS = 1000;
 
 type HolidayInfo = {
     dateName: string;
@@ -315,6 +316,7 @@ export default function CalendarPage() {
     const dragStartDateRef = useRef<string | null>(null);
     const isRangeDraggingRef = useRef(false);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hapticTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const swipeStartRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
     const touchSwipeStartRef = useRef<{ x: number; y: number } | null>(null);
     const hasSwipeIntentRef = useRef(false);
@@ -400,6 +402,10 @@ export default function CalendarPage() {
             clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
         }
+        if (hapticTimerRef.current) {
+            clearTimeout(hapticTimerRef.current);
+            hapticTimerRef.current = null;
+        }
         dragStartDateRef.current = null;
         isRangeDraggingRef.current = false;
         calendarRef.current?.getApi().unselect();
@@ -416,14 +422,19 @@ export default function CalendarPage() {
         longPressTimerRef.current = setTimeout(() => {
             longPressTimerRef.current = null;
             if (hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
+            isRangeDraggingRef.current = true;
+            setDragRange({ start: dateStr, end: dateStr });
+        }, RANGE_SELECT_DELAY_MS);
+
+        hapticTimerRef.current = setTimeout(() => {
+            hapticTimerRef.current = null;
+            if (!isRangeDraggingRef.current || hasSwipeIntentRef.current || hasTouchSwipeIntentRef.current) return;
             try {
                 navigator.vibrate?.(15);
             } catch {
                 // Vibration is best-effort and unavailable on some browsers/WebViews.
             }
-            isRangeDraggingRef.current = true;
-            setDragRange({ start: dateStr, end: dateStr });
-        }, RANGE_LONG_PRESS_DELAY_MS);
+        }, RANGE_HAPTIC_DELAY_MS);
     };
 
     const finishRangeDrag = (clientX: number, clientY: number) => {
@@ -462,6 +473,10 @@ export default function CalendarPage() {
                 if (longPressTimerRef.current) {
                     clearTimeout(longPressTimerRef.current);
                     longPressTimerRef.current = null;
+                }
+                if (hapticTimerRef.current) {
+                    clearTimeout(hapticTimerRef.current);
+                    hapticTimerRef.current = null;
                 }
                 event.preventDefault();
             }
@@ -550,6 +565,10 @@ export default function CalendarPage() {
             if (longPressTimerRef.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
+            }
+            if (hapticTimerRef.current) {
+                clearTimeout(hapticTimerRef.current);
+                hapticTimerRef.current = null;
             }
             event.preventDefault();
         }
@@ -1819,9 +1838,9 @@ export default function CalendarPage() {
                             selectable={true}
                             selectMirror={true}
                             unselectAuto={true}
-                            longPressDelay={RANGE_LONG_PRESS_DELAY_MS}
-                            selectLongPressDelay={RANGE_LONG_PRESS_DELAY_MS}
-                            eventLongPressDelay={RANGE_LONG_PRESS_DELAY_MS}
+                            longPressDelay={RANGE_SELECT_DELAY_MS}
+                            selectLongPressDelay={RANGE_SELECT_DELAY_MS}
+                            eventLongPressDelay={RANGE_SELECT_DELAY_MS}
                             select={openCreateFormFromSelect}
                             dayMaxEvents={3}
                             dayCellClassNames={(arg) => {
