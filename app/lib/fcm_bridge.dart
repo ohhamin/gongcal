@@ -30,6 +30,11 @@ class FcmBridge {
 
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(alert: true, badge: true, sound: true);
+      await messaging.setAutoInitEnabled(true);
+
+      if (!kIsWeb && Platform.isIOS) {
+        await _waitForApnsToken(messaging);
+      }
 
       _token = await messaging.getToken();
       await injectTokenIntoWebView();
@@ -70,6 +75,14 @@ class FcmBridge {
       await _controller.runJavaScript(script);
     } catch (error) {
       debugPrint('FCM token injection failed: $error');
+    }
+  }
+
+  Future<void> _waitForApnsToken(FirebaseMessaging messaging) async {
+    for (var attempt = 0; attempt < 10; attempt += 1) {
+      final token = await messaging.getAPNSToken();
+      if (token != null && token.isNotEmpty) return;
+      await Future<void>.delayed(const Duration(milliseconds: 300));
     }
   }
 
