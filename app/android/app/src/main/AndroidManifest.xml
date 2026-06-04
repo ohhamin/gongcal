@@ -30,6 +30,8 @@
         </activity>
         <receiver
             android:name=".MonthCalendarWidgetProvider"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/month_calendar_widget_name"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
