@@ -1,5 +1,23 @@
 # OPENCLAW
 
+## v.0.4.45 - 2026-06-02
+
+### 업데이트 내용
+
+- 로그인 화면을 OURCAL 디자인 시스템에 맞춰 히어로/카드/소셜 버튼 형태로 재정리했습니다.
+- 로그인 OAuth 진행 중에는 디자인 시스템 기반 로딩 오버레이를 표시하도록 변경했습니다.
+- 로그인 콜백 처리 화면도 `OurcalSplash` 기반 로딩 화면으로 교체했습니다.
+- Flutter iOS 프로젝트 scaffold를 추가해 iOS 빌드 기반을 마련했습니다.
+- iOS 앱명, 앱 아이콘, 알림 background mode, APNs entitlement, Kakao/Chrome URL scheme query 설정을 추가했습니다.
+- iOS FCM 토큰 발급 안정성을 위해 APNs 토큰 대기 후 FCM 토큰을 요청하도록 보강했습니다.
+- README/app README에 iOS Firebase/Auth/Apple Developer 설정 중 Hamin이 해야 할 작업을 정리했습니다.
+- README/package 기준 버전을 `v.0.4.44`에서 `v.0.4.45`로 업데이트했습니다.
+
+### 작업 메모
+
+- 웹은 lint/build로 검증했고, Flutter는 Docker Flutter 환경에서 `flutter analyze`와 `flutter test`로 검증했습니다.
+- iOS 실제 빌드/서명은 macOS/Xcode 및 Apple Developer 설정이 필요해 로컬 Linux 환경에서는 수행하지 않았습니다.
+
 ## v.0.4.44 - 2026-06-01
 
 ### 업데이트 내용

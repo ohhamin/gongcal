@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.4.44**
+**현재 버전: v.0.4.45**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -260,7 +260,17 @@ app/android/app/google-services.json
 app/ios/Runner/GoogleService-Info.plist  # iOS 프로젝트 생성 후 사용
 ```
 
-현재 Android 패키지명은 `app/android/app/build.gradle.kts`의 `applicationId` 기준 `com.example.ourcal_app`입니다. iOS 프로젝트 폴더는 아직 레포에 없으므로 iOS 앱 빌드가 필요해지면 `flutter create --platforms=ios .`로 생성한 뒤 `ios/Runner.xcodeproj/project.pbxproj`의 `PRODUCT_BUNDLE_IDENTIFIER`를 Firebase iOS Bundle ID로 등록해야 합니다.
+현재 Android 패키지명은 `app/android/app/build.gradle.kts`의 `applicationId` 기준 `com.example.ourcal_app`입니다. iOS Bundle ID는 `app/ios/Runner.xcodeproj/project.pbxproj`의 `PRODUCT_BUNDLE_IDENTIFIER` 기준 `com.example.ourcalApp`입니다.
+
+iOS FCM을 활성화하려면 Hamin이 아래 작업을 해야 합니다.
+
+1. Firebase Console에서 iOS 앱을 `com.example.ourcalApp` Bundle ID로 추가합니다.
+2. 내려받은 `GoogleService-Info.plist`를 `app/ios/Runner/GoogleService-Info.plist`에 넣습니다. 이 파일은 git에 커밋하지 않습니다.
+3. Apple Developer에서 Push Notifications capability와 APNs Auth Key를 준비합니다.
+4. Firebase Console > Project settings > Cloud Messaging에 APNs Auth Key를 등록합니다.
+5. Xcode에서 Runner target의 Signing Team을 선택하고, 필요하면 Bundle ID를 실제 배포 ID로 변경합니다. 변경 시 Firebase iOS 앱 Bundle ID도 동일해야 합니다.
+6. Supabase Auth > URL Configuration에 웹 콜백 URL `https://gongcal.vercel.app/auth/callback`이 허용되어 있는지 확인합니다.
+7. Kakao Developers/Google OAuth 설정에는 웹 도메인 콜백과 iOS Bundle ID 정책을 함께 확인합니다.
 
 Supabase SQL Editor에서 `web/supabase/create_push_tokens.sql`을 실행하면 모바일 FCM 토큰 저장용 `push_tokens` 테이블과 RLS 정책이 생성됩니다. 그룹 초대 알림을 위해 `web/supabase/create_notifications.sql`도 다시 실행해 `group_request` type 제약조건을 반영하세요.
 
@@ -297,6 +307,7 @@ npm run app:build:apk  # Flutter Android APK 빌드
 app/
   lib/main.dart     # Flutter WebView shell
   android/          # Android 프로젝트
+  ios/              # iOS 프로젝트
 web/app/
   auth/callback/   # 로그인 콜백 처리
   calendar/        # 월간 캘린더와 일정/초대/댓글 흐름

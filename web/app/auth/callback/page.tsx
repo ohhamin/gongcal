@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import OurcalSplash from '@/components/OurcalSplash';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
@@ -48,5 +49,5 @@ export default function AuthCallbackPage() {
         load();
     }, [router]);
 
-    return <div className="p-10">로그인 처리중...</div>;
+    return <OurcalSplash message="로그인 정보를 확인하는 중입니다." />;
 }
