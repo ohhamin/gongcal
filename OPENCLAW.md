@@ -1,5 +1,33 @@
 # OPENCLAW
 
+## v.0.4.47 - 2026-06-04
+
+### 업데이트 내용
+
+- Android 홈 화면 위젯이 런처 위젯 목록에 안정적으로 노출되도록 receiver label/icon을 추가했습니다.
+- 월간 캘린더 위젯 메타데이터에 4x4 셀 크기(`targetCellWidth`, `targetCellHeight`)와 resize 기준 크기를 명시했습니다.
+- GitHub Actions release APK 빌드에서 package 버전 기반 `--build-number`를 함께 지정해 Android 설치 업데이트 인식을 보강했습니다.
+- README/package 기준 버전을 `v.0.4.46`에서 `v.0.4.47`로 업데이트했습니다.
+
+### 작업 메모
+
+- 일부 Android 런처는 위젯 provider의 label/셀 크기 메타데이터가 부족하면 위젯 목록 표시가 불안정할 수 있어 메타데이터를 보강했습니다.
+
+## v.0.4.46 - 2026-06-02
+
+### 업데이트 내용
+
+- Android 홈 화면에 이번 달 월간 캘린더 위젯을 추가했습니다.
+- 위젯은 현재 월 제목, 요일, 날짜 6주 그리드, 오늘 강조 표시, 주말 색상을 표시합니다.
+- 위젯을 누르면 OURCAL 앱이 열리도록 연결했습니다.
+- 날짜/시간/시간대 변경 시 위젯이 다시 그려지도록 보강했습니다.
+- README/package 기준 버전을 `v.0.4.45`에서 `v.0.4.46`으로 업데이트했습니다.
+
+### 작업 메모
+
+- Flutter analyze/test와 Android XML 파싱으로 1차 검증했습니다.
+- Android Gradle 리소스/assemble 검증은 Docker 러너에서 Gradle 작업이 장시간 멈춰 최종 완료하지 못했습니다.
+
 ## v.0.4.45 - 2026-06-02
 
 ### 업데이트 내용
