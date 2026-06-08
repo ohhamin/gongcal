@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -43,6 +44,8 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
   late final WebViewController _controller;
   late final FcmBridge _fcmBridge;
   late final WidgetBridge _widgetBridge;
+  static const _widgetChannel = MethodChannel('ourcal/widget');
+
   var _progress = 0;
   String? _errorMessage;
 
@@ -71,7 +74,23 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
     _widgetBridge = WidgetBridge(_controller);
     _widgetBridge.attach();
     _fcmBridge.initialize();
-    _controller.loadRequest(Uri.parse(defaultWebUrl));
+    _loadInitialRequest();
+  }
+
+  Future<void> _loadInitialRequest() async {
+    final launchTarget = await _widgetChannel.invokeMapMethod<String, String>(
+      'getLaunchTarget',
+    );
+    final route = launchTarget?['route'];
+    final month = launchTarget?['month'];
+    final baseUri = Uri.parse(defaultWebUrl);
+    final path = route == 'groups' ? '/groups' : '/calendar';
+    final query = route == 'calendar' && month != null && month.isNotEmpty
+        ? {'widgetMonth': month}
+        : null;
+    final targetUri = baseUri.replace(path: path, queryParameters: query);
+
+    await _controller.loadRequest(targetUri);
   }
 
   Future<NavigationDecision> _handleNavigationRequest(
