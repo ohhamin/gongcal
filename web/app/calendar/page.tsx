@@ -2,7 +2,7 @@
 
 import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
 
 import FullCalendar from '@fullcalendar/react';
@@ -279,7 +279,6 @@ function formatDateTimeText(value: string | null): string {
 
 export default function CalendarPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const currentUserQuery = useCurrentUser();
     const profileQuery = useMyProfile();
 
@@ -321,10 +320,12 @@ export default function CalendarPage() {
     const [pendingRange, setPendingRange] = useState<{ start: string; end: string } | null>(null);
     const [holidayByDate, setHolidayByDate] = useState<Record<string, HolidayInfo>>({});
     const [calendarMonthDate, setCalendarMonthDate] = useState(() => {
-        const widgetMonth = searchParams.get('widgetMonth');
-        if (/^\d{4}-\d{2}$/.test(widgetMonth || '')) {
-            const [year, month] = widgetMonth!.split('-').map(Number);
-            return new Date(year, month - 1, 1);
+        if (typeof window !== 'undefined') {
+            const widgetMonth = new URLSearchParams(window.location.search).get('widgetMonth');
+            if (/^\d{4}-\d{2}$/.test(widgetMonth || '')) {
+                const [year, month] = widgetMonth!.split('-').map(Number);
+                return new Date(year, month - 1, 1);
+            }
         }
         return new Date();
     });
@@ -367,6 +368,14 @@ export default function CalendarPage() {
             router.push('/login');
         }
     }, [currentUserQuery.data, currentUserQuery.isLoading, router]);
+
+    useEffect(() => {
+        const widgetMonth = new URLSearchParams(window.location.search).get('widgetMonth');
+        if (!/^\d{4}-\d{2}$/.test(widgetMonth || '')) return;
+
+        const [year, month] = widgetMonth!.split('-').map(Number);
+        calendarRef.current?.getApi().gotoDate(new Date(year, month - 1, 1));
+    }, []);
 
     useEffect(() => {
         if (!isMemberFilterOpen) return;
