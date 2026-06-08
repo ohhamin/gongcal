@@ -8,13 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
-import android.text.style.RelativeSizeSpan
-import android.text.style.StyleSpan
-import android.graphics.Typeface
 import android.view.View
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
@@ -74,113 +67,128 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             val row = index / 7
             val column = index % 7
             val day = index - firstColumn + 1
-            val viewId = dayCellIds[row][column]
+            val numberViewId = dayNumberIds[row][column]
+            val eventViewIds = eventLabelIds[row][column]
+
+            views.setInt(dayCellIds[row][column], "setBackgroundResource", R.drawable.widget_grid_cell_bg)
+            clearEventSlots(views, eventViewIds)
 
             if (day in 1..daysInMonth) {
-                val dateKey = "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
-                val holiday = snapshotEventsByDate[dateKey]?.firstOrNull { it.isHoliday }?.title
-                    ?: holidayByDate[dateKey]
-                val dayEvents = snapshotEventsByDate[dateKey].orEmpty().filterNot { it.isHoliday }
-                val isToday = dateKey == todayKey
+                val currentDateKey = "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
+                val holiday = snapshotEventsByDate[currentDateKey]?.firstOrNull { it.isHoliday }?.title
+                    ?: holidayByDate[currentDateKey]
+                val dayEvents = snapshotEventsByDate[currentDateKey].orEmpty().filterNot { it.isHoliday }
+                val isToday = currentDateKey == todayKey
                 val isRedDay = holiday != null || column == 0 || column == 6
 
-                views.setTextViewText(viewId, buildDayCellText(day, holiday, dayEvents, isToday, isRedDay))
-                views.setTextColor(viewId, Color.parseColor(if (isToday) "#FFFFFF" else "#111122"))
-                views.setInt(viewId, "setBackgroundResource", if (isToday) R.drawable.widget_today_bg else R.drawable.widget_day_cell_bg)
+                views.setViewVisibility(numberViewId, View.VISIBLE)
+                views.setTextViewText(numberViewId, day.toString())
+                views.setTextColor(
+                    numberViewId,
+                    when {
+                        isToday -> Color.WHITE
+                        isRedDay -> RED_DAY_COLOR
+                        else -> TEXT_COLOR
+                    },
+                )
+                views.setInt(
+                    numberViewId,
+                    "setBackgroundResource",
+                    if (isToday) R.drawable.widget_today_number_bg else R.drawable.widget_day_number_bg,
+                )
+
+                renderEvents(views, eventViewIds, holiday, dayEvents)
             } else {
-                views.setTextViewText(viewId, "")
-                views.setTextColor(viewId, Color.TRANSPARENT)
-                views.setInt(viewId, "setBackgroundResource", R.drawable.widget_day_cell_bg)
+                views.setTextViewText(numberViewId, "")
+                views.setTextColor(numberViewId, Color.TRANSPARENT)
+                views.setInt(numberViewId, "setBackgroundResource", R.drawable.widget_day_number_bg)
             }
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    private fun buildDayCellText(
-        day: Int,
+    private fun clearEventSlots(views: RemoteViews, eventViewIds: IntArray) {
+        eventViewIds.forEach { eventViewId ->
+            views.setTextViewText(eventViewId, "")
+            views.setViewVisibility(eventViewId, View.GONE)
+        }
+    }
+
+    private fun renderEvents(
+        views: RemoteViews,
+        eventViewIds: IntArray,
         holiday: String?,
         events: List<WidgetEvent>,
-        isToday: Boolean,
-        isRedDay: Boolean,
-    ): SpannableStringBuilder {
-        val builder = SpannableStringBuilder()
-        appendStyled(
-            builder,
-            day.toString(),
-            color = when {
-                isToday -> Color.WHITE
-                isRedDay -> RED_DAY_COLOR
-                else -> TEXT_COLOR
-            },
-            size = 1.0f,
-            bold = true,
-        )
-
-        if (!holiday.isNullOrBlank()) {
-            builder.append('\n')
-            appendStyled(builder, holiday.take(5), color = if (isToday) Color.WHITE else RED_DAY_COLOR, size = 0.78f, bold = true)
-        }
-
-        events.take(MAX_VISIBLE_EVENTS).forEach { event ->
-            builder.append('\n')
-            appendEventLabel(builder, event, isToday)
-        }
-
-        if (events.size > MAX_VISIBLE_EVENTS) {
-            builder.append('\n')
-            appendStyled(builder, "+${events.size - MAX_VISIBLE_EVENTS}", color = if (isToday) Color.WHITE else PRIMARY_COLOR, size = 0.76f, bold = true)
-        }
-
-        return builder
-    }
-
-    private fun appendEventLabel(
-        builder: SpannableStringBuilder,
-        event: WidgetEvent,
-        isToday: Boolean,
     ) {
-        val maxTitleLength = if (event.isHidden) 6 else 7
-        val label = when {
-            event.isHidden -> " 🔒${event.title.removePrefix("🔒").take(maxTitleLength)} "
-            event.isPendingInvite -> " ◌ ${event.title.take(maxTitleLength)} "
-            else -> " ${event.title.take(maxTitleLength)} "
-        }
-        val start = builder.length
-        builder.append(label)
-
-        val foregroundColor = when {
-            isToday -> Color.WHITE
-            event.isPendingInvite -> event.color
-            else -> Color.WHITE
-        }
-        val backgroundColor = when {
-            isToday -> Color.TRANSPARENT
-            event.isPendingInvite -> tintColor(event.color, 0.14f)
-            event.isHidden -> applyAlpha(event.color, 0.62f)
-            else -> event.color
+        var slot = 0
+        if (!holiday.isNullOrBlank() && slot < eventViewIds.size) {
+            renderEventSlot(
+                views = views,
+                viewId = eventViewIds[slot++],
+                text = holiday,
+                background = R.drawable.widget_event_holiday_bg,
+                textColor = RED_DAY_COLOR,
+            )
         }
 
-        if (backgroundColor != Color.TRANSPARENT) {
-            builder.setSpan(BackgroundColorSpan(backgroundColor), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val availableSlots = eventViewIds.size - slot
+        val visibleEventCount = when {
+            availableSlots <= 0 -> 0
+            events.size > availableSlots -> availableSlots - 1
+            else -> events.size.coerceAtMost(MAX_VISIBLE_EVENTS)
         }
-        builder.setSpan(ForegroundColorSpan(foregroundColor), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        builder.setSpan(RelativeSizeSpan(0.78f), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        events.take(visibleEventCount).forEach { event ->
+            val isMyColor = isSameRgb(event.color, MY_EVENT_COLOR)
+            val background = when {
+                event.isHidden -> R.drawable.widget_event_hidden_bg
+                event.isPendingInvite -> R.drawable.widget_event_pending_bg
+                isMyColor -> R.drawable.widget_event_my_bg
+                else -> R.drawable.widget_event_group_bg
+            }
+            val textColor = when {
+                event.isHidden -> HIDDEN_EVENT_COLOR
+                event.isPendingInvite -> GROUP_EVENT_COLOR
+                isMyColor -> MY_EVENT_COLOR
+                else -> GROUP_EVENT_COLOR
+            }
+            val prefix = when {
+                event.isHidden -> "🔒 "
+                event.isPendingInvite -> "◌ "
+                else -> ""
+            }
+            renderEventSlot(
+                views = views,
+                viewId = eventViewIds[slot++],
+                text = prefix + event.title.removePrefix("🔒"),
+                background = background,
+                textColor = textColor,
+            )
+        }
+
+        val remaining = events.size - visibleEventCount
+        if (remaining > 0 && slot < eventViewIds.size) {
+            renderEventSlot(
+                views = views,
+                viewId = eventViewIds[slot],
+                text = "+$remaining",
+                background = R.drawable.widget_event_hidden_bg,
+                textColor = PRIMARY_COLOR,
+            )
+        }
     }
 
-    private fun appendStyled(
-        builder: SpannableStringBuilder,
+    private fun renderEventSlot(
+        views: RemoteViews,
+        viewId: Int,
         text: String,
-        color: Int,
-        size: Float,
-        bold: Boolean,
+        background: Int,
+        textColor: Int,
     ) {
-        val start = builder.length
-        builder.append(text)
-        builder.setSpan(ForegroundColorSpan(color), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        builder.setSpan(RelativeSizeSpan(size), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        if (bold) builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        views.setViewVisibility(viewId, View.VISIBLE)
+        views.setTextViewText(viewId, text)
+        views.setTextColor(viewId, textColor)
+        views.setInt(viewId, "setBackgroundResource", background)
     }
 
     private fun readSnapshot(context: Context): WidgetSnapshot? {
@@ -236,10 +244,10 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                         "locdate" -> currentLocdate = parser.nextText().trim()
                     }
                 } else if (eventType == XmlPullParser.END_TAG && parser.name == "item") {
-                    val dateKey = currentLocdate?.takeIf { it.length == 8 }?.let {
+                    val fallbackDateKey = currentLocdate?.takeIf { it.length == 8 }?.let {
                         "${it.substring(0, 4)}-${it.substring(4, 6)}-${it.substring(6, 8)}"
                     }
-                    if (!dateKey.isNullOrBlank() && !currentName.isNullOrBlank()) holidays[dateKey] = currentName!!
+                    if (!fallbackDateKey.isNullOrBlank() && !currentName.isNullOrBlank()) holidays[fallbackDateKey] = currentName!!
                     currentName = null
                     currentLocdate = null
                 }
@@ -287,18 +295,10 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         }.getOrDefault(fallback)
     }
 
-    private fun tintColor(color: Int, opacity: Float): Int {
-        val red = (Color.red(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        val green = (Color.green(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        val blue = (Color.blue(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        return Color.rgb(red, green, blue)
-    }
-
-    private fun applyAlpha(color: Int, opacity: Float): Int {
-        val red = (Color.red(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        val green = (Color.green(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        val blue = (Color.blue(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
-        return Color.rgb(red, green, blue)
+    private fun isSameRgb(left: Int, right: Int): Boolean {
+        return Color.red(left) == Color.red(right) &&
+            Color.green(left) == Color.green(right) &&
+            Color.blue(left) == Color.blue(right)
     }
 
     data class WidgetSnapshot(
@@ -315,11 +315,13 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
     )
 
     companion object {
-        private const val MAX_VISIBLE_EVENTS = 4
+        private const val MAX_VISIBLE_EVENTS = 2
         private val TEXT_COLOR = Color.parseColor("#111122")
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
+        private val MY_EVENT_COLOR = Color.parseColor("#3B82F6")
         private val GROUP_EVENT_COLOR = Color.parseColor("#10B981")
+        private val HIDDEN_EVENT_COLOR = Color.parseColor("#4B5563")
 
         private val dateRefreshActions = setOf(
             Intent.ACTION_DATE_CHANGED,
@@ -338,12 +340,78 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         }
 
         private val dayCellIds = arrayOf(
-            intArrayOf(R.id.day_0_0, R.id.day_0_1, R.id.day_0_2, R.id.day_0_3, R.id.day_0_4, R.id.day_0_5, R.id.day_0_6),
-            intArrayOf(R.id.day_1_0, R.id.day_1_1, R.id.day_1_2, R.id.day_1_3, R.id.day_1_4, R.id.day_1_5, R.id.day_1_6),
-            intArrayOf(R.id.day_2_0, R.id.day_2_1, R.id.day_2_2, R.id.day_2_3, R.id.day_2_4, R.id.day_2_5, R.id.day_2_6),
-            intArrayOf(R.id.day_3_0, R.id.day_3_1, R.id.day_3_2, R.id.day_3_3, R.id.day_3_4, R.id.day_3_5, R.id.day_3_6),
-            intArrayOf(R.id.day_4_0, R.id.day_4_1, R.id.day_4_2, R.id.day_4_3, R.id.day_4_4, R.id.day_4_5, R.id.day_4_6),
-            intArrayOf(R.id.day_5_0, R.id.day_5_1, R.id.day_5_2, R.id.day_5_3, R.id.day_5_4, R.id.day_5_5, R.id.day_5_6),
+            intArrayOf(R.id.day_cell_0_0, R.id.day_cell_0_1, R.id.day_cell_0_2, R.id.day_cell_0_3, R.id.day_cell_0_4, R.id.day_cell_0_5, R.id.day_cell_0_6),
+            intArrayOf(R.id.day_cell_1_0, R.id.day_cell_1_1, R.id.day_cell_1_2, R.id.day_cell_1_3, R.id.day_cell_1_4, R.id.day_cell_1_5, R.id.day_cell_1_6),
+            intArrayOf(R.id.day_cell_2_0, R.id.day_cell_2_1, R.id.day_cell_2_2, R.id.day_cell_2_3, R.id.day_cell_2_4, R.id.day_cell_2_5, R.id.day_cell_2_6),
+            intArrayOf(R.id.day_cell_3_0, R.id.day_cell_3_1, R.id.day_cell_3_2, R.id.day_cell_3_3, R.id.day_cell_3_4, R.id.day_cell_3_5, R.id.day_cell_3_6),
+            intArrayOf(R.id.day_cell_4_0, R.id.day_cell_4_1, R.id.day_cell_4_2, R.id.day_cell_4_3, R.id.day_cell_4_4, R.id.day_cell_4_5, R.id.day_cell_4_6),
+            intArrayOf(R.id.day_cell_5_0, R.id.day_cell_5_1, R.id.day_cell_5_2, R.id.day_cell_5_3, R.id.day_cell_5_4, R.id.day_cell_5_5, R.id.day_cell_5_6),
+        )
+
+        private val dayNumberIds = arrayOf(
+            intArrayOf(R.id.day_number_0_0, R.id.day_number_0_1, R.id.day_number_0_2, R.id.day_number_0_3, R.id.day_number_0_4, R.id.day_number_0_5, R.id.day_number_0_6),
+            intArrayOf(R.id.day_number_1_0, R.id.day_number_1_1, R.id.day_number_1_2, R.id.day_number_1_3, R.id.day_number_1_4, R.id.day_number_1_5, R.id.day_number_1_6),
+            intArrayOf(R.id.day_number_2_0, R.id.day_number_2_1, R.id.day_number_2_2, R.id.day_number_2_3, R.id.day_number_2_4, R.id.day_number_2_5, R.id.day_number_2_6),
+            intArrayOf(R.id.day_number_3_0, R.id.day_number_3_1, R.id.day_number_3_2, R.id.day_number_3_3, R.id.day_number_3_4, R.id.day_number_3_5, R.id.day_number_3_6),
+            intArrayOf(R.id.day_number_4_0, R.id.day_number_4_1, R.id.day_number_4_2, R.id.day_number_4_3, R.id.day_number_4_4, R.id.day_number_4_5, R.id.day_number_4_6),
+            intArrayOf(R.id.day_number_5_0, R.id.day_number_5_1, R.id.day_number_5_2, R.id.day_number_5_3, R.id.day_number_5_4, R.id.day_number_5_5, R.id.day_number_5_6),
+        )
+
+        private val eventLabelIds = arrayOf(
+            arrayOf(
+                intArrayOf(R.id.day_event_0_0_0, R.id.day_event_0_0_1, R.id.day_event_0_0_2, R.id.day_event_0_0_3),
+                intArrayOf(R.id.day_event_0_1_0, R.id.day_event_0_1_1, R.id.day_event_0_1_2, R.id.day_event_0_1_3),
+                intArrayOf(R.id.day_event_0_2_0, R.id.day_event_0_2_1, R.id.day_event_0_2_2, R.id.day_event_0_2_3),
+                intArrayOf(R.id.day_event_0_3_0, R.id.day_event_0_3_1, R.id.day_event_0_3_2, R.id.day_event_0_3_3),
+                intArrayOf(R.id.day_event_0_4_0, R.id.day_event_0_4_1, R.id.day_event_0_4_2, R.id.day_event_0_4_3),
+                intArrayOf(R.id.day_event_0_5_0, R.id.day_event_0_5_1, R.id.day_event_0_5_2, R.id.day_event_0_5_3),
+                intArrayOf(R.id.day_event_0_6_0, R.id.day_event_0_6_1, R.id.day_event_0_6_2, R.id.day_event_0_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_1_0_0, R.id.day_event_1_0_1, R.id.day_event_1_0_2, R.id.day_event_1_0_3),
+                intArrayOf(R.id.day_event_1_1_0, R.id.day_event_1_1_1, R.id.day_event_1_1_2, R.id.day_event_1_1_3),
+                intArrayOf(R.id.day_event_1_2_0, R.id.day_event_1_2_1, R.id.day_event_1_2_2, R.id.day_event_1_2_3),
+                intArrayOf(R.id.day_event_1_3_0, R.id.day_event_1_3_1, R.id.day_event_1_3_2, R.id.day_event_1_3_3),
+                intArrayOf(R.id.day_event_1_4_0, R.id.day_event_1_4_1, R.id.day_event_1_4_2, R.id.day_event_1_4_3),
+                intArrayOf(R.id.day_event_1_5_0, R.id.day_event_1_5_1, R.id.day_event_1_5_2, R.id.day_event_1_5_3),
+                intArrayOf(R.id.day_event_1_6_0, R.id.day_event_1_6_1, R.id.day_event_1_6_2, R.id.day_event_1_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_2_0_0, R.id.day_event_2_0_1, R.id.day_event_2_0_2, R.id.day_event_2_0_3),
+                intArrayOf(R.id.day_event_2_1_0, R.id.day_event_2_1_1, R.id.day_event_2_1_2, R.id.day_event_2_1_3),
+                intArrayOf(R.id.day_event_2_2_0, R.id.day_event_2_2_1, R.id.day_event_2_2_2, R.id.day_event_2_2_3),
+                intArrayOf(R.id.day_event_2_3_0, R.id.day_event_2_3_1, R.id.day_event_2_3_2, R.id.day_event_2_3_3),
+                intArrayOf(R.id.day_event_2_4_0, R.id.day_event_2_4_1, R.id.day_event_2_4_2, R.id.day_event_2_4_3),
+                intArrayOf(R.id.day_event_2_5_0, R.id.day_event_2_5_1, R.id.day_event_2_5_2, R.id.day_event_2_5_3),
+                intArrayOf(R.id.day_event_2_6_0, R.id.day_event_2_6_1, R.id.day_event_2_6_2, R.id.day_event_2_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_3_0_0, R.id.day_event_3_0_1, R.id.day_event_3_0_2, R.id.day_event_3_0_3),
+                intArrayOf(R.id.day_event_3_1_0, R.id.day_event_3_1_1, R.id.day_event_3_1_2, R.id.day_event_3_1_3),
+                intArrayOf(R.id.day_event_3_2_0, R.id.day_event_3_2_1, R.id.day_event_3_2_2, R.id.day_event_3_2_3),
+                intArrayOf(R.id.day_event_3_3_0, R.id.day_event_3_3_1, R.id.day_event_3_3_2, R.id.day_event_3_3_3),
+                intArrayOf(R.id.day_event_3_4_0, R.id.day_event_3_4_1, R.id.day_event_3_4_2, R.id.day_event_3_4_3),
+                intArrayOf(R.id.day_event_3_5_0, R.id.day_event_3_5_1, R.id.day_event_3_5_2, R.id.day_event_3_5_3),
+                intArrayOf(R.id.day_event_3_6_0, R.id.day_event_3_6_1, R.id.day_event_3_6_2, R.id.day_event_3_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_4_0_0, R.id.day_event_4_0_1, R.id.day_event_4_0_2, R.id.day_event_4_0_3),
+                intArrayOf(R.id.day_event_4_1_0, R.id.day_event_4_1_1, R.id.day_event_4_1_2, R.id.day_event_4_1_3),
+                intArrayOf(R.id.day_event_4_2_0, R.id.day_event_4_2_1, R.id.day_event_4_2_2, R.id.day_event_4_2_3),
+                intArrayOf(R.id.day_event_4_3_0, R.id.day_event_4_3_1, R.id.day_event_4_3_2, R.id.day_event_4_3_3),
+                intArrayOf(R.id.day_event_4_4_0, R.id.day_event_4_4_1, R.id.day_event_4_4_2, R.id.day_event_4_4_3),
+                intArrayOf(R.id.day_event_4_5_0, R.id.day_event_4_5_1, R.id.day_event_4_5_2, R.id.day_event_4_5_3),
+                intArrayOf(R.id.day_event_4_6_0, R.id.day_event_4_6_1, R.id.day_event_4_6_2, R.id.day_event_4_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_5_0_0, R.id.day_event_5_0_1, R.id.day_event_5_0_2, R.id.day_event_5_0_3),
+                intArrayOf(R.id.day_event_5_1_0, R.id.day_event_5_1_1, R.id.day_event_5_1_2, R.id.day_event_5_1_3),
+                intArrayOf(R.id.day_event_5_2_0, R.id.day_event_5_2_1, R.id.day_event_5_2_2, R.id.day_event_5_2_3),
+                intArrayOf(R.id.day_event_5_3_0, R.id.day_event_5_3_1, R.id.day_event_5_3_2, R.id.day_event_5_3_3),
+                intArrayOf(R.id.day_event_5_4_0, R.id.day_event_5_4_1, R.id.day_event_5_4_2, R.id.day_event_5_4_3),
+                intArrayOf(R.id.day_event_5_5_0, R.id.day_event_5_5_1, R.id.day_event_5_5_2, R.id.day_event_5_5_3),
+                intArrayOf(R.id.day_event_5_6_0, R.id.day_event_5_6_1, R.id.day_event_5_6_2, R.id.day_event_5_6_3),
+            ),
         )
     }
 }
