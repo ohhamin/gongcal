@@ -29,31 +29,31 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-[var(--oc-bg)] px-5 text-[var(--oc-text)]">
-            <div className="pointer-events-none absolute -left-16 top-12 h-44 w-44 rounded-full bg-[var(--oc-tint)] blur-3xl" />
-            <div className="pointer-events-none absolute -right-14 bottom-28 h-52 w-52 rounded-full bg-blue-100/70 blur-3xl" />
+        <main className="relative h-dvh overflow-hidden bg-[var(--oc-bg)] px-5 text-[var(--oc-text)]">
+            <div className="pointer-events-none absolute -left-16 top-8 h-36 w-36 rounded-full bg-[var(--oc-tint)] blur-3xl" />
+            <div className="pointer-events-none absolute -right-14 bottom-20 h-40 w-40 rounded-full bg-blue-100/70 blur-3xl" />
 
-            <div className="relative mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center py-10">
-                <section className="mb-9 text-center">
-                    <div className="mx-auto grid h-24 w-24 place-items-center rounded-[26px] bg-[var(--oc-primary)] shadow-[0_14px_34px_rgba(30,58,138,0.32)]">
-                        <Image src="/logo_white_256.png" alt="OURCAL" width={64} height={64} priority />
+            <div className="relative mx-auto flex h-dvh w-full max-w-sm flex-col justify-center py-[clamp(14px,3vh,32px)]">
+                <section className="mb-[clamp(18px,4vh,36px)] text-center">
+                    <div className="mx-auto grid h-[clamp(72px,12vh,96px)] w-[clamp(72px,12vh,96px)] place-items-center rounded-[24px] bg-[var(--oc-primary)] shadow-[0_14px_34px_rgba(30,58,138,0.32)]">
+                        <Image src="/logo_white_256.png" alt="OURCAL" width={58} height={58} priority />
                     </div>
-                    <h1 className="mt-7 text-[30px] font-extrabold tracking-[-0.05em]">우리캘린더</h1>
-                    <p className="mt-2 text-sm leading-6 tracking-[-0.01em] text-[var(--oc-text-secondary)]">
+                    <h1 className="mt-[clamp(16px,3vh,28px)] text-[clamp(24px,4vh,30px)] font-extrabold tracking-[-0.05em]">우리캘린더</h1>
+                    <p className="mt-1.5 text-[clamp(12px,1.9vh,14px)] leading-[1.55] tracking-[-0.01em] text-[var(--oc-text-secondary)]">
                         우리만의 일정을 함께 보고,
                         <br />초대와 약속을 가볍게 관리해요.
                     </p>
                 </section>
 
-                <section className="rounded-[28px] border border-[var(--oc-divider)] bg-white p-5 shadow-[var(--oc-elevation)]">
-                    <div className="mb-5 rounded-2xl bg-[var(--oc-surface-2)] px-4 py-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--oc-primary)]">Start with</p>
-                        <p className="mt-1 text-sm font-semibold tracking-[-0.02em] text-[var(--oc-text-secondary)]">소셜 계정으로 바로 시작하세요.</p>
+                <section className="rounded-[24px] border border-[var(--oc-divider)] bg-white p-[clamp(14px,2.4vh,20px)] shadow-[var(--oc-elevation)]">
+                    <div className="mb-[clamp(12px,2vh,20px)] rounded-2xl bg-[var(--oc-surface-2)] px-4 py-[clamp(9px,1.7vh,12px)]">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--oc-primary)]">Start with</p>
+                        <p className="mt-1 text-[clamp(12px,1.9vh,14px)] font-semibold tracking-[-0.02em] text-[var(--oc-text-secondary)]">소셜 계정으로 바로 시작하세요.</p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-[clamp(8px,1.6vh,12px)]">
                         <button
-                            className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-4 text-[15px] font-extrabold tracking-[-0.02em] text-[#191919] shadow-[0_6px_18px_rgba(25,25,25,0.08)] transition active:scale-[0.99] disabled:opacity-60"
+                            className="flex h-[clamp(44px,7vh,52px)] w-full items-center justify-center gap-2 rounded-2xl bg-[#FEE500] px-4 text-[15px] font-extrabold tracking-[-0.02em] text-[#191919] shadow-[0_6px_18px_rgba(25,25,25,0.08)] transition active:scale-[0.99] disabled:opacity-60"
                             onClick={() => handleOAuthLogin('kakao')}
                             disabled={Boolean(signingProvider)}
                         >
@@ -61,7 +61,7 @@ export default function LoginPage() {
                             카카오로 시작하기
                         </button>
                         <button
-                            className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--oc-divider-strong)] bg-white px-4 text-[15px] font-extrabold tracking-[-0.02em] text-[var(--oc-text)] shadow-sm transition active:scale-[0.99] disabled:opacity-60"
+                            className="flex h-[clamp(44px,7vh,52px)] w-full items-center justify-center gap-2 rounded-2xl border border-[var(--oc-divider-strong)] bg-white px-4 text-[15px] font-extrabold tracking-[-0.02em] text-[var(--oc-text)] shadow-sm transition active:scale-[0.99] disabled:opacity-60"
                             onClick={() => handleOAuthLogin('google')}
                             disabled={Boolean(signingProvider)}
                         >
@@ -71,7 +71,7 @@ export default function LoginPage() {
                     </div>
                 </section>
 
-                <p className="mt-6 text-center text-[11px] leading-5 tracking-[-0.01em] text-[var(--oc-text-tertiary)]">
+                <p className="mt-[clamp(12px,2.8vh,24px)] text-center text-[10.5px] leading-4 tracking-[-0.01em] text-[var(--oc-text-tertiary)]">
                     로그인하면 OURCAL의 서비스 이용약관과 개인정보 처리방침에 동의한 것으로 간주됩니다.
                 </p>
             </div>
