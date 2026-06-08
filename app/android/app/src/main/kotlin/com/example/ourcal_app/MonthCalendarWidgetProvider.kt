@@ -140,20 +140,20 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         }
         events.take(visibleEventCount).forEach { event ->
             val isMyColor = isSameRgb(event.color, MY_EVENT_COLOR)
+            val isMine = event.isMine || isMyColor
             val background = when {
-                event.isHidden -> R.drawable.widget_event_hidden_bg
+                event.isHidden && isMine -> R.drawable.widget_event_my_hidden_bg
+                event.isHidden -> R.drawable.widget_event_group_hidden_bg
                 event.isPendingInvite -> R.drawable.widget_event_pending_bg
-                isMyColor -> R.drawable.widget_event_my_bg
+                isMine -> R.drawable.widget_event_my_bg
                 else -> R.drawable.widget_event_group_bg
             }
             val textColor = when {
-                event.isHidden -> HIDDEN_EVENT_COLOR
                 event.isPendingInvite -> GROUP_EVENT_COLOR
-                isMyColor -> MY_EVENT_COLOR
-                else -> GROUP_EVENT_COLOR
+                else -> Color.WHITE
             }
             val prefix = when {
-                event.isHidden -> "🔒 "
+                event.isPrivateLocked -> "🔒 "
                 event.isPendingInvite -> "◌ "
                 else -> ""
             }
@@ -172,7 +172,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 views = views,
                 viewId = eventViewIds[slot],
                 text = "+$remaining",
-                background = R.drawable.widget_event_hidden_bg,
+                background = R.drawable.widget_event_more_bg,
                 textColor = PRIMARY_COLOR,
             )
         }
@@ -221,6 +221,8 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                             isHoliday = event.optBoolean("isHoliday"),
                             isPendingInvite = event.optBoolean("isPendingInvite"),
                             isHidden = event.optBoolean("isHidden"),
+                            isMine = event.optBoolean("isMine"),
+                            isPrivateLocked = event.optBoolean("isPrivateLocked"),
                         ),
                     )
                 }
@@ -312,6 +314,8 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val isHoliday: Boolean,
         val isPendingInvite: Boolean,
         val isHidden: Boolean,
+        val isMine: Boolean,
+        val isPrivateLocked: Boolean,
     )
 
     companion object {
@@ -321,7 +325,8 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         private val PRIMARY_COLOR = Color.parseColor("#111122")
         private val MY_EVENT_COLOR = Color.parseColor("#3B82F6")
         private val GROUP_EVENT_COLOR = Color.parseColor("#10B981")
-        private val HIDDEN_EVENT_COLOR = Color.parseColor("#4B5563")
+        // FullCalendar monthly event colors in web/app/calendar/page.tsx.
+        // Keep widget pills visually aligned with the in-app calendar.
 
         private val dateRefreshActions = setOf(
             Intent.ACTION_DATE_CHANGED,

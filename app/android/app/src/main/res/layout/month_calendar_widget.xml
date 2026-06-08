@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_month_calendar_bg"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="0dp">
 
     <TextView
         android:id="@+id/widget_title"
@@ -16,7 +16,9 @@
         android:text="2026년 6월"
         android:textColor="#111122"
         android:textSize="22sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp" />
 
     <TextView
         android:id="@+id/widget_subtitle"
@@ -27,7 +29,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="0dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -162,7 +164,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -180,7 +182,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -198,7 +200,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -216,7 +218,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -256,7 +258,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -274,7 +276,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -292,7 +294,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -310,7 +312,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -350,7 +352,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -368,7 +370,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -386,7 +388,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -404,7 +406,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -444,7 +446,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -462,7 +464,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -480,7 +482,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -498,7 +500,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -538,7 +540,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -556,7 +558,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -574,7 +576,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -592,7 +594,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -632,7 +634,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -650,7 +652,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -668,7 +670,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -686,7 +688,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -726,7 +728,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -744,7 +746,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -762,7 +764,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -780,7 +782,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -827,7 +829,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -845,7 +847,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -863,7 +865,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -881,7 +883,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -921,7 +923,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -939,7 +941,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -957,7 +959,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -975,7 +977,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1015,7 +1017,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1033,7 +1035,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1051,7 +1053,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1069,7 +1071,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1109,7 +1111,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1127,7 +1129,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1145,7 +1147,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1163,7 +1165,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1203,7 +1205,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1221,7 +1223,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1239,7 +1241,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1257,7 +1259,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1297,7 +1299,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1315,7 +1317,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1333,7 +1335,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1351,7 +1353,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1391,7 +1393,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1409,7 +1411,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1427,7 +1429,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1445,7 +1447,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1492,7 +1494,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1510,7 +1512,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1528,7 +1530,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1546,7 +1548,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1586,7 +1588,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1604,7 +1606,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1622,7 +1624,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1640,7 +1642,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1680,7 +1682,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1698,7 +1700,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1716,7 +1718,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1734,7 +1736,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1774,7 +1776,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1792,7 +1794,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1810,7 +1812,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1828,7 +1830,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1868,7 +1870,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1886,7 +1888,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1904,7 +1906,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1922,7 +1924,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1962,7 +1964,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1980,7 +1982,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1998,7 +2000,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2016,7 +2018,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2056,7 +2058,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2074,7 +2076,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2092,7 +2094,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2110,7 +2112,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2157,7 +2159,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2175,7 +2177,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2193,7 +2195,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2211,7 +2213,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2251,7 +2253,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2269,7 +2271,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2287,7 +2289,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2305,7 +2307,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2345,7 +2347,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2363,7 +2365,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2381,7 +2383,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2399,7 +2401,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2439,7 +2441,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2457,7 +2459,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2475,7 +2477,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2493,7 +2495,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2533,7 +2535,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2551,7 +2553,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2569,7 +2571,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2587,7 +2589,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2627,7 +2629,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2645,7 +2647,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2663,7 +2665,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2681,7 +2683,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2721,7 +2723,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2739,7 +2741,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2757,7 +2759,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2775,7 +2777,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2822,7 +2824,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2840,7 +2842,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2858,7 +2860,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2876,7 +2878,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2916,7 +2918,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2934,7 +2936,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2952,7 +2954,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2970,7 +2972,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3010,7 +3012,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3028,7 +3030,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3046,7 +3048,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3064,7 +3066,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3104,7 +3106,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3122,7 +3124,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3140,7 +3142,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3158,7 +3160,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3198,7 +3200,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3216,7 +3218,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3234,7 +3236,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3252,7 +3254,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3292,7 +3294,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3310,7 +3312,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3328,7 +3330,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3346,7 +3348,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3386,7 +3388,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3404,7 +3406,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3422,7 +3424,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3440,7 +3442,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="12sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>

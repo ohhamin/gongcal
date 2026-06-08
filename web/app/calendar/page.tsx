@@ -1735,6 +1735,8 @@ export default function CalendarPage() {
                 isHoliday: Boolean(event.extendedProps.isHoliday),
                 isPendingInvite: Boolean(event.extendedProps.isPendingInvite),
                 isHidden: Boolean(event.extendedProps.isHidden),
+                isMine: Boolean(event.extendedProps.isOwner) || Boolean(event.extendedProps.isMyInvite),
+                isPrivateLocked: Boolean(event.extendedProps.isHidden) && !Boolean(event.extendedProps.isOwner) && !Boolean(event.extendedProps.isMyInvite),
             })),
         }));
 
