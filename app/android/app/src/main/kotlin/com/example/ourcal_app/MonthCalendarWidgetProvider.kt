@@ -63,7 +63,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val firstColumn = firstDay.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY
         val daysInMonth = firstDay.getActualMaximum(Calendar.DAY_OF_MONTH)
 
-        for (index in 0 until 42) {
+        for (index in 0 until 35) {
             val row = index / 7
             val column = index % 7
             val day = index - firstColumn + 1
@@ -345,7 +345,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             intArrayOf(R.id.day_cell_2_0, R.id.day_cell_2_1, R.id.day_cell_2_2, R.id.day_cell_2_3, R.id.day_cell_2_4, R.id.day_cell_2_5, R.id.day_cell_2_6),
             intArrayOf(R.id.day_cell_3_0, R.id.day_cell_3_1, R.id.day_cell_3_2, R.id.day_cell_3_3, R.id.day_cell_3_4, R.id.day_cell_3_5, R.id.day_cell_3_6),
             intArrayOf(R.id.day_cell_4_0, R.id.day_cell_4_1, R.id.day_cell_4_2, R.id.day_cell_4_3, R.id.day_cell_4_4, R.id.day_cell_4_5, R.id.day_cell_4_6),
-            intArrayOf(R.id.day_cell_5_0, R.id.day_cell_5_1, R.id.day_cell_5_2, R.id.day_cell_5_3, R.id.day_cell_5_4, R.id.day_cell_5_5, R.id.day_cell_5_6),
         )
 
         private val dayNumberIds = arrayOf(
@@ -354,7 +353,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             intArrayOf(R.id.day_number_2_0, R.id.day_number_2_1, R.id.day_number_2_2, R.id.day_number_2_3, R.id.day_number_2_4, R.id.day_number_2_5, R.id.day_number_2_6),
             intArrayOf(R.id.day_number_3_0, R.id.day_number_3_1, R.id.day_number_3_2, R.id.day_number_3_3, R.id.day_number_3_4, R.id.day_number_3_5, R.id.day_number_3_6),
             intArrayOf(R.id.day_number_4_0, R.id.day_number_4_1, R.id.day_number_4_2, R.id.day_number_4_3, R.id.day_number_4_4, R.id.day_number_4_5, R.id.day_number_4_6),
-            intArrayOf(R.id.day_number_5_0, R.id.day_number_5_1, R.id.day_number_5_2, R.id.day_number_5_3, R.id.day_number_5_4, R.id.day_number_5_5, R.id.day_number_5_6),
         )
 
         private val eventLabelIds = arrayOf(
@@ -402,15 +400,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 intArrayOf(R.id.day_event_4_4_0, R.id.day_event_4_4_1, R.id.day_event_4_4_2, R.id.day_event_4_4_3),
                 intArrayOf(R.id.day_event_4_5_0, R.id.day_event_4_5_1, R.id.day_event_4_5_2, R.id.day_event_4_5_3),
                 intArrayOf(R.id.day_event_4_6_0, R.id.day_event_4_6_1, R.id.day_event_4_6_2, R.id.day_event_4_6_3),
-            ),
-            arrayOf(
-                intArrayOf(R.id.day_event_5_0_0, R.id.day_event_5_0_1, R.id.day_event_5_0_2, R.id.day_event_5_0_3),
-                intArrayOf(R.id.day_event_5_1_0, R.id.day_event_5_1_1, R.id.day_event_5_1_2, R.id.day_event_5_1_3),
-                intArrayOf(R.id.day_event_5_2_0, R.id.day_event_5_2_1, R.id.day_event_5_2_2, R.id.day_event_5_2_3),
-                intArrayOf(R.id.day_event_5_3_0, R.id.day_event_5_3_1, R.id.day_event_5_3_2, R.id.day_event_5_3_3),
-                intArrayOf(R.id.day_event_5_4_0, R.id.day_event_5_4_1, R.id.day_event_5_4_2, R.id.day_event_5_4_3),
-                intArrayOf(R.id.day_event_5_5_0, R.id.day_event_5_5_1, R.id.day_event_5_5_2, R.id.day_event_5_5_3),
-                intArrayOf(R.id.day_event_5_6_0, R.id.day_event_5_6_1, R.id.day_event_5_6_2, R.id.day_event_5_6_3),
             ),
         )
     }
