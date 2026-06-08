@@ -52,10 +52,13 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <Space
+        <TextView
+            android:id="@+id/widget_header_spacer"
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:includeFontPadding="false"
+            android:text="" />
 
         <TextView
             android:id="@+id/widget_filter_my"
@@ -105,6 +108,7 @@
         android:visibility="gone" />
 
     <LinearLayout
+        android:id="@+id/widget_calendar_grid"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="0dp"
