@@ -1734,6 +1734,7 @@ export default function CalendarPage() {
                 color: String(event.backgroundColor === 'transparent' ? event.borderColor : event.backgroundColor),
                 isHoliday: Boolean(event.extendedProps.isHoliday),
                 isPendingInvite: Boolean(event.extendedProps.isPendingInvite),
+                isHidden: Boolean(event.extendedProps.isHidden),
             })),
         }));
 
