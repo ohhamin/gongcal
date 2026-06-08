@@ -29,21 +29,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
 
-        when (intent.action) {
-            ACTION_PREV_MONTH -> {
-                moveDisplayMonth(context, -1)
-                refreshAllWidgets(context)
-            }
-            ACTION_NEXT_MONTH -> {
-                moveDisplayMonth(context, 1)
-                refreshAllWidgets(context)
-            }
-            ACTION_RESET_MONTH -> {
-                resetDisplayMonth(context)
-                refreshAllWidgets(context)
-            }
-            in dateRefreshActions -> refreshAllWidgets(context)
-        }
+        if (intent.action in dateRefreshActions) refreshAllWidgets(context)
     }
 
     private fun updateWidget(
@@ -54,7 +40,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.month_calendar_widget)
         val snapshot = readSnapshot(context)
         val now = Calendar.getInstance(Locale.KOREA)
-        val displayCalendar = readDisplayMonth(context) ?: snapshot?.monthCalendar ?: now
+        val displayCalendar = snapshot?.monthCalendar ?: now
         val year = displayCalendar.get(Calendar.YEAR)
         val month = displayCalendar.get(Calendar.MONTH)
         val todayKey = dateKey(now)
@@ -66,11 +52,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         views.setViewVisibility(R.id.widget_subtitle, View.GONE)
         views.setOnClickPendingIntent(R.id.widget_title, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
         views.setOnClickPendingIntent(R.id.widget_calendar_grid, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
-        views.setOnClickPendingIntent(R.id.widget_prev_month, createWidgetActionPendingIntent(context, ACTION_PREV_MONTH))
-        views.setOnClickPendingIntent(R.id.widget_next_month, createWidgetActionPendingIntent(context, ACTION_NEXT_MONTH))
-        views.setOnClickPendingIntent(R.id.widget_filter_my, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
-        views.setOnClickPendingIntent(R.id.widget_filter_group, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
-        views.setOnClickPendingIntent(R.id.widget_group_settings, createOpenAppPendingIntent(context, displayMonthKey, "groups"))
 
         val firstDay = Calendar.getInstance(Locale.KOREA).apply {
             set(Calendar.YEAR, year)
@@ -282,47 +263,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         updateWidgets(context, manager, manager.getAppWidgetIds(component))
     }
 
-    private fun readDisplayMonth(context: Context): Calendar? {
-        val rawMonth = context.getSharedPreferences(MainActivity.WIDGET_PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_DISPLAY_MONTH, null)
-            ?: return null
-        val parts = rawMonth.split('-')
-        val year = parts.getOrNull(0)?.toIntOrNull() ?: return null
-        val month = parts.getOrNull(1)?.toIntOrNull() ?: return null
-        return Calendar.getInstance(Locale.KOREA).apply {
-            set(Calendar.YEAR, year)
-            set(Calendar.MONTH, month - 1)
-            set(Calendar.DAY_OF_MONTH, 1)
-        }
-    }
-
-    private fun moveDisplayMonth(context: Context, deltaMonth: Int) {
-        val base = readDisplayMonth(context) ?: readSnapshot(context)?.monthCalendar ?: Calendar.getInstance(Locale.KOREA)
-        val next = Calendar.getInstance(Locale.KOREA).apply {
-            time = base.time
-            set(Calendar.DAY_OF_MONTH, 1)
-            add(Calendar.MONTH, deltaMonth)
-        }
-        context.getSharedPreferences(MainActivity.WIDGET_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_DISPLAY_MONTH, monthKey(next))
-            .apply()
-    }
-
-    private fun resetDisplayMonth(context: Context) {
-        context.getSharedPreferences(MainActivity.WIDGET_PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .remove(KEY_DISPLAY_MONTH)
-            .apply()
-    }
-
-    private fun createWidgetActionPendingIntent(context: Context, action: String): PendingIntent {
-        val intent = Intent(context, MonthCalendarWidgetProvider::class.java).apply {
-            this.action = action
-        }
-        return PendingIntent.getBroadcast(context, action.hashCode(), intent, pendingIntentFlags())
-    }
-
     private fun createOpenAppPendingIntent(context: Context, targetMonth: String, route: String): PendingIntent {
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?: Intent(context, MainActivity::class.java)
@@ -394,10 +334,6 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val MAX_VISIBLE_EVENTS = 4
-        private const val KEY_DISPLAY_MONTH = "widget_display_month"
-        private const val ACTION_PREV_MONTH = "com.example.ourcal_app.widget.PREV_MONTH"
-        private const val ACTION_NEXT_MONTH = "com.example.ourcal_app.widget.NEXT_MONTH"
-        private const val ACTION_RESET_MONTH = "com.example.ourcal_app.widget.RESET_MONTH"
         private val TEXT_COLOR = Color.parseColor("#111122")
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
