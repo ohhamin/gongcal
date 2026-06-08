@@ -1710,6 +1710,41 @@ export default function CalendarPage() {
         });
     });
 
+    useEffect(() => {
+        const bridge = (window as unknown as { OurcalWidgetBridge?: { postMessage: (message: string) => void } }).OurcalWidgetBridge;
+        if (!bridge) return;
+
+        const year = calendarMonthDate.getFullYear();
+        const month = calendarMonthDate.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const start = addDays(firstDay, -firstDay.getDay());
+        const visibleDates = Array.from({ length: 42 }, (_, index) => formatLocalDateString(addDays(start, index)));
+        const eventsByDate = new Map<string, typeof calendarEvents>();
+
+        calendarEvents.forEach((event) => {
+            const date = String(event.start || '');
+            if (!visibleDates.includes(date)) return;
+            eventsByDate.set(date, [...(eventsByDate.get(date) || []), event]);
+        });
+
+        const days = visibleDates.map((date) => ({
+            date,
+            events: (eventsByDate.get(date) || []).slice(0, 6).map((event) => ({
+                title: String(event.title || '일정'),
+                color: String(event.backgroundColor === 'transparent' ? event.borderColor : event.backgroundColor),
+                isHoliday: Boolean(event.extendedProps.isHoliday),
+                isPendingInvite: Boolean(event.extendedProps.isPendingInvite),
+            })),
+        }));
+
+        bridge.postMessage(JSON.stringify({
+            version: 1,
+            monthDate: formatLocalDateString(firstDay),
+            generatedAt: new Date().toISOString(),
+            days,
+        }));
+    }, [calendarEvents, calendarMonthDate]);
+
     const popupEvents = popupDate ? getEventsForDate(popupDate).filter((event) => event.is_holiday || isEventVisibleByMemberFilter(event)) : [];
 
     const isDateInPendingRange = (dateStr: string) => {

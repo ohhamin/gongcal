@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'fcm_bridge.dart';
+import 'widget_bridge.dart';
 
 const String defaultWebUrl = String.fromEnvironment(
   'OURCAL_WEB_URL',
@@ -41,6 +42,7 @@ class OurCalWebShell extends StatefulWidget {
 class _OurCalWebShellState extends State<OurCalWebShell> {
   late final WebViewController _controller;
   late final FcmBridge _fcmBridge;
+  late final WidgetBridge _widgetBridge;
   var _progress = 0;
   String? _errorMessage;
 
@@ -66,6 +68,8 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
       );
 
     _fcmBridge = FcmBridge(_controller, defaultWebUrl);
+    _widgetBridge = WidgetBridge(_controller);
+    _widgetBridge.attach();
     _fcmBridge.initialize();
     _controller.loadRequest(Uri.parse(defaultWebUrl));
   }

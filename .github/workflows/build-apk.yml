@@ -8,9 +8,14 @@ on:
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
+concurrency:
+  group: build-flutter-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     defaults:
       run:
@@ -25,6 +30,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -69,7 +75,7 @@ jobs:
         id: release_version
         run: |
           RELEASE_VERSION="$(node -p "require('../package.json').version")"
-          RELEASE_BUILD_NUMBER="$(node -p "require('../package.json').version.split('.').reduce((acc, part) => acc * 1000 + Number(part), 0)")"
+          RELEASE_BUILD_NUMBER="$(node -p "const [major, minor, patch] = require('../package.json').version.split('.').map(Number); major * 10000 + minor * 100 + patch")"
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
           echo "build_number=$RELEASE_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
 
