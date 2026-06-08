@@ -15,7 +15,7 @@
         android:includeFontPadding="false"
         android:text="2026년 6월"
         android:textColor="#111122"
-        android:textSize="45sp"
+        android:textSize="22sp"
         android:textStyle="bold" />
 
     <TextView
@@ -45,7 +45,7 @@
                 android:includeFontPadding="false"
                 android:text="일"
                 android:textColor="#DC2626"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_mon"
@@ -57,7 +57,7 @@
                 android:includeFontPadding="false"
                 android:text="월"
                 android:textColor="#76768A"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_tue"
@@ -69,7 +69,7 @@
                 android:includeFontPadding="false"
                 android:text="화"
                 android:textColor="#76768A"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_wed"
@@ -81,7 +81,7 @@
                 android:includeFontPadding="false"
                 android:text="수"
                 android:textColor="#76768A"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_thu"
@@ -93,7 +93,7 @@
                 android:includeFontPadding="false"
                 android:text="목"
                 android:textColor="#76768A"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_fri"
@@ -105,7 +105,7 @@
                 android:includeFontPadding="false"
                 android:text="금"
                 android:textColor="#76768A"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/weekday_sat"
@@ -117,7 +117,7 @@
                 android:includeFontPadding="false"
                 android:text="토"
                 android:textColor="#DC2626"
-                android:textSize="18sp"
+                android:textSize="9sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -145,7 +145,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -162,7 +162,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -180,7 +180,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -198,7 +198,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -216,7 +216,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -239,7 +239,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -256,7 +256,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -274,7 +274,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -292,7 +292,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -310,7 +310,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -333,7 +333,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -350,7 +350,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -368,7 +368,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -386,7 +386,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -404,7 +404,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -427,7 +427,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -444,7 +444,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -462,7 +462,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -480,7 +480,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -498,7 +498,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -521,7 +521,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -538,7 +538,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -556,7 +556,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -574,7 +574,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -592,7 +592,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -615,7 +615,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -632,7 +632,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -650,7 +650,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -668,7 +668,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -686,7 +686,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -709,7 +709,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -726,7 +726,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -744,7 +744,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -762,7 +762,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -780,7 +780,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -810,7 +810,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -827,7 +827,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -845,7 +845,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -863,7 +863,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -881,7 +881,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -904,7 +904,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -921,7 +921,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -939,7 +939,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -957,7 +957,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -975,7 +975,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -998,7 +998,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1015,7 +1015,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1033,7 +1033,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1051,7 +1051,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1069,7 +1069,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1092,7 +1092,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1109,7 +1109,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1127,7 +1127,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1145,7 +1145,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1163,7 +1163,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1186,7 +1186,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1203,7 +1203,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1221,7 +1221,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1239,7 +1239,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1257,7 +1257,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1280,7 +1280,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1297,7 +1297,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1315,7 +1315,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1333,7 +1333,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1351,7 +1351,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1374,7 +1374,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1391,7 +1391,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1409,7 +1409,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1427,7 +1427,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1445,7 +1445,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1475,7 +1475,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1492,7 +1492,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1510,7 +1510,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1528,7 +1528,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1546,7 +1546,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1569,7 +1569,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1586,7 +1586,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1604,7 +1604,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1622,7 +1622,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1640,7 +1640,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1663,7 +1663,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1680,7 +1680,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1698,7 +1698,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1716,7 +1716,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1734,7 +1734,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1757,7 +1757,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1774,7 +1774,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1792,7 +1792,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1810,7 +1810,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1828,7 +1828,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1851,7 +1851,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1868,7 +1868,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1886,7 +1886,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1904,7 +1904,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1922,7 +1922,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -1945,7 +1945,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -1962,7 +1962,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1980,7 +1980,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -1998,7 +1998,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2016,7 +2016,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2039,7 +2039,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2056,7 +2056,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2074,7 +2074,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2092,7 +2092,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2110,7 +2110,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2140,7 +2140,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2157,7 +2157,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2175,7 +2175,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2193,7 +2193,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2211,7 +2211,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2234,7 +2234,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2251,7 +2251,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2269,7 +2269,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2287,7 +2287,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2305,7 +2305,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2328,7 +2328,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2345,7 +2345,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2363,7 +2363,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2381,7 +2381,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2399,7 +2399,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2422,7 +2422,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2439,7 +2439,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2457,7 +2457,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2475,7 +2475,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2493,7 +2493,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2516,7 +2516,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2533,7 +2533,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2551,7 +2551,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2569,7 +2569,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2587,7 +2587,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2610,7 +2610,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2627,7 +2627,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2645,7 +2645,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2663,7 +2663,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2681,7 +2681,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2704,7 +2704,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2721,7 +2721,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2739,7 +2739,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2757,7 +2757,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2775,7 +2775,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2805,7 +2805,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2822,7 +2822,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2840,7 +2840,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2858,7 +2858,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2876,7 +2876,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2899,7 +2899,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -2916,7 +2916,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2934,7 +2934,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2952,7 +2952,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -2970,7 +2970,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -2993,7 +2993,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3010,7 +3010,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3028,7 +3028,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3046,7 +3046,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3064,7 +3064,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3087,7 +3087,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3104,7 +3104,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3122,7 +3122,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3140,7 +3140,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3158,7 +3158,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3181,7 +3181,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3198,7 +3198,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3216,7 +3216,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3234,7 +3234,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3252,7 +3252,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3275,7 +3275,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3292,7 +3292,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3310,7 +3310,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3328,7 +3328,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3346,7 +3346,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3369,7 +3369,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3386,7 +3386,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3404,7 +3404,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3422,7 +3422,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3440,7 +3440,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3470,7 +3470,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3487,7 +3487,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3505,7 +3505,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3523,7 +3523,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3541,7 +3541,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3564,7 +3564,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3581,7 +3581,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3599,7 +3599,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3617,7 +3617,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3635,7 +3635,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3658,7 +3658,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3675,7 +3675,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3693,7 +3693,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3711,7 +3711,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3729,7 +3729,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3752,7 +3752,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3769,7 +3769,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3787,7 +3787,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3805,7 +3805,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3823,7 +3823,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3846,7 +3846,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3863,7 +3863,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3881,7 +3881,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3899,7 +3899,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3917,7 +3917,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -3940,7 +3940,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -3957,7 +3957,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3975,7 +3975,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -3993,7 +3993,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -4011,7 +4011,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
@@ -4034,7 +4034,7 @@
                     android:gravity="center"
                     android:includeFontPadding="false"
                     android:textColor="#111122"
-                    android:textSize="20sp"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -4051,7 +4051,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -4069,7 +4069,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -4087,7 +4087,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -4105,7 +4105,7 @@
                     android:paddingStart="4dp"
                     android:paddingEnd="4dp"
                     android:textColor="#FFFFFF"
-                    android:textSize="16sp"
+                    android:textSize="8sp"
                     android:textStyle="bold"
                     android:visibility="gone" />
             </LinearLayout>
