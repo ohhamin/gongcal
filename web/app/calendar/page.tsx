@@ -1718,7 +1718,7 @@ export default function CalendarPage() {
         const month = calendarMonthDate.getMonth();
         const firstDay = new Date(year, month, 1);
         const start = addDays(firstDay, -firstDay.getDay());
-        const visibleDates = Array.from({ length: 42 }, (_, index) => formatLocalDateString(addDays(start, index)));
+        const visibleDates = Array.from({ length: 35 }, (_, index) => formatLocalDateString(addDays(start, index)));
         const eventsByDate = new Map<string, typeof calendarEvents>();
 
         calendarEvents.forEach((event) => {
