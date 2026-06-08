@@ -10,10 +10,12 @@ import android.graphics.Color
 import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.graphics.Typeface
+import android.view.View
 import android.widget.RemoteViews
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -57,7 +59,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val snapshotEventsByDate = snapshot?.eventsByDate.orEmpty()
 
         views.setTextViewText(R.id.widget_title, SimpleDateFormat("yyyy년 M월", Locale.KOREA).format(displayCalendar.time))
-        views.setTextViewText(R.id.widget_subtitle, if (snapshot == null) "앱을 열면 일정이 동기화돼요" else "앱 월간 캘린더 동기화")
+        views.setViewVisibility(R.id.widget_subtitle, View.GONE)
         views.setOnClickPendingIntent(R.id.widget_root, createOpenAppPendingIntent(context))
 
         val firstDay = Calendar.getInstance(Locale.KOREA).apply {
@@ -122,14 +124,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
 
         events.take(MAX_VISIBLE_EVENTS).forEach { event ->
             builder.append('\n')
-            val prefix = if (event.isPendingInvite) "◌ " else "● "
-            appendStyled(
-                builder,
-                (prefix + event.title).take(8),
-                color = if (isToday) Color.WHITE else event.color,
-                size = 0.76f,
-                bold = true,
-            )
+            appendEventLabel(builder, event, isToday)
         }
 
         if (events.size > MAX_VISIBLE_EVENTS) {
@@ -138,6 +133,40 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         }
 
         return builder
+    }
+
+    private fun appendEventLabel(
+        builder: SpannableStringBuilder,
+        event: WidgetEvent,
+        isToday: Boolean,
+    ) {
+        val maxTitleLength = if (event.isHidden) 6 else 7
+        val label = when {
+            event.isHidden -> " 🔒${event.title.removePrefix("🔒").take(maxTitleLength)} "
+            event.isPendingInvite -> " ◌ ${event.title.take(maxTitleLength)} "
+            else -> " ${event.title.take(maxTitleLength)} "
+        }
+        val start = builder.length
+        builder.append(label)
+
+        val foregroundColor = when {
+            isToday -> Color.WHITE
+            event.isPendingInvite -> event.color
+            else -> Color.WHITE
+        }
+        val backgroundColor = when {
+            isToday -> Color.TRANSPARENT
+            event.isPendingInvite -> tintColor(event.color, 0.14f)
+            event.isHidden -> applyAlpha(event.color, 0.62f)
+            else -> event.color
+        }
+
+        if (backgroundColor != Color.TRANSPARENT) {
+            builder.setSpan(BackgroundColorSpan(backgroundColor), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        builder.setSpan(ForegroundColorSpan(foregroundColor), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        builder.setSpan(RelativeSizeSpan(0.78f), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
 
     private fun appendStyled(
@@ -183,6 +212,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                             color = parseColor(event.optString("color"), GROUP_EVENT_COLOR),
                             isHoliday = event.optBoolean("isHoliday"),
                             isPendingInvite = event.optBoolean("isPendingInvite"),
+                            isHidden = event.optBoolean("isHidden"),
                         ),
                     )
                 }
@@ -243,6 +273,10 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
     private fun parseColor(rawColor: String, fallback: Int): Int {
         return runCatching {
             when {
+                rawColor.matches(Regex("^#[0-9A-Fa-f]{8}$")) -> {
+                    val rgb = rawColor.substring(1, 7)
+                    Color.parseColor("#$rgb")
+                }
                 rawColor.startsWith("#") -> Color.parseColor(rawColor)
                 rawColor.startsWith("rgba") -> {
                     val values = rawColor.substringAfter('(').substringBefore(')').split(',').map { it.trim() }
@@ -251,6 +285,20 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 else -> fallback
             }
         }.getOrDefault(fallback)
+    }
+
+    private fun tintColor(color: Int, opacity: Float): Int {
+        val red = (Color.red(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        val green = (Color.green(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        val blue = (Color.blue(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        return Color.rgb(red, green, blue)
+    }
+
+    private fun applyAlpha(color: Int, opacity: Float): Int {
+        val red = (Color.red(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        val green = (Color.green(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        val blue = (Color.blue(color) * opacity + 255 * (1 - opacity)).toInt().coerceIn(0, 255)
+        return Color.rgb(red, green, blue)
     }
 
     data class WidgetSnapshot(
@@ -263,10 +311,11 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val color: Int,
         val isHoliday: Boolean,
         val isPendingInvite: Boolean,
+        val isHidden: Boolean,
     )
 
     companion object {
-        private const val MAX_VISIBLE_EVENTS = 3
+        private const val MAX_VISIBLE_EVENTS = 4
         private val TEXT_COLOR = Color.parseColor("#111122")
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
