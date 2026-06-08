@@ -1,5 +1,17 @@
 # OPENCLAW
 
+## v.0.4.55 - 2026-06-08
+
+### 업데이트 내용
+
+- `/calendar` 페이지에서 `useSearchParams()`를 직접 사용해 Next.js prerender가 실패하던 문제를 수정했습니다.
+- 위젯 월 이동 쿼리(`widgetMonth`)는 클라이언트 마운트 이후 `window.location.search`로 읽고 FullCalendar API로 이동하도록 변경했습니다.
+- README/package 기준 버전을 `v.0.4.54`에서 `v.0.4.55`로 업데이트했습니다.
+
+### 작업 메모
+
+- Supabase 더미 환경 변수로 `npm --prefix web run build`를 실행해 `/calendar`를 포함한 static prerender 통과를 확인했습니다.
+
 ## v.0.4.54 - 2026-06-08
 
 ### 업데이트 내용
