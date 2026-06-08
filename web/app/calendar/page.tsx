@@ -2,7 +2,7 @@
 
 import { appAlert, appConfirm } from '@/components/AppDialogProvider';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { flushSync } from 'react-dom';
 
 import FullCalendar from '@fullcalendar/react';
@@ -279,6 +279,7 @@ function formatDateTimeText(value: string | null): string {
 
 export default function CalendarPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const currentUserQuery = useCurrentUser();
     const profileQuery = useMyProfile();
 
@@ -319,7 +320,14 @@ export default function CalendarPage() {
     const [dragRange, setDragRange] = useState<{ start: string; end: string } | null>(null);
     const [pendingRange, setPendingRange] = useState<{ start: string; end: string } | null>(null);
     const [holidayByDate, setHolidayByDate] = useState<Record<string, HolidayInfo>>({});
-    const [calendarMonthDate, setCalendarMonthDate] = useState(() => new Date());
+    const [calendarMonthDate, setCalendarMonthDate] = useState(() => {
+        const widgetMonth = searchParams.get('widgetMonth');
+        if (/^\d{4}-\d{2}$/.test(widgetMonth || '')) {
+            const [year, month] = widgetMonth!.split('-').map(Number);
+            return new Date(year, month - 1, 1);
+        }
+        return new Date();
+    });
     const calendarContainerRef = useRef<HTMLDivElement | null>(null);
     const calendarRef = useRef<FullCalendar | null>(null);
     const dragStartDateRef = useRef<string | null>(null);
@@ -1730,7 +1738,7 @@ export default function CalendarPage() {
         const days = visibleDates.map((date) => ({
             date,
             events: (eventsByDate.get(date) || []).slice(0, 6).map((event) => ({
-                title: String(event.title || '일정'),
+                title: String((!Boolean(event.extendedProps.isHoliday) && !Boolean(event.extendedProps.isOwner) && !Boolean(event.extendedProps.isMyInvite) && String(event.extendedProps.ownerName || '').length > 0) ? event.extendedProps.ownerName : event.title || '일정'),
                 color: String(event.backgroundColor === 'transparent' ? event.borderColor : event.backgroundColor),
                 isHoliday: Boolean(event.extendedProps.isHoliday),
                 isPendingInvite: Boolean(event.extendedProps.isPendingInvite),
@@ -1913,6 +1921,7 @@ export default function CalendarPage() {
                             key={profileQuery.data?.main_group_id || 'personal'}
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
+                            initialDate={calendarMonthDate}
                             headerToolbar={false}
                             height="100%"
                             expandRows={true}
@@ -1927,7 +1936,7 @@ export default function CalendarPage() {
                             selectLongPressDelay={RANGE_SELECT_DELAY_MS}
                             eventLongPressDelay={RANGE_SELECT_DELAY_MS}
                             select={openCreateFormFromSelect}
-                            dayMaxEvents={3}
+                            dayMaxEvents={4}
                             dayCellClassNames={(arg) => {
                                 const dateStr = formatLocalDateString(arg.date);
                                 const classNames: string[] = [];
@@ -1963,16 +1972,16 @@ export default function CalendarPage() {
                             eventOrder="orderPriority,orderStartAt,orderOwnerRank,orderTitle"
                             eventContent={(arg) => {
                                 const isOwner = Boolean(arg.event.extendedProps.isOwner);
-                                const isHidden = Boolean(arg.event.extendedProps.isHidden);
                                 const isPendingInvite = Boolean(arg.event.extendedProps.isPendingInvite);
                                 const ownerName = String(arg.event.extendedProps.ownerName || '');
-                                const shouldShowOwnerName = !isOwner && !isHidden && ownerName.length > 0;
+                                const isMyInvite = Boolean(arg.event.extendedProps.isMyInvite);
+                                const shouldShowOwnerName = !isOwner && !isMyInvite && ownerName.length > 0;
+                                const displayTitle = shouldShowOwnerName ? ownerName : arg.event.title;
 
                                 return (
                                     <div className="flex min-w-0 items-center text-[10px] font-semibold leading-none">
                                         <span className="min-w-0 flex-1 truncate">
-                                            {arg.event.title}
-                                            {shouldShowOwnerName && <span className="ml-1 opacity-80">{ownerName}</span>}
+                                            {displayTitle}
                                         </span>
                                         {isPendingInvite && <span className="ourcal-pending-invite-dot" aria-hidden="true" />}
                                     </div>
