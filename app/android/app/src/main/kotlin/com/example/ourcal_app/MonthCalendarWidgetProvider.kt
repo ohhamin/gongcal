@@ -173,12 +173,12 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 else -> R.drawable.widget_event_group_bg
             }
             val textColor = when {
-                event.isPendingInvite -> GROUP_EVENT_COLOR
+                event.isPendingInvite -> PENDING_DOT_COLOR
                 else -> Color.WHITE
             }
             val prefix = when {
                 event.isPrivateLocked -> "🔒 "
-                event.isPendingInvite -> "◌ "
+                event.isPendingInvite -> "• "
                 else -> ""
             }
             renderEventSlot(
@@ -433,6 +433,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         private val DISABLED_TEXT_COLOR = Color.parseColor("#C7C7D1")
         private const val ADJACENT_MONTH_ALPHA = 0.5f
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
+        private val PENDING_DOT_COLOR = Color.parseColor("#EF4444")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
         private val MY_EVENT_COLOR = Color.parseColor("#3B82F6")
         private val GROUP_EVENT_COLOR = Color.parseColor("#10B981")
