@@ -1720,7 +1720,7 @@ export default function CalendarPage() {
         const visibleDates = Array.from(new Set(monthDates.flatMap((monthDate) => {
             const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
             const start = addDays(firstDay, -firstDay.getDay());
-            return Array.from({ length: 35 }, (_, index) => formatLocalDateString(addDays(start, index)));
+            return Array.from({ length: 42 }, (_, index) => formatLocalDateString(addDays(start, index)));
         })));
         const visibleDateSet = new Set(visibleDates);
         const eventsByDate = new Map<string, typeof calendarEvents>();
