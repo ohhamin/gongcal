@@ -15,6 +15,11 @@ type PushTokenRow = {
     token: string;
 };
 
+type SendFcmOptions = {
+    path?: string;
+    data?: Record<string, string>;
+};
+
 let cachedAccessToken: { token: string; expiresAt: number } | null = null;
 
 function getFirebaseCredentials() {
@@ -55,7 +60,7 @@ async function getFirebaseAccessToken() {
     return cachedAccessToken.token;
 }
 
-export async function sendFcmToTokens(notification: PushNotification, tokens: PushTokenRow[]) {
+export async function sendFcmToTokens(notification: PushNotification, tokens: PushTokenRow[], options: SendFcmOptions = {}) {
     if (tokens.length === 0) return { successCount: 0, failureCount: 0 };
 
     const { projectId } = getFirebaseCredentials();
@@ -84,8 +89,9 @@ export async function sendFcmToTokens(notification: PushNotification, tokens: Pu
                             notificationId: String(notification.id),
                             type: notification.type,
                             relatedId: notification.related_id ? String(notification.related_id) : '',
-                            path: '/notifications',
+                            path: options.path ?? '/notifications',
                             click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                            ...(options.data ?? {}),
                         },
                         android: {
                             notification: {

@@ -5,6 +5,7 @@ import { type ReactNode, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
+import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase';
 import { useCurrentUser, useMyProfile } from '@/lib/useCurrentProfile';
 
@@ -59,8 +60,10 @@ export default function SettingsPage() {
     const profileQuery = useMyProfile();
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [updatingScheduleReminder, setUpdatingScheduleReminder] = useState(false);
 
     const inviteCode = profileQuery.data?.id.slice(0, 8) || '';
+    const scheduleReminderEnabled = profileQuery.data?.schedule_30m_push_enabled ?? true;
 
     const copyInviteCode = async () => {
         if (!inviteCode) return;
@@ -72,6 +75,30 @@ export default function SettingsPage() {
             console.error(error);
             await appAlert('초대코드 복사 실패');
         }
+    };
+
+    const handleScheduleReminderToggle = async () => {
+        const profile = profileQuery.data;
+
+        if (!profile || updatingScheduleReminder) return;
+
+        const nextEnabled = !scheduleReminderEnabled;
+        setUpdatingScheduleReminder(true);
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ schedule_30m_push_enabled: nextEnabled })
+            .eq('id', profile.id);
+
+        setUpdatingScheduleReminder(false);
+
+        if (error) {
+            console.error(error);
+            await appAlert('일정 알림 설정 변경 실패');
+            return;
+        }
+
+        await queryClient.invalidateQueries({ queryKey: queryKeys.myProfile(profile.id) });
     };
 
     const handleLogout = async () => {
@@ -176,6 +203,22 @@ export default function SettingsPage() {
 
             <SettingsSection title="Account">
                 <SettingsRow icon="👤" label="프로필" sub="닉네임과 초대코드를 확인합니다." />
+                <SettingsRow
+                    icon="⏰"
+                    label="일정 30분 전 알림"
+                    sub="내 일정과 수락한 초대 일정 시작 30분 전에 푸시를 받습니다."
+                    onClick={handleScheduleReminderToggle}
+                    right={
+                        <span
+                            role="switch"
+                            aria-checked={scheduleReminderEnabled}
+                            aria-label="일정 30분 전 알림"
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition ${scheduleReminderEnabled ? 'bg-[var(--oc-primary)]' : 'bg-gray-300'} ${updatingScheduleReminder ? 'opacity-60' : ''}`}
+                        >
+                            <span className={`h-5 w-5 rounded-full bg-white shadow transition ${scheduleReminderEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </span>
+                    }
+                />
                 <SettingsRow icon="🚪" label="로그아웃" sub="현재 기기에서 세션을 종료합니다." onClick={handleLogout} last />
             </SettingsSection>
 
