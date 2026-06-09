@@ -29,7 +29,17 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
 
-        if (intent.action in dateRefreshActions) refreshAllWidgets(context)
+        when (intent.action) {
+            ACTION_PREV_MONTH -> {
+                moveDisplayMonth(context, -1)
+                refreshAllWidgets(context)
+            }
+            ACTION_NEXT_MONTH -> {
+                moveDisplayMonth(context, 1)
+                refreshAllWidgets(context)
+            }
+            in dateRefreshActions -> refreshAllWidgets(context)
+        }
     }
 
     private fun updateWidget(
@@ -40,7 +50,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val views = RemoteViews(context.packageName, R.layout.month_calendar_widget)
         val snapshot = readSnapshot(context)
         val now = Calendar.getInstance(Locale.KOREA)
-        val displayCalendar = snapshot?.monthCalendar ?: now
+        val displayCalendar = readDisplayMonth(context, snapshot) ?: snapshot?.monthCalendar ?: now
         val year = displayCalendar.get(Calendar.YEAR)
         val month = displayCalendar.get(Calendar.MONTH)
         val todayKey = dateKey(now)
@@ -50,6 +60,12 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val displayMonthKey = monthKey(displayCalendar)
         views.setTextViewText(R.id.widget_title, SimpleDateFormat("yyyy년 M월", Locale.KOREA).format(displayCalendar.time))
         views.setViewVisibility(R.id.widget_subtitle, View.GONE)
+        val canGoPrev = snapshot?.minMonthCalendar?.let { compareMonth(displayCalendar, it) > 0 } ?: false
+        val canGoNext = snapshot?.maxMonthCalendar?.let { compareMonth(displayCalendar, it) < 0 } ?: false
+        views.setTextColor(R.id.widget_prev_month, if (canGoPrev) TEXT_COLOR else DISABLED_TEXT_COLOR)
+        views.setTextColor(R.id.widget_next_month, if (canGoNext) TEXT_COLOR else DISABLED_TEXT_COLOR)
+        views.setOnClickPendingIntent(R.id.widget_prev_month, createWidgetActionPendingIntent(context, if (canGoPrev) ACTION_PREV_MONTH else ACTION_DISABLED))
+        views.setOnClickPendingIntent(R.id.widget_next_month, createWidgetActionPendingIntent(context, if (canGoNext) ACTION_NEXT_MONTH else ACTION_DISABLED))
         views.setOnClickPendingIntent(R.id.widget_title, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
         views.setOnClickPendingIntent(R.id.widget_calendar_grid, createOpenAppPendingIntent(context, displayMonthKey, "calendar"))
 
@@ -196,12 +212,14 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
 
         return runCatching {
             val json = JSONObject(raw)
-            val monthDate = json.optString("monthDate")
-            val monthCalendar = Calendar.getInstance(Locale.KOREA).apply {
-                val parts = monthDate.split('-')
-                set(Calendar.YEAR, parts.getOrNull(0)?.toIntOrNull() ?: get(Calendar.YEAR))
-                set(Calendar.MONTH, (parts.getOrNull(1)?.toIntOrNull() ?: (get(Calendar.MONTH) + 1)) - 1)
-                set(Calendar.DAY_OF_MONTH, 1)
+            val monthCalendar = parseMonthCalendar(json.optString("monthDate")) ?: Calendar.getInstance(Locale.KOREA)
+            val minMonthCalendar = parseMonthCalendar(json.optString("minMonthDate")) ?: Calendar.getInstance(Locale.KOREA).apply {
+                time = monthCalendar.time
+                add(Calendar.MONTH, -2)
+            }
+            val maxMonthCalendar = parseMonthCalendar(json.optString("maxMonthDate")) ?: Calendar.getInstance(Locale.KOREA).apply {
+                time = monthCalendar.time
+                add(Calendar.MONTH, 2)
             }
 
             val eventsByDate = mutableMapOf<String, MutableList<WidgetEvent>>()
@@ -226,7 +244,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 }
             }
 
-            WidgetSnapshot(monthCalendar, eventsByDate)
+            WidgetSnapshot(monthCalendar, minMonthCalendar, maxMonthCalendar, eventsByDate)
         }.getOrNull()
     }
 
@@ -261,6 +279,63 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         val manager = AppWidgetManager.getInstance(context)
         val component = ComponentName(context, MonthCalendarWidgetProvider::class.java)
         updateWidgets(context, manager, manager.getAppWidgetIds(component))
+    }
+
+    private fun parseMonthCalendar(monthDate: String?): Calendar? {
+        if (monthDate.isNullOrBlank()) return null
+        val parts = monthDate.split('-')
+        val year = parts.getOrNull(0)?.toIntOrNull() ?: return null
+        val month = parts.getOrNull(1)?.toIntOrNull() ?: return null
+        return Calendar.getInstance(Locale.KOREA).apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month - 1)
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+    }
+
+    private fun readDisplayMonth(context: Context, snapshot: WidgetSnapshot?): Calendar? {
+        val rawMonth = context.getSharedPreferences(MainActivity.WIDGET_PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_DISPLAY_MONTH, null)
+            ?: return null
+        val parsed = parseMonthCalendar(rawMonth) ?: return null
+        if (snapshot == null) return parsed
+        return clampMonth(parsed, snapshot.minMonthCalendar, snapshot.maxMonthCalendar)
+    }
+
+    private fun moveDisplayMonth(context: Context, deltaMonth: Int) {
+        val snapshot = readSnapshot(context) ?: return
+        val base = readDisplayMonth(context, snapshot) ?: snapshot.monthCalendar
+        val next = Calendar.getInstance(Locale.KOREA).apply {
+            time = base.time
+            set(Calendar.DAY_OF_MONTH, 1)
+            add(Calendar.MONTH, deltaMonth)
+        }
+        val clamped = clampMonth(next, snapshot.minMonthCalendar, snapshot.maxMonthCalendar)
+        context.getSharedPreferences(MainActivity.WIDGET_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_DISPLAY_MONTH, monthKey(clamped))
+            .apply()
+    }
+
+    private fun clampMonth(month: Calendar, minMonth: Calendar, maxMonth: Calendar): Calendar {
+        return when {
+            compareMonth(month, minMonth) < 0 -> minMonth
+            compareMonth(month, maxMonth) > 0 -> maxMonth
+            else -> month
+        }
+    }
+
+    private fun compareMonth(left: Calendar, right: Calendar): Int {
+        val leftValue = left.get(Calendar.YEAR) * 12 + left.get(Calendar.MONTH)
+        val rightValue = right.get(Calendar.YEAR) * 12 + right.get(Calendar.MONTH)
+        return leftValue - rightValue
+    }
+
+    private fun createWidgetActionPendingIntent(context: Context, action: String): PendingIntent {
+        val intent = Intent(context, MonthCalendarWidgetProvider::class.java).apply {
+            this.action = action
+        }
+        return PendingIntent.getBroadcast(context, action.hashCode(), intent, pendingIntentFlags())
     }
 
     private fun createOpenAppPendingIntent(context: Context, targetMonth: String, route: String): PendingIntent {
@@ -319,6 +394,8 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
 
     data class WidgetSnapshot(
         val monthCalendar: Calendar,
+        val minMonthCalendar: Calendar,
+        val maxMonthCalendar: Calendar,
         val eventsByDate: Map<String, List<WidgetEvent>>,
     )
 
@@ -334,7 +411,12 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val MAX_VISIBLE_EVENTS = 4
+        private const val KEY_DISPLAY_MONTH = "widget_display_month"
+        private const val ACTION_PREV_MONTH = "com.example.ourcal_app.widget.PREV_MONTH"
+        private const val ACTION_NEXT_MONTH = "com.example.ourcal_app.widget.NEXT_MONTH"
+        private const val ACTION_DISABLED = "com.example.ourcal_app.widget.DISABLED"
         private val TEXT_COLOR = Color.parseColor("#111122")
+        private val DISABLED_TEXT_COLOR = Color.parseColor("#C7C7D1")
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
         private val MY_EVENT_COLOR = Color.parseColor("#3B82F6")
