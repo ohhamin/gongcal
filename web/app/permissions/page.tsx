@@ -73,7 +73,7 @@ export default function PermissionsPage() {
     };
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-5">
+        <main className="flex h-[calc(100dvh-var(--oc-content-top-padding)-var(--oc-nav-height))] overflow-hidden items-center justify-center bg-gray-50 px-5">
             <div className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-sm ring-1 ring-black/5">
                 <p className="mb-2 text-xs font-bold tracking-[0.08em] text-[var(--oc-primary)]">APP PERMISSIONS</p>
                 <h1 className="text-2xl font-extrabold tracking-[-0.04em] text-[var(--oc-text)]">앱 접근 권한 안내</h1>

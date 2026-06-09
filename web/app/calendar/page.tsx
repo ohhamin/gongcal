@@ -429,9 +429,11 @@ export default function CalendarPage() {
 
     const getSheetMaxHeight = (sheet: BottomSheetId) => {
         if (typeof window === 'undefined') return 0;
-        const verticalMargin = 12;
+        // 풀 확장 시에도 기기 상태바 영역과 겹치지 않도록, 기존 일정 추가 Sheet의
+        // CSS max-height(`100vh - 2rem`)와 같은 상단 여백을 최대 높이 기준으로 사용합니다.
+        const topSafeMargin = 32;
         const navHeight = sheet === 'dateList' ? getNavHeightPx() : 0;
-        return Math.max(240, window.innerHeight - navHeight - verticalMargin);
+        return Math.max(240, window.innerHeight - navHeight - topSafeMargin);
     };
 
     const handleBottomSheetDragStart = (sheet: BottomSheetId) => (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1880,7 +1882,7 @@ export default function CalendarPage() {
 
         const days = visibleDates.map((date) => ({
             date,
-            events: (eventsByDate.get(date) || []).slice(0, 6).map((event) => ({
+            events: (eventsByDate.get(date) || []).map((event) => ({
                 title: String((!Boolean(event.extendedProps.isHoliday) && !Boolean(event.extendedProps.isOwner) && !Boolean(event.extendedProps.isMyInvite) && String(event.extendedProps.ownerName || '').length > 0) ? event.extendedProps.ownerName : event.title || '일정'),
                 color: String(event.backgroundColor === 'transparent' ? event.borderColor : event.backgroundColor),
                 isHoliday: Boolean(event.extendedProps.isHoliday),
