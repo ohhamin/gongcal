@@ -108,6 +108,17 @@ const DEFAULT_START_TIME: TimeValue = '09:00';
 const DEFAULT_END_TIME: TimeValue = '22:00';
 const MASTER_FILTER_MY_ONLY = 'my-only';
 const MASTER_FILTER_GROUP = 'group';
+const SHEET_EXPAND_THRESHOLD_PX = 48;
+const SHEET_DISMISS_THRESHOLD_PX = 84;
+
+type BottomSheetId = 'dateList' | 'eventForm';
+type BottomSheetMode = 'default' | 'full';
+type BottomSheetDragState = {
+    sheet: BottomSheetId;
+    startY: number;
+    currentY: number;
+    startMode: BottomSheetMode;
+};
 
 function formatLocalDateString(date: Date): string {
     const year = date.getFullYear();
@@ -304,6 +315,9 @@ export default function CalendarPage() {
     const [myUserId, setMyUserId] = useState<string | null>(null);
 
     const [popupDate, setPopupDate] = useState<string | null>(null);
+    const [dateListSheetMode, setDateListSheetMode] = useState<BottomSheetMode>('default');
+    const [eventFormSheetMode, setEventFormSheetMode] = useState<BottomSheetMode>('default');
+    const [bottomSheetDrag, setBottomSheetDrag] = useState<BottomSheetDragState | null>(null);
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [startDate, setStartDate] = useState(getTodayString());
@@ -369,6 +383,69 @@ export default function CalendarPage() {
             setIsVisibilityTooltipOpen(false);
             visibilityTooltipTimerRef.current = null;
         }, 2000);
+    };
+
+    const getSheetMode = (sheet: BottomSheetId): BottomSheetMode => {
+        return sheet === 'dateList' ? dateListSheetMode : eventFormSheetMode;
+    };
+
+    const setSheetMode = (sheet: BottomSheetId, mode: BottomSheetMode) => {
+        if (sheet === 'dateList') setDateListSheetMode(mode);
+        else setEventFormSheetMode(mode);
+    };
+
+    const closeSheetById = (sheet: BottomSheetId) => {
+        if (sheet === 'dateList') setPopupDate(null);
+        else closeForm();
+    };
+
+    const handleBottomSheetDragStart = (sheet: BottomSheetId) => (event: React.PointerEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setBottomSheetDrag({
+            sheet,
+            startY: event.clientY,
+            currentY: event.clientY,
+            startMode: getSheetMode(sheet),
+        });
+    };
+
+    const handleBottomSheetDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!bottomSheetDrag) return;
+        setBottomSheetDrag({ ...bottomSheetDrag, currentY: event.clientY });
+    };
+
+    const handleBottomSheetDragEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!bottomSheetDrag) return;
+
+        const deltaY = event.clientY - bottomSheetDrag.startY;
+        const { sheet, startMode } = bottomSheetDrag;
+        setBottomSheetDrag(null);
+
+        if (deltaY <= -SHEET_EXPAND_THRESHOLD_PX) {
+            setSheetMode(sheet, 'full');
+            return;
+        }
+
+        if (deltaY >= SHEET_DISMISS_THRESHOLD_PX) {
+            if (startMode === 'full') setSheetMode(sheet, 'default');
+            else closeSheetById(sheet);
+        }
+    };
+
+    const getBottomSheetStyle = (sheet: BottomSheetId): React.CSSProperties => {
+        const isDragging = bottomSheetDrag?.sheet === sheet;
+        const dragOffset = isDragging ? Math.max(0, bottomSheetDrag.currentY - bottomSheetDrag.startY) : 0;
+
+        return {
+            transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
+            transition: isDragging ? 'none' : 'height 220ms cubic-bezier(0.22, 1, 0.36, 1), max-height 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+        };
+    };
+
+    const openDateListSheet = (dateStr: string) => {
+        setDateListSheetMode('default');
+        setPopupDate(dateStr);
     };
 
     useEffect(() => {
@@ -950,6 +1027,7 @@ export default function CalendarPage() {
             setIsAllDay(true);
         }
 
+        setEventFormSheetMode('default');
         setIsFormOpen(true);
     };
 
@@ -980,6 +1058,7 @@ export default function CalendarPage() {
         setIsHidden(event.is_hidden);
         setAttendees([{ profile_id: event.user_id, nickname: ownerNameById.get(event.user_id) || '이름 없음', is_agree: true, isOwner: true }]);
         void loadEventAttendees(String(event.id), event.user_id);
+        setEventFormSheetMode('default');
         setIsFormOpen(true);
     };
 
@@ -1435,7 +1514,7 @@ export default function CalendarPage() {
 
     const handleDateClick = (info: DateClickArg) => {
         if (shouldSuppressNextClickRef.current || pendingRange) return;
-        setPopupDate(info.dateStr);
+        openDateListSheet(info.dateStr);
     };
 
     const handleEventClick = (info: EventClickArg) => {
@@ -1447,7 +1526,7 @@ export default function CalendarPage() {
         const dayCell = targetElement?.closest('[data-date]');
         const clickedDate = dayCell?.getAttribute('data-date');
 
-        setPopupDate(clickedDate || formatLocalDateString(info.event.start || new Date()));
+        openDateListSheet(clickedDate || formatLocalDateString(info.event.start || new Date()));
     };
 
     const handleListEventClick = (event: CalendarEvent) => {
@@ -1958,7 +2037,7 @@ export default function CalendarPage() {
                             }}
                             moreLinkContent={(args) => `+${args.num}`}
                             moreLinkClick={(arg) => {
-                                setPopupDate(formatLocalDateString(arg.date));
+                                openDateListSheet(formatLocalDateString(arg.date));
                                 return 'none';
                             }}
                             datesSet={handleCalendarDatesSet}
@@ -2023,8 +2102,22 @@ export default function CalendarPage() {
 
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 pb-[var(--oc-nav-height)] sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
-                    <div className="flex max-h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white" onClick={(e) => e.stopPropagation()}>
-                        <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
+                    <div
+                        className={`flex w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px] ${dateListSheetMode === 'full' ? 'h-[calc(100dvh-var(--oc-nav-height)-0.75rem)] sm:h-[calc(100dvh-2rem)]' : 'h-[58vh]'}`}
+                        style={getBottomSheetStyle('dateList')}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            className="flex h-7 shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+                            role="button"
+                            aria-label="일정 목록 창 크기 조절"
+                            onPointerDown={handleBottomSheetDragStart('dateList')}
+                            onPointerMove={handleBottomSheetDragMove}
+                            onPointerUp={handleBottomSheetDragEnd}
+                            onPointerCancel={handleBottomSheetDragEnd}
+                        >
+                            <div className="h-1 w-9 rounded-full bg-[var(--oc-divider-strong)]" />
+                        </div>
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--oc-divider)] p-4">
                             <h2 className="text-lg font-bold">{formatPopupDate(popupDate)}</h2>
                             <button
@@ -2035,7 +2128,7 @@ export default function CalendarPage() {
                             </button>
                         </div>
 
-                        <div className="min-h-0 max-h-[calc(58vh-7.5rem)] overflow-y-auto">
+                        <div className="min-h-0 flex-1 overflow-y-auto">
                             {popupEvents.length === 0 ? (
                                 <div className="px-5 py-9 text-center tracking-[-0.01em]">
                                     <p className="text-sm font-semibold text-[var(--oc-text-secondary)]">일정이 없습니다.</p>
@@ -2269,8 +2362,22 @@ export default function CalendarPage() {
 
             {isFormOpen && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={closeForm}>
-                    <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]" onClick={(e) => e.stopPropagation()}>
-                        <div className="mx-auto mt-3 h-1 w-9 shrink-0 rounded-full bg-[var(--oc-divider-strong)]" />
+                    <div
+                        className={`flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px] ${eventFormSheetMode === 'full' ? 'h-[calc(100dvh-0.75rem)] sm:h-[calc(100dvh-2rem)]' : 'max-h-[calc(100vh-2rem)]'}`}
+                        style={getBottomSheetStyle('eventForm')}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div
+                            className="flex h-7 shrink-0 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+                            role="button"
+                            aria-label="일정 입력 창 크기 조절"
+                            onPointerDown={handleBottomSheetDragStart('eventForm')}
+                            onPointerMove={handleBottomSheetDragMove}
+                            onPointerUp={handleBottomSheetDragEnd}
+                            onPointerCancel={handleBottomSheetDragEnd}
+                        >
+                            <div className="h-1 w-9 rounded-full bg-[var(--oc-divider-strong)]" />
+                        </div>
                         <div className="border-b border-[var(--oc-divider)] px-5 pb-4 pt-3">
                             <h2 className="text-xl font-extrabold tracking-[-0.03em]">{selectedEventId ? '일정 수정' : '일정 추가'}</h2>
                         </div>
