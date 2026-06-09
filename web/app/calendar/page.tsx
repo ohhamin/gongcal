@@ -108,16 +108,17 @@ const DEFAULT_START_TIME: TimeValue = '09:00';
 const DEFAULT_END_TIME: TimeValue = '22:00';
 const MASTER_FILTER_MY_ONLY = 'my-only';
 const MASTER_FILTER_GROUP = 'group';
-const SHEET_EXPAND_THRESHOLD_PX = 48;
-const SHEET_DISMISS_THRESHOLD_PX = 84;
+const SHEET_FULL_RATIO = 0.8;
+const SHEET_DISMISS_THRESHOLD_PX = 48;
 
 type BottomSheetId = 'dateList' | 'eventForm';
-type BottomSheetMode = 'default' | 'full';
 type BottomSheetDragState = {
     sheet: BottomSheetId;
     startY: number;
     currentY: number;
-    startMode: BottomSheetMode;
+    startHeight: number;
+    minHeight: number;
+    maxHeight: number;
 };
 
 function formatLocalDateString(date: Date): string {
@@ -315,9 +316,13 @@ export default function CalendarPage() {
     const [myUserId, setMyUserId] = useState<string | null>(null);
 
     const [popupDate, setPopupDate] = useState<string | null>(null);
-    const [dateListSheetMode, setDateListSheetMode] = useState<BottomSheetMode>('default');
-    const [eventFormSheetMode, setEventFormSheetMode] = useState<BottomSheetMode>('default');
+    const [dateListSheetHeight, setDateListSheetHeight] = useState<number | null>(null);
+    const [eventFormSheetHeight, setEventFormSheetHeight] = useState<number | null>(null);
     const [bottomSheetDrag, setBottomSheetDrag] = useState<BottomSheetDragState | null>(null);
+    const dateListSheetRef = useRef<HTMLDivElement | null>(null);
+    const eventFormSheetRef = useRef<HTMLDivElement | null>(null);
+    const dateListSheetMinHeightRef = useRef<number | null>(null);
+    const eventFormSheetMinHeightRef = useRef<number | null>(null);
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [startDate, setStartDate] = useState(getTodayString());
@@ -385,66 +390,127 @@ export default function CalendarPage() {
         }, 2000);
     };
 
-    const getSheetMode = (sheet: BottomSheetId): BottomSheetMode => {
-        return sheet === 'dateList' ? dateListSheetMode : eventFormSheetMode;
+    const getSheetRef = (sheet: BottomSheetId) => {
+        return sheet === 'dateList' ? dateListSheetRef : eventFormSheetRef;
     };
 
-    const setSheetMode = (sheet: BottomSheetId, mode: BottomSheetMode) => {
-        if (sheet === 'dateList') setDateListSheetMode(mode);
-        else setEventFormSheetMode(mode);
+    const getSheetHeight = (sheet: BottomSheetId) => {
+        return sheet === 'dateList' ? dateListSheetHeight : eventFormSheetHeight;
+    };
+
+    const getSheetMinHeightRef = (sheet: BottomSheetId) => {
+        return sheet === 'dateList' ? dateListSheetMinHeightRef : eventFormSheetMinHeightRef;
+    };
+
+    const setSheetHeight = (sheet: BottomSheetId, height: number | null) => {
+        if (sheet === 'dateList') setDateListSheetHeight(height);
+        else setEventFormSheetHeight(height);
     };
 
     const closeSheetById = (sheet: BottomSheetId) => {
+        getSheetMinHeightRef(sheet).current = null;
+        setSheetHeight(sheet, null);
         if (sheet === 'dateList') setPopupDate(null);
         else closeForm();
     };
 
+    const getNavHeightPx = () => {
+        if (typeof window === 'undefined') return 0;
+        const raw = getComputedStyle(document.documentElement).getPropertyValue('--oc-nav-height').trim();
+        const probe = document.createElement('div');
+        probe.style.position = 'absolute';
+        probe.style.visibility = 'hidden';
+        probe.style.height = raw || '0px';
+        document.body.appendChild(probe);
+        const height = probe.getBoundingClientRect().height;
+        probe.remove();
+        return height;
+    };
+
+    const getSheetMaxHeight = (sheet: BottomSheetId) => {
+        if (typeof window === 'undefined') return 0;
+        const verticalMargin = 12;
+        const navHeight = sheet === 'dateList' ? getNavHeightPx() : 0;
+        return Math.max(240, window.innerHeight - navHeight - verticalMargin);
+    };
+
     const handleBottomSheetDragStart = (sheet: BottomSheetId) => (event: React.PointerEvent<HTMLDivElement>) => {
+        const sheetElement = getSheetRef(sheet).current;
+        if (!sheetElement) return;
+
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
+
+        const measuredHeight = sheetElement.getBoundingClientRect().height;
+        const maxHeight = getSheetMaxHeight(sheet);
+        const currentHeight = getSheetHeight(sheet) ?? measuredHeight;
+        const minHeightRef = getSheetMinHeightRef(sheet);
+        const minHeight = minHeightRef.current ?? measuredHeight;
+        minHeightRef.current = minHeight;
+
         setBottomSheetDrag({
             sheet,
             startY: event.clientY,
             currentY: event.clientY,
-            startMode: getSheetMode(sheet),
+            startHeight: currentHeight,
+            minHeight,
+            maxHeight,
         });
+        setSheetHeight(sheet, currentHeight);
     };
 
     const handleBottomSheetDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
-        if (!bottomSheetDrag) return;
-        setBottomSheetDrag({ ...bottomSheetDrag, currentY: event.clientY });
+        setBottomSheetDrag((current) => {
+            if (!current) return current;
+            return { ...current, currentY: event.clientY };
+        });
     };
 
     const handleBottomSheetDragEnd = (event: React.PointerEvent<HTMLDivElement>) => {
         if (!bottomSheetDrag) return;
 
         const deltaY = event.clientY - bottomSheetDrag.startY;
-        const { sheet, startMode } = bottomSheetDrag;
+        const targetHeight = bottomSheetDrag.startHeight - deltaY;
+        const fullThreshold = bottomSheetDrag.maxHeight * SHEET_FULL_RATIO;
+        const { sheet, minHeight, maxHeight } = bottomSheetDrag;
+
         setBottomSheetDrag(null);
 
-        if (deltaY <= -SHEET_EXPAND_THRESHOLD_PX) {
-            setSheetMode(sheet, 'full');
+        if (targetHeight < minHeight - SHEET_DISMISS_THRESHOLD_PX) {
+            closeSheetById(sheet);
             return;
         }
 
-        if (deltaY >= SHEET_DISMISS_THRESHOLD_PX) {
-            if (startMode === 'full') setSheetMode(sheet, 'default');
-            else closeSheetById(sheet);
+        if (targetHeight >= fullThreshold) {
+            setSheetHeight(sheet, maxHeight);
+            return;
         }
+
+        setSheetHeight(sheet, Math.max(minHeight, Math.min(targetHeight, maxHeight)));
     };
 
     const getBottomSheetStyle = (sheet: BottomSheetId): React.CSSProperties => {
         const isDragging = bottomSheetDrag?.sheet === sheet;
-        const dragOffset = isDragging ? Math.max(0, bottomSheetDrag.currentY - bottomSheetDrag.startY) : 0;
+        const height = isDragging
+            ? Math.max(0, Math.min(bottomSheetDrag.startHeight - (bottomSheetDrag.currentY - bottomSheetDrag.startY), bottomSheetDrag.maxHeight))
+            : getSheetHeight(sheet);
+        const numericHeight = height ?? null;
+        const dismissOffset = isDragging && numericHeight !== null && numericHeight < bottomSheetDrag.minHeight
+            ? Math.min(bottomSheetDrag.minHeight - numericHeight, SHEET_DISMISS_THRESHOLD_PX * 1.5)
+            : 0;
 
         return {
-            transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
-            transition: isDragging ? 'none' : 'height 220ms cubic-bezier(0.22, 1, 0.36, 1), max-height 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+            height: numericHeight ? `${Math.max(1, numericHeight)}px` : undefined,
+            maxHeight: height ? `${bottomSheetDrag?.sheet === sheet ? bottomSheetDrag.maxHeight : getSheetMaxHeight(sheet)}px` : undefined,
+            transform: dismissOffset > 0 ? `translateY(${dismissOffset}px)` : undefined,
+            transition: isDragging ? 'none' : 'height 260ms cubic-bezier(0.22, 1, 0.36, 1), max-height 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease-out',
+            willChange: isDragging ? 'height, transform' : undefined,
         };
     };
 
     const openDateListSheet = (dateStr: string) => {
-        setDateListSheetMode('default');
+        dateListSheetMinHeightRef.current = null;
+        setDateListSheetHeight(null);
         setPopupDate(dateStr);
     };
 
@@ -1027,7 +1093,8 @@ export default function CalendarPage() {
             setIsAllDay(true);
         }
 
-        setEventFormSheetMode('default');
+        eventFormSheetMinHeightRef.current = null;
+        setEventFormSheetHeight(null);
         setIsFormOpen(true);
     };
 
@@ -1058,7 +1125,8 @@ export default function CalendarPage() {
         setIsHidden(event.is_hidden);
         setAttendees([{ profile_id: event.user_id, nickname: ownerNameById.get(event.user_id) || '이름 없음', is_agree: true, isOwner: true }]);
         void loadEventAttendees(String(event.id), event.user_id);
-        setEventFormSheetMode('default');
+        eventFormSheetMinHeightRef.current = null;
+        setEventFormSheetHeight(null);
         setIsFormOpen(true);
     };
 
@@ -2103,7 +2171,8 @@ export default function CalendarPage() {
             {popupDate && (
                 <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 pb-[var(--oc-nav-height)] sm:items-center sm:p-4" onClick={() => setPopupDate(null)}>
                     <div
-                        className={`flex w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px] ${dateListSheetMode === 'full' ? 'h-[calc(100dvh-var(--oc-nav-height)-0.75rem)] sm:h-[calc(100dvh-2rem)]' : 'h-[58vh]'}`}
+                        ref={dateListSheetRef}
+                        className="ourcal-bottom-sheet-enter flex max-h-[58vh] w-full max-w-md flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]"
                         style={getBottomSheetStyle('dateList')}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -2363,7 +2432,8 @@ export default function CalendarPage() {
             {isFormOpen && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(11,15,31,0.42)] p-0 sm:items-center sm:p-4" onClick={closeForm}>
                     <div
-                        className={`flex w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px] ${eventFormSheetMode === 'full' ? 'h-[calc(100dvh-0.75rem)] sm:h-[calc(100dvh-2rem)]' : 'max-h-[calc(100vh-2rem)]'}`}
+                        ref={eventFormSheetRef}
+                        className="ourcal-bottom-sheet-enter flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[var(--oc-elevation)] sm:rounded-[24px]"
                         style={getBottomSheetStyle('eventForm')}
                         onClick={(e) => e.stopPropagation()}
                     >
