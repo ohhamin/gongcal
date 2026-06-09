@@ -156,6 +156,16 @@ function addDays(date: Date, days: number): Date {
     return next;
 }
 
+function addMonths(date: Date, months: number): Date {
+    return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+function getMonthDataRange(monthDate: Date, beforeMonths = 2, afterMonths = 2): { start: Date; end: Date } {
+    const start = new Date(monthDate.getFullYear(), monthDate.getMonth() - beforeMonths, 1);
+    const end = new Date(monthDate.getFullYear(), monthDate.getMonth() + afterMonths + 1, 1);
+    return { start, end };
+}
+
 function getTodayString(): string {
     return formatLocalDateString(new Date());
 }
@@ -292,8 +302,6 @@ export default function CalendarPage() {
     const memberFilterRef = useRef<HTMLDivElement | null>(null);
     const previousGroupIdRef = useRef<number | null | undefined>(undefined);
     const [myUserId, setMyUserId] = useState<string | null>(null);
-    const [visibleRange, setVisibleRange] = useState<{ start: Date; end: Date } | null>(null);
-    const [isCalendarLoading, setIsCalendarLoading] = useState(true);
 
     const [popupDate, setPopupDate] = useState<string | null>(null);
 
@@ -697,7 +705,7 @@ export default function CalendarPage() {
     }, [currentUserQuery.data, profileQuery.data]);
 
     const fetchEvents = useCallback(async () => {
-        if (!visibleRange) return;
+        const prefetchRange = getMonthDataRange(calendarMonthDate);
 
         const currentUserId = currentUserQuery.data?.id;
         const currentProfileId = profileQuery.data?.id;
@@ -734,8 +742,8 @@ export default function CalendarPage() {
             .from('events')
             .select('*')
             .in('user_id', peopleIds)
-            .lt('start_at', visibleRange.end.toISOString())
-            .gte('end_at', visibleRange.start.toISOString());
+            .lt('start_at', prefetchRange.end.toISOString())
+            .gte('end_at', prefetchRange.start.toISOString());
 
         if (ownedError) {
             console.error(ownedError);
@@ -745,8 +753,8 @@ export default function CalendarPage() {
         const inviteEventById = new Map<string, CalendarEvent>();
         let normalizedInviteRows: EventInvite[] = [];
         const { data: myInvitedRows, error: myInvitedError } = await supabase.rpc('get_my_invited_events', {
-            p_range_start: visibleRange.start.toISOString(),
-            p_range_end: visibleRange.end.toISOString(),
+            p_range_start: prefetchRange.start.toISOString(),
+            p_range_end: prefetchRange.end.toISOString(),
         });
 
         if (!myInvitedError) {
@@ -787,8 +795,8 @@ export default function CalendarPage() {
                     .from('events')
                     .select('*')
                     .in('id', inviteEventIds)
-                    .lt('start_at', visibleRange.end.toISOString())
-                    .gte('end_at', visibleRange.start.toISOString())
+                    .lt('start_at', prefetchRange.end.toISOString())
+                    .gte('end_at', prefetchRange.start.toISOString())
                 : { data: [], error: null };
 
             if (inviteEventError) {
@@ -873,36 +881,22 @@ export default function CalendarPage() {
 
         setCommentCountByEventId(nextCommentCountByEventId);
         setEvents(sortCalendarEvents(mergedEvents));
-    }, [visibleRange, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, profileQuery.data?.main_group_id, filterPeople.length, sortCalendarEvents]);
+    }, [calendarMonthDate, fetchVisiblePeople, currentUserQuery.data?.id, profileQuery.data?.id, profileQuery.data?.main_group_id, filterPeople.length, sortCalendarEvents]);
 
-    // 첫 로딩 + 그룹/범위 변경 시 일정 재조회
+    // 첫 로딩 + 그룹/월 변경 시 5개월치 일정을 백그라운드로 재조회합니다.
+    // 달력 UI는 먼저 그려두고 데이터가 도착하면 이벤트만 갱신해 월 이동 로딩 화면을 없앱니다.
     useEffect(() => {
         if (currentUserQuery.isLoading || profileQuery.isLoading) return;
-        if (!visibleRange) return;
 
-        let isCanceled = false;
+        const fetchTimer = window.setTimeout(() => {
+            void fetchEvents();
+        }, 0);
 
-        const load = async () => {
-            setIsCalendarLoading(true);
-
-            const minimumLoadingTime = new Promise((resolve) => setTimeout(resolve, 600));
-            await Promise.all([fetchEvents(), minimumLoadingTime]);
-
-            if (!isCanceled) {
-                setIsCalendarLoading(false);
-            }
-        };
-
-        load();
-
-        return () => {
-            isCanceled = true;
-        };
+        return () => window.clearTimeout(fetchTimer);
     }, [
         currentUserQuery.isLoading,
         profileQuery.isLoading,
         profileQuery.data?.main_group_id,
-        visibleRange,
         fetchEvents,
     ]);
 
@@ -1645,16 +1639,6 @@ export default function CalendarPage() {
             if (prev.getFullYear() === currentDate.getFullYear() && prev.getMonth() === currentDate.getMonth()) return prev;
             return currentDate;
         });
-        setVisibleRange((prev) => {
-            if (
-                prev &&
-                prev.start.getTime() === arg.start.getTime() &&
-                prev.end.getTime() === arg.end.getTime()
-            ) {
-                return prev;
-            }
-            return { start: arg.start, end: arg.end };
-        });
     };
 
     const toggleMemberFilter = (profileId: string) => {
@@ -1731,16 +1715,19 @@ export default function CalendarPage() {
         const bridge = (window as unknown as { OurcalWidgetBridge?: { postMessage: (message: string) => void } }).OurcalWidgetBridge;
         if (!bridge) return;
 
-        const year = calendarMonthDate.getFullYear();
-        const month = calendarMonthDate.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const start = addDays(firstDay, -firstDay.getDay());
-        const visibleDates = Array.from({ length: 35 }, (_, index) => formatLocalDateString(addDays(start, index)));
+        const baseMonth = new Date(calendarMonthDate.getFullYear(), calendarMonthDate.getMonth(), 1);
+        const monthDates = Array.from({ length: 5 }, (_, index) => addMonths(baseMonth, index - 2));
+        const visibleDates = Array.from(new Set(monthDates.flatMap((monthDate) => {
+            const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+            const start = addDays(firstDay, -firstDay.getDay());
+            return Array.from({ length: 35 }, (_, index) => formatLocalDateString(addDays(start, index)));
+        })));
+        const visibleDateSet = new Set(visibleDates);
         const eventsByDate = new Map<string, typeof calendarEvents>();
 
         calendarEvents.forEach((event) => {
             const date = String(event.start || '');
-            if (!visibleDates.includes(date)) return;
+            if (!visibleDateSet.has(date)) return;
             eventsByDate.set(date, [...(eventsByDate.get(date) || []), event]);
         });
 
@@ -1758,8 +1745,10 @@ export default function CalendarPage() {
         }));
 
         bridge.postMessage(JSON.stringify({
-            version: 1,
-            monthDate: formatLocalDateString(firstDay),
+            version: 2,
+            monthDate: formatLocalDateString(baseMonth),
+            minMonthDate: formatLocalDateString(monthDates[0]),
+            maxMonthDate: formatLocalDateString(monthDates[monthDates.length - 1]),
             generatedAt: new Date().toISOString(),
             days,
         }));
@@ -1838,7 +1827,6 @@ export default function CalendarPage() {
                 <div className="flex items-start justify-end gap-0">
                     <GroupSelector
                         onChange={() => {
-                            setIsCalendarLoading(true);
                             setPopupDate(null);
                             setDetailEvent(null);
                             setIsFormOpen(false);
@@ -1998,11 +1986,6 @@ export default function CalendarPage() {
                             }}
                         />
 
-                        {isCalendarLoading && (
-                            <div className="absolute inset-0 z-10 bg-white/95 backdrop-blur-sm">
-                                <CalendarLoading />
-                            </div>
-                        )}
                     </>
                 )}
             </div>
