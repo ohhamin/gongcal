@@ -43,6 +43,11 @@ export default function AuthCallbackPage() {
                 return;
             }
 
+            if (!profile.permissions_onboarding_completed) {
+                router.push('/permissions');
+                return;
+            }
+
             router.push('/calendar');
         };
 

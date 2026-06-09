@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // 로그인 필요 보호 경로
-const PROTECTED_PATHS = ['/calendar', '/day', '/friends', '/groups', '/settings', '/setup-profile'];
+const PROTECTED_PATHS = ['/calendar', '/day', '/friends', '/groups', '/settings', '/setup-profile', '/permissions'];
 
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
