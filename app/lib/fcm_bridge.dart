@@ -20,24 +20,24 @@ class FcmBridge {
   final WebViewController _controller;
   final String _baseWebUrl;
   String? _token;
+  FirebaseMessaging? _messaging;
+  bool _initialized = false;
 
   Future<void> initialize() async {
-    if (!fcmEnabled) return;
+    if (!fcmEnabled || _initialized) return;
 
     try {
       await Firebase.initializeApp();
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       final messaging = FirebaseMessaging.instance;
-      await messaging.requestPermission(alert: true, badge: true, sound: true);
-      await messaging.setAutoInitEnabled(true);
+      _messaging = messaging;
+      _initialized = true;
 
-      if (!kIsWeb && Platform.isIOS) {
-        await _waitForApnsToken(messaging);
+      final settings = await messaging.getNotificationSettings();
+      if (_isPermissionGranted(settings.authorizationStatus)) {
+        await _registerToken(messaging);
       }
-
-      _token = await messaging.getToken();
-      await injectTokenIntoWebView();
 
       FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
         _token = token;
@@ -54,6 +54,46 @@ class FcmBridge {
       // FCM 설정 파일이 아직 없거나 플랫폼 설정이 미완성이어도 WebView 앱 실행은 막지 않습니다.
       debugPrint('FCM initialization skipped: $error');
     }
+  }
+
+  Future<void> requestPermissionAndRegister() async {
+    if (!fcmEnabled) return;
+
+    try {
+      if (!_initialized) {
+        await initialize();
+      }
+
+      final messaging = _messaging ?? FirebaseMessaging.instance;
+      _messaging = messaging;
+
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (!_isPermissionGranted(settings.authorizationStatus)) return;
+      await _registerToken(messaging);
+    } catch (error) {
+      debugPrint('FCM permission request skipped: $error');
+    }
+  }
+
+  Future<void> _registerToken(FirebaseMessaging messaging) async {
+    await messaging.setAutoInitEnabled(true);
+
+    if (!kIsWeb && Platform.isIOS) {
+      await _waitForApnsToken(messaging);
+    }
+
+    _token = await messaging.getToken();
+    await injectTokenIntoWebView();
+  }
+
+  bool _isPermissionGranted(AuthorizationStatus status) {
+    return status == AuthorizationStatus.authorized ||
+        status == AuthorizationStatus.provisional;
   }
 
   Future<void> injectTokenIntoWebView() async {

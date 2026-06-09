@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -56,6 +58,10 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
+      ..addJavaScriptChannel(
+        'OurcalNative',
+        onMessageReceived: _handleNativeMessage,
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (progress) => setState(() => _progress = progress),
@@ -75,6 +81,17 @@ class _OurCalWebShellState extends State<OurCalWebShell> {
     _widgetBridge.attach();
     _fcmBridge.initialize();
     _loadInitialRequest();
+  }
+
+  void _handleNativeMessage(JavaScriptMessage message) {
+    try {
+      final decoded = jsonDecode(message.message);
+      if (decoded is Map && decoded['type'] == 'requestNotificationPermission') {
+        _fcmBridge.requestPermissionAndRegister();
+      }
+    } catch (_) {
+      // 알 수 없는 웹 메시지는 무시합니다.
+    }
   }
 
   Future<void> _loadInitialRequest() async {

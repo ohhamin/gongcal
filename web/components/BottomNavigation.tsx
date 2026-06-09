@@ -11,7 +11,7 @@ const NAV_ITEMS = [
     { href: '/settings', icon: 'settings', activeIcon: 'settingsFill', title: '설정' },
 ] as const;
 
-const HIDDEN_PREFIXES = ['/login', '/auth', '/setup-profile'];
+const HIDDEN_PREFIXES = ['/login', '/auth', '/setup-profile', '/permissions'];
 
 export default function BottomNavigation() {
     const pathname = usePathname();
