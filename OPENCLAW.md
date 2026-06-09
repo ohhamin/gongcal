@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.4.61 - 2026-06-09
+
+### 업데이트 내용
+
+- 설정 페이지에 `일정 30분 전 알림` 토글을 추가했습니다.
+- `profiles.schedule_30m_push_enabled` 값으로 사용자별 일정 리마인더 수신 여부를 저장하도록 연결했습니다.
+- `/api/schedule-reminders` 서버 API를 추가해 CRON이 1분마다 내 일정과 수락한 초대 일정을 조회하고, 시작 30분 전 FCM 푸시만 발송하도록 했습니다.
+- 알림 페이지 row는 생성하지 않고, FCM payload의 제목/본문에 일정 제목과 세부일정을 담도록 처리했습니다.
+- `schedule_push_logs` SQL을 추가해 CRON 재시도/중복 조회에도 같은 일정 알림이 중복 발송되지 않도록 했습니다.
+- README/package 기준 버전을 `v.0.4.60`에서 `v.0.4.61`로 업데이트했습니다.
+
+### 작업 메모
+
+- 운영 Supabase에 `web/supabase/create_schedule_push_reminders.sql`을 적용해야 설정 토글과 중복 발송 로그가 동작합니다.
+- 운영 서버에는 `CRON_SECRET`을 설정하고, CRON 호출 시 `Authorization: Bearer $CRON_SECRET` 헤더를 넣어야 합니다.
+
 ## v.0.4.60 - 2026-06-09
 
 ### 업데이트 내용

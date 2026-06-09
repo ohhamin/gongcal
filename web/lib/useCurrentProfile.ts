@@ -7,6 +7,7 @@ export type CurrentProfile = {
     id: string;
     nickname: string | null;
     main_group_id: number | null;
+    schedule_30m_push_enabled: boolean;
 };
 
 export function useCurrentUser() {
@@ -39,7 +40,7 @@ export function useMyProfile() {
 
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, nickname, main_group_id')
+                .select('id, nickname, main_group_id, schedule_30m_push_enabled')
                 .eq('id', profileId)
                 .single();
 
