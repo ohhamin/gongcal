@@ -1,6 +1,6 @@
 # OURCAL
 
-**현재 버전: v.0.4.61**
+**현재 버전: v.0.4.62**
 
 우리캘린더(OURCAL)는 Supabase 인증과 FullCalendar를 사용하는 Next.js 기반 공유 캘린더 앱입니다. 개인 일정, 그룹원 일정, 초대받은 일정을 월간 캘린더 중심으로 확인하고 관리합니다.
 
@@ -42,6 +42,7 @@ flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 - 같은 기기 자동 로그인을 위한 세션 저장 및 토큰 자동 갱신
 - 루트/PWA 진입 시 세션이 있으면 `/calendar`, 없으면 `/login`으로 이동
 - 설정 페이지 로그아웃 및 회원 탈퇴
+- 신규 가입자는 닉네임 설정 후 앱 접근 권한 안내 페이지에서 알림 권한(선택)을 체크한 경우에만 네이티브 알림 허용 팝업을 봅니다.
 - 설정 페이지 상단에 닉네임과 profiles.id 앞 8자리 초대코드를 표시하고, 📋 버튼으로 클립보드 복사
 
 ### 월간 캘린더
@@ -149,7 +150,7 @@ flutter run --dart-define=OURCAL_WEB_URL=http://10.0.2.2:3000
 - 현재 푸시 클릭 진입점은 모두 `/notifications`로 통일
 - 페이지 이동 시마다 알림 unread 상태를 DB에서 다시 조회해 읽음 상태를 동기화
 - 알림 페이지에서는 상단 🔔 버튼 숨김
-- 설정 페이지에서 일정 30분 전 푸시 알림을 ON/OFF할 수 있으며, ON 사용자는 내 일정과 수락한 초대 일정 시작 30분 전에 FCM 푸시를 받음
+- 설정 페이지에서 일정 30분 전 푸시 알림을 ON/OFF할 수 있으며, ON 사용자는 내 일정과 수락한 초대 일정 시작 약 29분 전에 FCM 푸시를 받음
 - 알림 페이지 진입 시 내 알림 목록을 조회하고 읽지 않은 알림을 읽음 처리
 - 일정 초대와 친구 요청 시 `notifications` 테이블에 알림 생성
 
@@ -187,7 +188,7 @@ POST https://gongcal.vercel.app/api/schedule-reminders
 Authorization: Bearer $CRON_SECRET
 ```
 
-대상은 `events.user_id`가 본인인 일정과 `events_invite.is_agree=true`로 수락한 초대 일정이며, `profiles.schedule_30m_push_enabled=true`인 사용자에게만 발송됩니다. 중복 발송은 `schedule_push_logs(schedule_id, profile_id, type)` unique 제약으로 차단합니다.
+대상은 `events.user_id`가 본인인 일정과 `events_invite.is_agree=true`로 수락한 초대 일정이며, `profiles.schedule_30m_push_enabled=true`인 사용자에게만 발송됩니다. 30분 단위 일정에서 약 29분 전 발송을 원하면 Supabase cron schedule은 `1,31 * * * *`를 사용합니다. 중복 발송은 `schedule_push_logs(schedule_id, profile_id, type)` unique 제약으로 차단합니다.
 
 ## 기술 스택
 
@@ -332,6 +333,7 @@ web/app/
   groups/          # 그룹관리 화면
   login/           # 로그인 화면
   setup-profile/   # 프로필 설정 화면
+  permissions/      # 가입 직후 앱 접근 권한 안내 화면
   settings/        # 설정 화면
 web/lib/
   friendships.ts   # 친구 정책 유틸

@@ -1,5 +1,21 @@
 # OPENCLAW
 
+## v.0.4.62 - 2026-06-09
+
+### 업데이트 내용
+
+- 일정 리마인더 API 조회 기준을 30분 전 범위에서 29분 전 중심의 좁은 범위로 변경했습니다.
+- 신규 가입 플로우에 `/permissions` 앱 접근 권한 안내 페이지를 추가했습니다.
+- 알림 권한은 선택 권한으로 표시하고, 사용자가 체크한 뒤 계속할 때만 네이티브 알림 권한 팝업을 요청하도록 변경했습니다.
+- Flutter FCM 초기화 시 앱 시작 즉시 권한 팝업을 띄우지 않고, 웹 권한 페이지의 `OurcalNative` 브리지 요청 시 권한 요청/토큰 등록을 수행하도록 조정했습니다.
+- `profiles.permissions_onboarding_completed` SQL을 추가해 가입 권한 안내 완료 여부를 저장합니다.
+- README/package 기준 버전을 `v.0.4.61`에서 `v.0.4.62`로 업데이트했습니다.
+
+### 작업 메모
+
+- 30분 단위 일정에서 29분 전 발송을 맞추려면 Supabase cron schedule을 `1,31 * * * *`로 바꾸는 것이 안전합니다.
+- `web/supabase/create_schedule_push_reminders.sql`을 다시 실행해 `permissions_onboarding_completed` 컬럼을 추가해야 합니다.
+
 ## v.0.4.61 - 2026-06-09
 
 ### 업데이트 내용

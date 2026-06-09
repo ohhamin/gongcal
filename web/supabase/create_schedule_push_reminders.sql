@@ -9,6 +9,19 @@ alter table public.profiles
 comment on column public.profiles.schedule_30m_push_enabled
     is '내 일정/수락한 초대 일정 시작 30분 전 FCM 푸시 수신 여부';
 
+-- 가입 직후 접근 권한 안내 페이지를 한 번만 거쳤는지 저장합니다.
+alter table public.profiles
+    add column if not exists permissions_onboarding_completed boolean not null default false;
+
+-- 이미 닉네임을 설정한 기존 사용자는 배포 후 갑자기 가입 온보딩으로 보내지 않도록 완료 처리합니다.
+update public.profiles
+set permissions_onboarding_completed = true
+where nickname is not null
+  and permissions_onboarding_completed = false;
+
+comment on column public.profiles.permissions_onboarding_completed
+    is '가입 직후 앱 접근 권한 안내 페이지 완료 여부';
+
 -- 서버 CRON 재시도/동시 실행/시간 윈도우 중복 조회 시 같은 사용자에게 같은 일정 알림이 중복 발송되지 않게 합니다.
 create table if not exists public.schedule_push_logs (
     id uuid primary key default gen_random_uuid(),

@@ -41,7 +41,7 @@ export default function SetupProfilePage() {
             return;
         }
 
-        router.push('/calendar');
+        router.push('/permissions');
     };
 
     return (

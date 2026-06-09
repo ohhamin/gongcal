@@ -30,8 +30,8 @@ type PushTokenRow = {
 };
 
 const REMINDER_TYPE = 'schedule_before_30m';
-const DEFAULT_WINDOW_BEFORE_MS = 29 * 60 * 1000;
-const DEFAULT_WINDOW_AFTER_MS = 31 * 60 * 1000;
+const REMINDER_TARGET_MS = 29 * 60 * 1000;
+const REMINDER_WINDOW_HALF_MS = 30 * 1000;
 
 function getSupabaseAdmin() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -90,8 +90,9 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = getSupabaseAdmin();
     const now = new Date();
-    const windowStart = addMilliseconds(now, DEFAULT_WINDOW_BEFORE_MS);
-    const windowEnd = addMilliseconds(now, DEFAULT_WINDOW_AFTER_MS);
+    // 30분 전보다 살짝 늦은 29분 전 알림을 기준으로, CRON 초 단위 지연만 흡수합니다.
+    const windowStart = addMilliseconds(now, REMINDER_TARGET_MS - REMINDER_WINDOW_HALF_MS);
+    const windowEnd = addMilliseconds(now, REMINDER_TARGET_MS + REMINDER_WINDOW_HALF_MS);
 
     const { data: events, error: eventsError } = await supabaseAdmin
         .from('events')
