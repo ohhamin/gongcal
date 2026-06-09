@@ -75,48 +75,55 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             set(Calendar.DAY_OF_MONTH, 1)
         }
         val firstColumn = firstDay.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY
-        val daysInMonth = firstDay.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val gridStart = Calendar.getInstance(Locale.KOREA).apply {
+            time = firstDay.time
+            add(Calendar.DAY_OF_MONTH, -firstColumn)
+        }
 
-        for (index in 0 until 35) {
+        for (index in 0 until 42) {
             val row = index / 7
             val column = index % 7
-            val day = index - firstColumn + 1
+            val cellCalendar = Calendar.getInstance(Locale.KOREA).apply {
+                time = gridStart.time
+                add(Calendar.DAY_OF_MONTH, index)
+            }
+            val isCurrentMonth = cellCalendar.get(Calendar.YEAR) == year && cellCalendar.get(Calendar.MONTH) == month
             val numberViewId = dayNumberIds[row][column]
             val eventViewIds = eventLabelIds[row][column]
 
-            views.setInt(dayCellIds[row][column], "setBackgroundResource", R.drawable.widget_grid_cell_bg)
+            views.setInt(
+                dayCellIds[row][column],
+                "setBackgroundResource",
+                if (isCurrentMonth) R.drawable.widget_grid_cell_bg else R.drawable.widget_grid_cell_adjacent_bg,
+            )
             clearEventSlots(views, eventViewIds)
 
-            if (day in 1..daysInMonth) {
-                val currentDateKey = "%04d-%02d-%02d".format(Locale.US, year, month + 1, day)
-                val holiday = snapshotEventsByDate[currentDateKey]?.firstOrNull { it.isHoliday }?.title
-                    ?: holidayByDate[currentDateKey]
-                val dayEvents = snapshotEventsByDate[currentDateKey].orEmpty().filterNot { it.isHoliday }
-                val isToday = currentDateKey == todayKey
-                val isRedDay = holiday != null || column == 0 || column == 6
+            val currentDateKey = dateKey(cellCalendar)
+            val holiday = snapshotEventsByDate[currentDateKey]?.firstOrNull { it.isHoliday }?.title
+                ?: holidayByDate[currentDateKey]
+            val dayEvents = snapshotEventsByDate[currentDateKey].orEmpty().filterNot { it.isHoliday }
+            val isToday = currentDateKey == todayKey
+            val isRedDay = holiday != null || column == 0 || column == 6
+            val mutedAlpha = if (isCurrentMonth) 1f else ADJACENT_MONTH_ALPHA
 
-                views.setViewVisibility(numberViewId, View.VISIBLE)
-                views.setTextViewText(numberViewId, day.toString())
-                views.setTextColor(
-                    numberViewId,
-                    when {
-                        isToday -> Color.WHITE
-                        isRedDay -> RED_DAY_COLOR
-                        else -> TEXT_COLOR
-                    },
-                )
-                views.setInt(
-                    numberViewId,
-                    "setBackgroundResource",
-                    if (isToday) R.drawable.widget_today_number_bg else R.drawable.widget_day_number_bg,
-                )
+            views.setViewVisibility(numberViewId, View.VISIBLE)
+            views.setTextViewText(numberViewId, cellCalendar.get(Calendar.DAY_OF_MONTH).toString())
+            views.setTextColor(
+                numberViewId,
+                when {
+                    isToday -> Color.WHITE
+                    isRedDay -> RED_DAY_COLOR
+                    else -> TEXT_COLOR
+                },
+            )
+            views.setFloat(numberViewId, "setAlpha", mutedAlpha)
+            views.setInt(
+                numberViewId,
+                "setBackgroundResource",
+                if (isToday && isCurrentMonth) R.drawable.widget_today_number_bg else R.drawable.widget_day_number_bg,
+            )
 
-                renderEvents(views, eventViewIds, holiday, dayEvents)
-            } else {
-                views.setTextViewText(numberViewId, "")
-                views.setTextColor(numberViewId, Color.TRANSPARENT)
-                views.setInt(numberViewId, "setBackgroundResource", R.drawable.widget_day_number_bg)
-            }
+            renderEvents(views, eventViewIds, holiday, dayEvents, mutedAlpha)
         }
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -125,6 +132,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
     private fun clearEventSlots(views: RemoteViews, eventViewIds: IntArray) {
         eventViewIds.forEach { eventViewId ->
             views.setTextViewText(eventViewId, "")
+            views.setFloat(eventViewId, "setAlpha", 1f)
             views.setViewVisibility(eventViewId, View.GONE)
         }
     }
@@ -134,6 +142,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         eventViewIds: IntArray,
         holiday: String?,
         events: List<WidgetEvent>,
+        alpha: Float = 1f,
     ) {
         var slot = 0
         if (!holiday.isNullOrBlank() && slot < eventViewIds.size) {
@@ -143,6 +152,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 text = holiday,
                 background = R.drawable.widget_event_holiday_bg,
                 textColor = RED_DAY_COLOR,
+                alpha = alpha,
             )
         }
 
@@ -177,6 +187,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 text = prefix + event.title.removePrefix("🔒"),
                 background = background,
                 textColor = textColor,
+                alpha = alpha,
             )
         }
 
@@ -188,6 +199,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 text = "+$remaining",
                 background = R.drawable.widget_event_more_bg,
                 textColor = PRIMARY_COLOR,
+                alpha = alpha,
             )
         }
     }
@@ -198,10 +210,12 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         text: String,
         background: Int,
         textColor: Int,
+        alpha: Float = 1f,
     ) {
         views.setViewVisibility(viewId, View.VISIBLE)
         views.setTextViewText(viewId, text)
         views.setTextColor(viewId, textColor)
+        views.setFloat(viewId, "setAlpha", alpha)
         views.setInt(viewId, "setBackgroundResource", background)
     }
 
@@ -417,6 +431,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
         private const val ACTION_DISABLED = "com.example.ourcal_app.widget.DISABLED"
         private val TEXT_COLOR = Color.parseColor("#111122")
         private val DISABLED_TEXT_COLOR = Color.parseColor("#C7C7D1")
+        private const val ADJACENT_MONTH_ALPHA = 0.5f
         private val RED_DAY_COLOR = Color.parseColor("#DC2626")
         private val PRIMARY_COLOR = Color.parseColor("#111122")
         private val MY_EVENT_COLOR = Color.parseColor("#3B82F6")
@@ -446,6 +461,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             intArrayOf(R.id.day_cell_2_0, R.id.day_cell_2_1, R.id.day_cell_2_2, R.id.day_cell_2_3, R.id.day_cell_2_4, R.id.day_cell_2_5, R.id.day_cell_2_6),
             intArrayOf(R.id.day_cell_3_0, R.id.day_cell_3_1, R.id.day_cell_3_2, R.id.day_cell_3_3, R.id.day_cell_3_4, R.id.day_cell_3_5, R.id.day_cell_3_6),
             intArrayOf(R.id.day_cell_4_0, R.id.day_cell_4_1, R.id.day_cell_4_2, R.id.day_cell_4_3, R.id.day_cell_4_4, R.id.day_cell_4_5, R.id.day_cell_4_6),
+            intArrayOf(R.id.day_cell_5_0, R.id.day_cell_5_1, R.id.day_cell_5_2, R.id.day_cell_5_3, R.id.day_cell_5_4, R.id.day_cell_5_5, R.id.day_cell_5_6),
         )
 
         private val dayNumberIds = arrayOf(
@@ -454,6 +470,7 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
             intArrayOf(R.id.day_number_2_0, R.id.day_number_2_1, R.id.day_number_2_2, R.id.day_number_2_3, R.id.day_number_2_4, R.id.day_number_2_5, R.id.day_number_2_6),
             intArrayOf(R.id.day_number_3_0, R.id.day_number_3_1, R.id.day_number_3_2, R.id.day_number_3_3, R.id.day_number_3_4, R.id.day_number_3_5, R.id.day_number_3_6),
             intArrayOf(R.id.day_number_4_0, R.id.day_number_4_1, R.id.day_number_4_2, R.id.day_number_4_3, R.id.day_number_4_4, R.id.day_number_4_5, R.id.day_number_4_6),
+            intArrayOf(R.id.day_number_5_0, R.id.day_number_5_1, R.id.day_number_5_2, R.id.day_number_5_3, R.id.day_number_5_4, R.id.day_number_5_5, R.id.day_number_5_6),
         )
 
         private val eventLabelIds = arrayOf(
@@ -501,6 +518,15 @@ class MonthCalendarWidgetProvider : AppWidgetProvider() {
                 intArrayOf(R.id.day_event_4_4_0, R.id.day_event_4_4_1, R.id.day_event_4_4_2, R.id.day_event_4_4_3),
                 intArrayOf(R.id.day_event_4_5_0, R.id.day_event_4_5_1, R.id.day_event_4_5_2, R.id.day_event_4_5_3),
                 intArrayOf(R.id.day_event_4_6_0, R.id.day_event_4_6_1, R.id.day_event_4_6_2, R.id.day_event_4_6_3),
+            ),
+            arrayOf(
+                intArrayOf(R.id.day_event_5_0_0, R.id.day_event_5_0_1, R.id.day_event_5_0_2, R.id.day_event_5_0_3),
+                intArrayOf(R.id.day_event_5_1_0, R.id.day_event_5_1_1, R.id.day_event_5_1_2, R.id.day_event_5_1_3),
+                intArrayOf(R.id.day_event_5_2_0, R.id.day_event_5_2_1, R.id.day_event_5_2_2, R.id.day_event_5_2_3),
+                intArrayOf(R.id.day_event_5_3_0, R.id.day_event_5_3_1, R.id.day_event_5_3_2, R.id.day_event_5_3_3),
+                intArrayOf(R.id.day_event_5_4_0, R.id.day_event_5_4_1, R.id.day_event_5_4_2, R.id.day_event_5_4_3),
+                intArrayOf(R.id.day_event_5_5_0, R.id.day_event_5_5_1, R.id.day_event_5_5_2, R.id.day_event_5_5_3),
+                intArrayOf(R.id.day_event_5_6_0, R.id.day_event_5_6_1, R.id.day_event_5_6_2, R.id.day_event_5_6_3),
             ),
         )
     }
